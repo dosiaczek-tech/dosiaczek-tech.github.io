@@ -1,11 +1,732 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head> 
-        <title>
-            Hello
-        </title>
-    </head>
-    <body>
-        <h1> This is my github pages website!</h1>
-    </body>
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5ef">
+  <meta name="description" content="Twoje okno na Bałtyk. Kamery na żywo z Kołobrzegu, Brzeźna, Sopotu, Helu i innych nadmorskich miejscowości.">
+  <title>Nad morzem — kamery Bałtyku na żywo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230b7169'/%3E%3Cpath d='M10 26q11-12 22 0t22 0M10 39q11-12 22 0t22 0' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f5ef;
+      --white: #fff;
+      --ink: #18383e;
+      --muted: #647776;
+      --sea: #0b7169;
+      --sea-dark: #07594f;
+      --mint: #e2eeE6;
+      --line: #dce3db;
+      --sand: #eee8db;
+      --radius: 22px;
+      --shadow: 0 8px 30px rgb(25 52 48 / 5%);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 90% 0%, #e5ede3 0, transparent 40%), var(--paper);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button, a, input { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .5; }
+    a { color: inherit; }
+    button, input, a { outline-offset: 5px; }
+    :focus-visible { outline: 3px solid #0f8279; }
+    button { color: inherit; }
+    svg { flex-shrink: 0; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .shell { width: min(1320px, calc(100% - 80px)); margin-inline: auto; }
+    .skip-link { position: fixed; top: -80px; left: 20px; z-index: 30; padding: 12px 20px; background: var(--white); border-radius: 10px; }
+    .skip-link:focus { top: 16px; }
+    .masthead { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 29px 0 25px; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand-mark { display: grid; place-items: center; width: 43px; height: 43px; background: var(--sea); color: white; border-radius: 14px; }
+    .brand-mark .icon { width: 26px; height: 26px; }
+    .brand-name { font-weight: 750; font-size: 23px; letter-spacing: -.9px; }
+    .brand-name span { color: var(--sea); }
+    .brand-tag { border-left: 1px solid #ced9cf; margin-left: 10px; padding-left: 20px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .clock { display: flex; align-items: center; gap: 13px; text-align: right; }
+    .clock .icon { color: #8d9b87; width: 27px; height: 27px; }
+    .clock time { display: block; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .clock small { font-size: 11px; color: var(--muted); }
+    .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; padding: 42px 0 28px; }
+    .eyebrow { margin: 0 0 9px; text-transform: uppercase; letter-spacing: 2px; font-size: 10px; font-weight: 750; color: var(--sea); }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -1.9px; font-size: clamp(36px, 4vw, 55px); line-height: 1.15; margin: 0; }
+    .intro p:not(.eyebrow) { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+    .collection-pill { flex-shrink: 0; display: flex; align-items: center; gap: 9px; background: #e9eee4; border: 1px solid #d7e1d1; border-radius: 99px; padding: 10px 16px; font-size: 12px; margin-bottom: 5px; }
+    .collection-pill .icon { width: 17px; height: 17px; color: var(--sea); }
+    .viewer { display: grid; grid-template-columns: minmax(0, 1fr) 294px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); overflow: hidden; box-shadow: var(--shadow); }
+    .screen-column { min-width: 0; background: #0b2227; display: flex; flex-direction: column; }
+    .screen { position: relative; aspect-ratio: 16 / 9; background: #0b2227; width: 100%; }
+    video { display: block; width: 100%; height: 100%; object-fit: contain; background: #0b2227; }
+    .screen-badge { position: absolute; top: 18px; left: 18px; pointer-events: none; display: flex; align-items: center; gap: 8px; background: #132d35db; backdrop-filter: blur(8px); color: white; font-weight: 600; font-size: 10px; letter-spacing: 1.1px; padding: 7px 12px; border: 1px solid #ffffff24; border-radius: 7px; }
+    .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #dab87a; }
+    .screen-badge[data-state="live"] .status-dot { background: #80ddaa; box-shadow: 0 0 0 3px #80ddaa18; }
+    .screen-badge[data-state="error"] .status-dot { background: #f5a691; }
+    .screen-badge[data-state="paused"] .status-dot { background: #b8c9ce; }
+    .player-notice { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 52px 25px; background: linear-gradient(#0d252b88, #0d252bee); color: white; pointer-events: none; }
+    .notice-inner { max-width: 390px; }
+    .notice-inner > .icon { width: 34px; height: 34px; margin-bottom: 12px; color: #bdd9d1; }
+    .notice-inner h3 { margin: 0 0 8px; font-size: 19px; line-height: 1.4; font-weight: 650; }
+    .notice-inner p { margin: 0; font-size: 13px; color: #c3d2d4; }
+    .notice-inner button { pointer-events: auto; margin-top: 20px; border: 1px solid #ffffff80; border-radius: 9px; padding: 9px 20px; background: white; color: #163a3d; font-weight: 650; }
+    .screen-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; color: #c9d8d6; background: #143239; font-size: 11px; flex: 1; min-height: 46px; }
+    .screen-footer span { display: inline-flex; align-items: center; gap: 7px; }
+    .screen-footer .icon { width: 14px; height: 14px; color: #95b6ae; }
+    .screen-footer button { display: flex; align-items: center; gap: 7px; padding: 3px 0; border: 0; background: none; color: #d8e5e2; font-size: 11px; }
+    .camera-info { display: flex; flex-direction: column; padding: 27px 26px 23px; min-width: 0; }
+    .info-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 19px; }
+    .info-top .eyebrow { margin: 0; font-size: 9px; letter-spacing: 1.6px; }
+    .icon-button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); background: var(--white); border-radius: 50%; }
+    .icon-button[aria-pressed="true"] { background: var(--mint); border-color: #b1cfc0; color: var(--sea); }
+    .icon-button[aria-pressed="true"] .icon { fill: currentColor; }
+    .camera-info h2 { font: 400 34px / 1.18 Georgia, "Times New Roman", serif; letter-spacing: -.9px; margin: 0 0 8px; overflow-wrap: anywhere; }
+    .view-name { margin: 0; font-size: 14px; font-weight: 650; }
+    .camera-description { margin: 12px 0 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 21px; }
+    .tag { display: inline-block; background: #f0f3ed; padding: 4px 9px; border-radius: 6px; color: #5b7165; font-size: 10px; }
+    .stream-meta { margin: auto 0 17px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .stream-meta div { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; gap: 10px; }
+    .stream-meta dt { color: var(--muted); }
+    .stream-meta dd { margin: 0; font-weight: 550; }
+    .player-actions { display: flex; gap: 8px; }
+    .primary-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; flex: 1; padding: 10px 12px; font-size: 12px; font-weight: 600; color: white; background: var(--sea); border: 1px solid var(--sea); border-radius: 10px; transition: background .15s; }
+    .primary-button:hover { background: var(--sea-dark); }
+    .primary-button .icon { width: 16px; height: 16px; }
+    .reload-button { width: 42px; height: 42px; border-radius: 10px; background: #f4f6f0; }
+    .source-links { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 15px; font-size: 10px; }
+    .source-links a, .text-button { border: 0; padding: 0; background: none; color: #637975; font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
+    .catalog { padding: 42px 0 45px; }
+    .catalog-top { display: flex; align-items: center; justify-content: space-between; gap: 25px; }
+    .catalog-title { font: 400 28px / 1.25 Georgia, "Times New Roman", serif; letter-spacing: -.55px; margin: 0 0 6px; }
+    .catalog-subtitle { color: var(--muted); font-size: 12px; margin: 0; }
+    .search { flex-shrink: 0; display: flex; align-items: center; gap: 10px; width: 267px; border: 1px solid #d7dfd5; border-radius: 12px; padding: 10px 14px; background: #ffffffb3; }
+    .search .icon { width: 18px; height: 18px; color: #83958b; }
+    .search:focus-within { border-color: var(--sea); box-shadow: 0 0 0 2px #0b716919; }
+    .search input { min-width: 0; width: 100%; border: 0; outline: none; background: transparent; font-size: 12px; color: var(--ink); }
+    .search input::placeholder { color: #798b82; }
+    .filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 24px 0 19px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .filter { border: 1px solid #d9e0d5; background: transparent; padding: 7px 13px; border-radius: 8px; font-size: 11px; font-weight: 550; color: #65776c; transition: background .15s, border-color .15s; }
+    .filter:hover { border-color: #94b7a3; }
+    .filter[aria-pressed="true"] { background: var(--sea); border-color: var(--sea); color: white; }
+    .filter-favorites { display: inline-flex; align-items: center; gap: 5px; }
+    .filter .icon { width: 12px; height: 12px; }
+    .result-count { flex-shrink: 0; color: #6b7d72; font-size: 11px; white-space: nowrap; }
+    .camera-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+    .camera-card { position: relative; min-width: 0; background: white; border: 1px solid #dfe5dc; border-radius: 16px; overflow: hidden; box-shadow: 0 3px 15px #263c3005; transition: transform .18s, box-shadow .18s, border-color .18s; }
+    .camera-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px #263c3010; border-color: #a7beb0; }
+    .camera-card.selected { border-color: var(--sea); box-shadow: 0 0 0 1px var(--sea); }
+    .select-camera { display: block; width: 100%; text-align: left; border: 0; padding: 0; background: transparent; }
+    .select-camera:focus-visible { outline-offset: -4px; outline-width: 4px; border-radius: 14px; }
+    .card-picture { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: linear-gradient(155deg, #cbded8 0%, #a8c8cf 55%, #dfd9bb 56%, #efe7cf 100%); }
+    .card-picture img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .camera-card:hover .card-picture img { transform: scale(1.035); }
+    .picture-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: #4f7b79; }
+    .picture-fallback .icon { width: 43px; height: 43px; }
+    .selected-marker { position: absolute; left: 11px; bottom: 10px; display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 5px; background: var(--sea); color: white; font-size: 9px; font-weight: 650; letter-spacing: .25px; }
+    .selected-marker .icon { width: 11px; height: 11px; }
+    .card-favorite { position: absolute; top: 10px; right: 10px; background: #fffef4ef; border: 1px solid #ffffff8c; width: 30px; height: 30px; backdrop-filter: blur(6px); }
+    .card-favorite .icon { width: 15px; height: 15px; }
+    .card-copy { position: relative; display: block; padding: 15px 17px 17px; }
+    .card-region { display: block; color: #758778; font-size: 9px; letter-spacing: 1.1px; text-transform: uppercase; margin-bottom: 4px; }
+    .card-name { display: block; font-weight: 700; font-size: 16px; line-height: 1.45; letter-spacing: -.25px; padding-right: 24px; }
+    .card-view { display: block; color: #6d7e75; font-size: 11px; padding-top: 3px; }
+    .card-arrow { position: absolute; top: 40px; right: 16px; color: #7b9589; width: 17px; height: 17px; }
+    .selected .card-arrow { color: var(--sea); }
+    .empty { border: 1px dashed #c1d0bf; border-radius: 16px; text-align: center; padding: 45px 20px; background: #ffffff70; }
+    .empty h3 { margin: 0 0 7px; font-size: 18px; }
+    .empty p { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+    .empty button { display: inline-flex; flex: none; }
+    .catalog-note { margin: 21px 0 0; color: #75867a; font-size: 10px; display: flex; align-items: center; gap: 7px; }
+    .catalog-note .icon { width: 14px; height: 14px; }
+    .page-footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 24px 0 30px; border-top: 1px solid var(--line); color: #768779; font-size: 10px; }
+    .footer-brand { font-weight: 700; color: #466c5c; font-size: 14px; letter-spacing: -.4px; }
+    .page-footer p { margin: 3px 0 0; }
+    .footer-right { text-align: right; }
+    .page-footer a { text-underline-offset: 3px; }
+    .toast { position: fixed; bottom: 25px; left: 50%; transform: translate(-50%, 18px); opacity: 0; pointer-events: none; z-index: 25; max-width: calc(100vw - 40px); background: #173e38; color: white; padding: 11px 20px; box-shadow: 0 5px 20px #0002; border-radius: 12px; font-size: 13px; transition: opacity .2s, transform .2s; }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+    noscript { display: block; margin: 20px; padding: 20px; background: #fff5db; border: 1px solid #dcc897; }
+    @media (min-width: 1500px) { .camera-info { padding-block: 33px 28px; } .camera-description { margin-block: 16px 22px; } }
+    @media (max-width: 1120px) {
+      .shell { width: calc(100% - 48px); }
+      .viewer { grid-template-columns: minmax(0, 1fr) 257px; }
+      .camera-info { padding: 22px; }
+      .camera-info h2 { font-size: 29px; }
+      .info-top { margin-bottom: 10px; }
+      .camera-description { font-size: 11px; margin-block: 10px 14px; }
+      .tags { margin-bottom: 15px; }
+      .camera-grid { gap: 15px; }
+      .card-copy { padding: 13px; }
+      .card-name { font-size: 15px; }
+      .filter { padding-inline: 10px; font-size: 10px; }
+    }
+    @media (max-width: 920px) {
+      .viewer { grid-template-columns: 1fr; }
+      .camera-info { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 0 30px; padding: 25px; }
+      .info-top { grid-column: 1; grid-row: 1; margin-bottom: 10px; }
+      .camera-info h2 { grid-column: 1; grid-row: 2; }
+      .view-name { grid-column: 1; grid-row: 3; }
+      .camera-description { grid-column: 1; grid-row: 4 / span 2; margin-bottom: 0; }
+      .tags { display: none; }
+      .stream-meta { grid-column: 2; grid-row: 1 / span 2; padding-top: 0; border: 0; margin: auto 0 12px; }
+      .player-actions { grid-column: 2; grid-row: 3 / span 2; align-items: start; }
+      .source-links { grid-column: 2; grid-row: 5; }
+      .camera-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .filter-bar { align-items: flex-start; }
+      .result-count { padding-top: 8px; }
+      .catalog-title { font-size: 25px; }
+      .search { width: 220px; }
+    }
+    @media (max-width: 640px) {
+      .shell { width: calc(100% - 32px); }
+      .masthead { padding-block: 19px; gap: 12px; }
+      .brand-tag, .clock .icon, .clock small { display: none; }
+      .brand-name { font-size: 21px; }
+      .brand-mark { width: 37px; height: 37px; border-radius: 12px; }
+      .clock time { font-size: 12px; }
+      .intro { display: block; padding: 30px 0 23px; }
+      .intro p:not(.eyebrow) { font-size: 12px; max-width: 310px; }
+      h1 { font-size: 39px; letter-spacing: -1.65px; }
+      .collection-pill { display: inline-flex; font-size: 10px; margin: 18px 0 0; padding: 6px 11px; }
+      .viewer { border-radius: 16px; }
+      .screen-badge { top: 10px; left: 10px; padding: 4px 8px; font-size: 8px; }
+      .screen-footer { padding: 10px 12px; font-size: 9px; min-height: 38px; }
+      .screen-footer button { font-size: 9px; }
+      .screen-footer .icon { width: 12px; height: 12px; }
+      .camera-info { display: flex; padding: 20px; }
+      .camera-info h2 { font-size: 31px; }
+      .info-top { margin-bottom: 12px; }
+      .camera-description { font-size: 12px; margin: 10px 0 18px; }
+      .stream-meta { display: flex; justify-content: space-between; gap: 14px; margin: 0 0 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+      .stream-meta div { display: block; }
+      .stream-meta dd { margin-top: 3px; }
+      .player-actions { align-items: stretch; }
+      .source-links { margin-top: 16px; }
+      .catalog { padding-top: 33px; }
+      .catalog-top { display: block; }
+      .catalog-title { font-size: 25px; max-width: 300px; }
+      .catalog-subtitle { font-size: 11px; }
+      .search { width: 100%; margin-top: 20px; padding: 12px; }
+      .search input { font-size: 16px; }
+      .filter-bar { display: block; padding-top: 16px; }
+      .filter { padding: 8px 11px; font-size: 11px; }
+      .result-count { display: block; margin-top: 9px; padding-top: 0; font-size: 10px; }
+      .camera-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+      .card-copy { padding: 12px 10px; }
+      .card-name { font-size: 14px; padding-right: 0; }
+      .card-region { font-size: 8px; letter-spacing: .5px; }
+      .card-view { font-size: 10px; }
+      .card-arrow { display: none; }
+      .card-favorite { width: 28px; height: 28px; top: 7px; right: 7px; }
+      .selected-marker { font-size: 8px; bottom: 6px; left: 6px; padding: 3px 6px; }
+      .catalog-note { align-items: flex-start; line-height: 1.6; }
+      .catalog-note .icon { margin-top: 2px; }
+      .page-footer { display: block; }
+      .footer-right { text-align: left; margin-top: 12px; }
+      .player-notice { padding: 35px 14px; }
+      .notice-inner > .icon { display: none; }
+      .notice-inner h3 { font-size: 15px; margin-bottom: 5px; }
+      .notice-inner p { font-size: 11px; }
+      .notice-inner button { margin-top: 10px; font-size: 11px; padding: 7px 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
+</head>
+<body>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-waves" viewBox="0 0 24 24"><path d="M2 8c3-4 6-4 10 0s7 4 10 0M2 15c3-4 6-4 10 0s7 4 10 0"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-reload" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.2"/></symbol>
+  </svg>
+  <a class="skip-link" href="#viewer">Przejdź do kamery</a>
+  <header class="shell masthead">
+    <a class="brand" href="#viewer" aria-label="Nad morzem — przejdź do odtwarzacza">
+      <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-waves"/></svg></span>
+      <span class="brand-name">nad morzem<span>.</span></span>
+      <span class="brand-tag">Małe okno.<br>Wielki Bałtyk.</span>
+    </a>
+    <div class="clock">
+      <svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg>
+      <div><time id="coastalTime"></time><small>Czas nad Bałtykiem</small></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="intro" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">BLISKO MORZA, GDZIEKOLWIEK JESTEŚ</p>
+        <h1 id="pageTitle">Zerknij nad Bałtyk.</h1>
+        <p>Sprawdź fale, zajrzyj na molo, znajdź swój kawałek plaży.</p>
+      </div>
+      <div class="collection-pill"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>12 kamer · od Międzyzdrojów po Gdańsk</span></div>
+    </section>
+
+    <section id="viewer" class="viewer" aria-label="Wybrana kamera na żywo">
+      <div class="screen-column">
+        <div class="screen">
+          <video id="video" controls autoplay muted playsinline preload="none" aria-label="Obraz z wybranej kamery na żywo"></video>
+          <div id="statusBadge" class="screen-badge" data-state="loading"><span class="status-dot"></span><span id="statusText">ŁĄCZENIE</span></div>
+          <div id="playerNotice" class="player-notice" role="status" aria-live="polite">
+            <div class="notice-inner">
+              <svg class="icon" aria-hidden="true"><use href="#i-waves"/></svg>
+              <h3 id="noticeTitle">Już za chwilę nad morzem…</h3>
+              <p id="noticeText">Przygotowuję transmisję z kamery.</p>
+              <button id="noticePlay" type="button" hidden>Odtwórz transmisję</button>
+              <button id="noticeRetry" type="button" hidden>Spróbuj ponownie</button>
+            </div>
+          </div>
+        </div>
+        <div class="screen-footer">
+          <span><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span id="screenCaption">Kołobrzeg · molo i plaża</span></span>
+          <button id="fullscreenButton" type="button"><svg class="icon" aria-hidden="true"><use href="#i-expand"/></svg>Pełny ekran</button>
+        </div>
+      </div>
+      <div class="camera-info">
+        <div class="info-top"><p id="selectedRegion" class="eyebrow">ZACHODNIE WYBRZEŻE</p><button id="selectedFavorite" class="icon-button" type="button" aria-label="Dodaj kamerę do ulubionych" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></button></div>
+        <h2 id="selectedName" tabindex="-1">Kołobrzeg</h2>
+        <p id="selectedView" class="view-name">Molo i plaża</p>
+        <p id="selectedDescription" class="camera-description">Spacerowicze na molo, piaszczysta plaża i otwarty Bałtyk. Widok z Sanatorium Bałtyk.</p>
+        <div id="selectedTags" class="tags"></div>
+        <dl class="stream-meta">
+          <div><dt>Obraz</dt><dd id="resolution">Łączenie…</dd></div>
+          <div><dt>Odtwarzacz</dt><dd id="playbackState">Przygotowywanie</dd></div>
+        </dl>
+        <div class="player-actions">
+          <button id="liveButton" class="primary-button" type="button"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>Wróć na żywo</button>
+          <button id="reloadButton" class="icon-button reload-button" type="button" aria-label="Połącz ponownie z wybraną kamerą" title="Połącz ponownie"><svg class="icon" aria-hidden="true"><use href="#i-reload"/></svg></button>
+        </div>
+        <div class="source-links"><a id="sourceLink" href="https://kolobrzeg.webcamera.pl/" target="_blank" rel="noopener noreferrer">Strona kamery ↗</a><button id="playlistButton" class="text-button" type="button" title="Pobierz plik .m3u i otwórz go w VLC">Pobierz do VLC ↓</button></div>
+      </div>
+    </section>
+
+    <section class="catalog" aria-labelledby="catalogTitle">
+      <div class="catalog-top">
+        <div><h2 id="catalogTitle" class="catalog-title">Gdzie dziś zaglądamy?</h2><p class="catalog-subtitle">Wybierz widok. Serca zapamiętają Twoje ulubione miejsca.</p></div>
+        <label class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input id="search" type="search" placeholder="Szukaj miejscowości lub widoku" aria-label="Szukaj miejscowości lub widoku" autocomplete="off" spellcheck="false"></label>
+      </div>
+      <div class="filter-bar">
+        <div id="filters" class="filters" role="group" aria-label="Filtruj kamery">
+          <button class="filter" data-filter="all" aria-pressed="true" type="button">Całe wybrzeże</button>
+          <button class="filter" data-filter="trojmiasto" aria-pressed="false" type="button">Trójmiasto</button>
+          <button class="filter" data-filter="polwysep" aria-pressed="false" type="button">Półwysep i okolice</button>
+          <button class="filter" data-filter="srodek" aria-pressed="false" type="button">Środkowe wybrzeże</button>
+          <button class="filter" data-filter="zachod" aria-pressed="false" type="button">Zachodnie wybrzeże</button>
+          <button class="filter filter-favorites" data-filter="favorites" aria-pressed="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>Ulubione <span id="favoritesCount">0</span></button>
+        </div>
+        <span id="resultCount" class="result-count" aria-live="polite">12 z 12 kamer</span>
+      </div>
+      <div id="cameraGrid" class="camera-grid"></div>
+      <div id="emptyState" class="empty" hidden><h3 id="emptyTitle">Tu jeszcze nie ma widoków.</h3><p id="emptyText">Spróbuj innej miejscowości lub zmień filtr.</p><button id="clearFilters" class="primary-button" type="button">Pokaż wszystkie kamery</button></div>
+      <p class="catalog-note"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>Na kafelkach są zdjęcia podglądowe. Transmisja na żywo odtwarza się w dużym oknie — jedna kamera naraz.</p>
+    </section>
+  </main>
+  <footer class="shell page-footer">
+    <div><span class="footer-brand">nad morzem.</span><p>Morze jest bliżej, niż myślisz.</p></div>
+    <div class="footer-right"><p>Obraz: <a href="https://www.webcamera.pl/" target="_blank" rel="noopener noreferrer">WebCamera.pl</a> i właściciele kamer.</p><p>Statyczny HTML · wymaga internetu · źródła sprawdzone 19.09.2026</p></div>
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript>Włącz JavaScript, aby wybierać i odtwarzać kamery. Możesz też otworzyć <a href="https://kolobrzeg.webcamera.pl/">kamerę w Kołobrzegu</a> na stronie źródłowej.</noscript>
+
+  <template id="cameraTemplate">
+    <article class="camera-card">
+      <button class="select-camera" type="button" aria-pressed="false">
+        <span class="card-picture">
+          <span class="picture-fallback" hidden><svg class="icon" aria-hidden="true"><use href="#i-waves"/></svg></span>
+          <img loading="lazy" decoding="async" alt="" width="480" height="270" referrerpolicy="no-referrer">
+          <span class="selected-marker" hidden><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Wybrana kamera</span>
+        </span>
+        <span class="card-copy"><span class="card-region"></span><span class="card-name"></span><span class="card-view"></span><svg class="icon card-arrow" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+      </button>
+      <button class="icon-button card-favorite" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></button>
+    </article>
+  </template>
+
+  <script>
+  "use strict";
+  // Edytuj tę listę, aby dodać lub zmienić kamery. Adres stream musi wskazywać
+  // na publiczną listę HLS .m3u8, z nagłówkami CORS pozwalającymi na odtwarzanie.
+  const CAMERAS = [
+    { id: "kolobrzeg", name: "Kołobrzeg", view: "Molo i plaża", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Molo"], description: "Spacerowicze na molo, piaszczysta plaża i otwarty Bałtyk. Widok z Sanatorium Bałtyk.", host: 5, camera: "nocowanie_cam_a32dd1", source: "https://kolobrzeg.webcamera.pl/" },
+    { id: "brzezno", name: "Gdańsk · Brzeźno", view: "Molo w Brzeźnie", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Plaża", "Molo"], description: "Gdańskie Brzeźno z perspektywy nadmorskiej kamery. Sprawdź plażę i widok w okolicy molo.", host: 5, camera: "gdansk_cam_77aeaf", source: "https://gdansk.webcamera.pl/" },
+    { id: "sopot", name: "Sopot", view: "Widok z molo", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Molo", "Zatoka"], description: "Sopockie molo i Zatoka Gdańska. Zajrzyj na jeden z najbardziej rozpoznawalnych spacerów nad morzem.", host: 1, camera: "sopot_cam_e1c28f", source: "https://sopot-molo.webcamera.pl/" },
+    { id: "kolobrzeg-plaza", name: "Kołobrzeg", view: "Plaża przy Marine Hotel", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Morze"], description: "Drugi widok na Kołobrzeg: szeroka plaża i morze z kamery przy Marine Hotel.", host: 3, camera: "kolobrzeg_cam_c26ccc", source: "https://kolobrzeg-marinehotel.webcamera.pl/" },
+    { id: "hel", name: "Hel", view: "Bulwar i plaża", region: "polwysep", regionLabel: "Półwysep Helski", tags: ["Bulwar", "Zatoka"], description: "Nadmorski bulwar na końcu półwyspu. Chwila nad wodą w samym Helu.", host: 1, camera: "hel_cam_cf55ee", source: "https://hel.webcamera.pl/" },
+    { id: "kuznica", name: "Kuźnica", view: "Zatoka Pucka", region: "polwysep", regionLabel: "Półwysep Helski", tags: ["Zatoka", "Półwysep"], description: "Spojrzenie na Zatokę Pucką z Kuźnicy. Kameralny kawałek Półwyspu Helskiego.", host: 2, camera: "kuznica_cam_e87bf3", source: "https://kuznica.webcamera.pl/" },
+    { id: "wladyslawowo", name: "Władysławowo", view: "Widok na plażę", region: "polwysep", regionLabel: "U nasady półwyspu", tags: ["Plaża", "Morze"], description: "Piasek i otwarte morze we Władysławowie. Dobry punkt na szybkie sprawdzenie, co dzieje się na plaży.", host: 5, camera: "wladyslawowo_cam_01fb5d", source: "https://wladyslawowo-plaza.webcamera.pl/" },
+    { id: "leba", name: "Łeba", view: "Wydmy i plaża", region: "srodek", regionLabel: "Środkowe wybrzeże", tags: ["Plaża", "Wydmy"], description: "Szeroka plaża i wydmowy krajobraz Łeby. Zobacz, jak wygląda morze po tej stronie wybrzeża.", host: 4, camera: "leba_cam_0d3c03", source: "https://leba.webcamera.pl/" },
+    { id: "ustka", name: "Ustka", view: "Plaża wschodnia", region: "srodek", regionLabel: "Środkowe wybrzeże", tags: ["Plaża", "Morze"], description: "Widok na wschodnią plażę w Ustce. Zajrzyj nad wodę bez wychodzenia z domu.", host: 3, camera: "ustka_cam_104ebc", source: "https://ustka-widok-z-kamery-na-plaze-wschodnia.webcamera.pl/" },
+    { id: "sarbinowo", name: "Sarbinowo", view: "Widok na plażę", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Morze"], description: "Nadmorskie Sarbinowo: plaża, linia brzegu i fale w zasięgu jednego kliknięcia.", host: 1, camera: "sarbinowo_cam_bd6ec8", source: "https://sarbinowo.webcamera.pl/" },
+    { id: "miedzyzdroje", name: "Międzyzdroje", view: "Nadmorski deptak", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Deptak", "Spacer"], description: "Nadmorski spacer w Międzyzdrojach. Obserwuj życie kurortu z kamery skierowanej na deptak.", host: 1, camera: "miedzyzdroje_cam_613997", source: "https://miedzyzdroje.webcamera.pl/" },
+    { id: "gdansk-motlawa", name: "Gdańsk", view: "Motława i kładka", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Nabrzeże", "Miasto"], description: "Mała przerwa od plaży: gdańskie nabrzeże, Motława i kładka w samym sercu miasta.", host: 2, camera: "umgdansk_cam_11161c", source: "https://gdansk-motlawa.webcamera.pl/" }
+  ].map(camera => ({
+    ...camera,
+    stream: `https://hoktastream${camera.host}.webcamera.pl/${camera.camera}/${camera.camera}.stream/playlist.m3u8`,
+    poster: `https://imageserver.webcamera.pl/miniaturki/${camera.camera}.jpg`
+  }));
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const $ = id => document.getElementById(id);
+    const video = $("video");
+    const grid = $("cameraGrid");
+    const byId = new Map(CAMERAS.map(camera => [camera.id, camera]));
+    const storage = {
+      get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
+      set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Local files can have storage disabled. */ } }
+    };
+    const storedFavorites = storage.get("nad-morzem:favorites", []);
+    const favorites = new Set((Array.isArray(storedFavorites) ? storedFavorites : []).filter(id => byId.has(id)));
+    let selected = null;
+    let filter = "all";
+    let hls = null;
+    let generation = 0;
+    let phase = "loading";
+    let networkRecoveries = 0;
+    let mediaRecoveries = 0;
+    let connectionTimer;
+    let recoveryTimer;
+    let toastTimer;
+    let hasPlayed = false;
+
+    const normalize = value => value.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/ł/g, "l");
+    const favoriteLabel = camera => `${favorites.has(camera.id) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${camera.name}, ${camera.view}`;
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      $("toast").textContent = message;
+      $("toast").classList.add("visible");
+      toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 3500);
+    }
+
+    function setStatus(state, label, detail) {
+      phase = state;
+      $("statusBadge").dataset.state = state;
+      $("statusText").textContent = label;
+      $("playbackState").textContent = detail;
+    }
+
+    function showNotice(title, text, action = null) {
+      $("noticeTitle").textContent = title;
+      $("noticeText").textContent = text;
+      $("noticePlay").hidden = action !== "play";
+      $("noticeRetry").hidden = action !== "retry";
+      $("playerNotice").hidden = false;
+    }
+
+    function clearPlaybackTimers() {
+      clearTimeout(connectionTimer);
+      clearTimeout(recoveryTimer);
+    }
+
+    function fail(title, explanation) {
+      clearPlaybackTimers();
+      setStatus("error", "BRAK POŁĄCZENIA", "Niedostępne");
+      if (hls) hls.stopLoad();
+      showNotice(title, explanation, "retry");
+    }
+
+    function armTimeout(token) {
+      clearTimeout(connectionTimer);
+      connectionTimer = setTimeout(() => {
+        if (token === generation && phase !== "live" && phase !== "paused") {
+          fail("Kamera nie odpowiada", "Połączenie trwa zbyt długo. Spróbuj ponownie, wybierz inną kamerę lub pobierz link do VLC.");
+        }
+      }, 30000);
+    }
+
+    function play(token = generation) {
+      const promise = video.play();
+      if (!promise) return;
+      promise.catch(error => {
+        if (token !== generation || error.name === "AbortError") return;
+        if (error.name === "NotAllowedError") {
+          clearTimeout(connectionTimer);
+          setStatus("paused", "GOTOWE", "Kliknij Odtwórz");
+          showNotice("Twój widok jest gotowy", "Przeglądarka prosi o kliknięcie, aby rozpocząć odtwarzanie.", "play");
+        } else if (phase !== "error") {
+          fail("Nie udało się uruchomić obrazu", "Spróbuj ponownie lub otwórz tę kamerę w VLC.");
+        }
+      });
+    }
+
+    function syncFavorites() {
+      $("favoritesCount").textContent = favorites.size;
+      if (selected) {
+        $("selectedFavorite").setAttribute("aria-pressed", String(favorites.has(selected.id)));
+        $("selectedFavorite").setAttribute("aria-label", favoriteLabel(selected));
+        $("selectedFavorite").title = favoriteLabel(selected);
+      }
+      grid.querySelectorAll(".camera-card").forEach(card => {
+        const camera = byId.get(card.dataset.camera);
+        const button = card.querySelector(".card-favorite");
+        button.setAttribute("aria-pressed", String(favorites.has(camera.id)));
+        button.setAttribute("aria-label", favoriteLabel(camera));
+        button.title = favoriteLabel(camera);
+      });
+    }
+
+    function syncSelection() {
+      grid.querySelectorAll(".camera-card").forEach(card => {
+        const active = card.dataset.camera === selected?.id;
+        card.classList.toggle("selected", active);
+        card.querySelector(".select-camera").setAttribute("aria-pressed", String(active));
+        card.querySelector(".selected-marker").hidden = !active;
+      });
+    }
+
+    function toggleFavorite(camera) {
+      const adding = !favorites.has(camera.id);
+      if (adding) favorites.add(camera.id); else favorites.delete(camera.id);
+      storage.set("nad-morzem:favorites", [...favorites]);
+      if (filter === "favorites") {
+        const focusWasInGrid = grid.contains(document.activeElement);
+        renderCatalog();
+        if (focusWasInGrid) (grid.querySelector("button") || $("clearFilters")).focus();
+      }
+      syncFavorites();
+      showToast(`${camera.name}: ${adding ? "dodano do ulubionych" : "usunięto z ulubionych"}.`);
+    }
+
+    function renderCatalog() {
+      const query = normalize($("search").value.trim());
+      const visible = CAMERAS.filter(camera => {
+        const inRegion = filter === "all" || (filter === "favorites" ? favorites.has(camera.id) : camera.region === filter);
+        const matches = normalize([camera.name, camera.view, camera.regionLabel, ...camera.tags].join(" ")).includes(query);
+        return inRegion && matches;
+      });
+      const fragment = document.createDocumentFragment();
+      visible.forEach(camera => {
+        const card = $("cameraTemplate").content.firstElementChild.cloneNode(true);
+        card.dataset.camera = camera.id;
+        const image = card.querySelector("img");
+        image.src = `${camera.poster}?preview=${Math.floor(Date.now() / 300000)}`;
+        image.addEventListener("error", () => {
+          image.hidden = true;
+          card.querySelector(".picture-fallback").hidden = false;
+        });
+        card.querySelector(".card-name").textContent = camera.name;
+        card.querySelector(".card-view").textContent = camera.view;
+        card.querySelector(".card-region").textContent = camera.regionLabel;
+        card.querySelector(".select-camera").setAttribute("aria-label", `Oglądaj: ${camera.name}, ${camera.view}`);
+        card.querySelector(".select-camera").addEventListener("click", () => {
+          if (selected?.id !== camera.id || phase === "error") selectCamera(camera);
+          $("viewer").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+          $("selectedName").focus({ preventScroll: true });
+        });
+        card.querySelector(".card-favorite").addEventListener("click", () => toggleFavorite(camera));
+        fragment.append(card);
+      });
+      grid.replaceChildren(fragment);
+      $("resultCount").textContent = `${visible.length} z ${CAMERAS.length} kamer`;
+      $("emptyState").hidden = visible.length !== 0;
+      $("emptyTitle").textContent = filter === "favorites" && favorites.size === 0 ? "Twoje ulubione czekają na pierwszy widok." : "Nie znaleźliśmy takiego widoku.";
+      $("emptyText").textContent = filter === "favorites" && favorites.size === 0 ? "Kliknij serce przy kamerze, aby zachować ją na tej liście." : "Wyczyść wyszukiwanie lub wybierz inny region.";
+      syncSelection();
+      syncFavorites();
+    }
+
+    function selectCamera(camera) {
+      const token = ++generation;
+      selected = camera;
+      clearPlaybackTimers();
+      setStatus("loading", "ŁĄCZENIE", "Przygotowywanie");
+      hasPlayed = false;
+      networkRecoveries = 0;
+      mediaRecoveries = 0;
+      if (hls) { hls.destroy(); hls = null; }
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.poster = `${camera.poster}?preview=${Math.floor(Date.now() / 300000)}`;
+      video.setAttribute("aria-label", `${camera.name}, ${camera.view} — transmisja na żywo`);
+      $("selectedName").textContent = camera.name;
+      $("selectedView").textContent = camera.view;
+      $("selectedRegion").textContent = camera.regionLabel;
+      $("selectedDescription").textContent = camera.description;
+      $("screenCaption").textContent = `${camera.name} · ${camera.view}`;
+      $("sourceLink").href = camera.source;
+      $("resolution").textContent = "Łączenie…";
+      $("selectedTags").replaceChildren(...camera.tags.map(text => {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = text;
+        return span;
+      }));
+      document.title = `${camera.name} — ${camera.view} | Nad morzem`;
+      storage.set("nad-morzem:selected", camera.id);
+      if (location.hash !== `#${camera.id}`) {
+        try { history.replaceState(null, "", `#${camera.id}`); } catch { /* Selection still works with restricted history. */ }
+      }
+      syncSelection();
+      syncFavorites();
+      showNotice("Już za chwilę nad morzem…", `Łączę z kamerą: ${camera.name}, ${camera.view.toLocaleLowerCase("pl")}.`);
+      if (!navigator.onLine) {
+        fail("Brak połączenia z internetem", "Strona działa z pliku, ale do obrazu na żywo potrzebuje internetu.");
+        return;
+      }
+      armTimeout(token);
+      if (typeof Hls !== "undefined" && Hls.isSupported()) {
+        hls = new Hls({
+          maxBufferLength: 20,
+          maxMaxBufferLength: 35,
+          backBufferLength: 10,
+          liveSyncDurationCount: 3,
+          liveMaxLatencyDurationCount: 8,
+          capLevelToPlayerSize: true,
+          enableWorker: true
+        });
+        const session = hls;
+        session.on(Hls.Events.MEDIA_ATTACHED, () => { if (token === generation) session.loadSource(camera.stream); });
+        session.on(Hls.Events.MANIFEST_PARSED, () => { if (token === generation) play(token); });
+        session.on(Hls.Events.ERROR, (_, data) => {
+          if (token !== generation || !data.fatal) return;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRecoveries++ < 2) {
+            setStatus("loading", "PONOWNE ŁĄCZENIE", "Łączenie…");
+            showNotice("Odnawiam połączenie…", "Transmisja chwilowo się zatrzymała. Próbuję jeszcze raz.");
+            clearTimeout(recoveryTimer);
+            recoveryTimer = setTimeout(() => {
+              if (token === generation) { session.startLoad(-1); armTimeout(token); }
+            }, 2000);
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRecoveries++ < 1) {
+            session.recoverMediaError();
+            armTimeout(token);
+          } else {
+            fail("Ta kamera jest chwilowo niedostępna", "Połącz ponownie, sprawdź inną kamerę lub otwórz stronę źródłową. Możesz też pobrać link do VLC.");
+          }
+        });
+        session.attachMedia(video);
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = camera.stream;
+        play(token);
+      } else {
+        fail("Nie udało się wczytać odtwarzacza", "Sprawdź dostęp do internetu i odśwież stronę. Przycisk „Pobierz do VLC” udostępnia bezpośredni link do kamery.");
+      }
+    }
+
+    video.addEventListener("playing", () => {
+      hasPlayed = true;
+      clearPlaybackTimers();
+      setStatus("live", "NA ŻYWO", "Odtwarzanie");
+      $("playerNotice").hidden = true;
+      if (video.videoWidth) $("resolution").textContent = `${video.videoWidth} × ${video.videoHeight}`;
+    });
+    video.addEventListener("resize", () => {
+      if (video.videoWidth) $("resolution").textContent = `${video.videoWidth} × ${video.videoHeight}`;
+    });
+    video.addEventListener("pause", () => {
+      if (phase === "live") {
+        clearTimeout(connectionTimer);
+        setStatus("paused", "WSTRZYMANO", "Pauza");
+      }
+    });
+    video.addEventListener("waiting", () => {
+      if (!hasPlayed || phase === "error") return;
+      setStatus("loading", "BUFOROWANIE", "Buforowanie");
+      armTimeout(generation);
+    });
+    video.addEventListener("ended", () => {
+      if (hasPlayed) fail("Transmisja została przerwana", "Kliknij „Spróbuj ponownie”, aby połączyć się z aktualnym obrazem.");
+    });
+    video.addEventListener("error", () => {
+      if (!hls && video.getAttribute("src") && phase !== "error") fail("Nie udało się odtworzyć kamery", "Połącz ponownie lub pobierz link do VLC.");
+    });
+
+    $("selectedFavorite").addEventListener("click", () => { if (selected) toggleFavorite(selected); });
+    $("reloadButton").addEventListener("click", () => selectCamera(selected));
+    $("noticeRetry").addEventListener("click", () => selectCamera(selected));
+    $("noticePlay").addEventListener("click", () => play());
+    $("liveButton").addEventListener("click", () => {
+      if (phase === "error" || !video.readyState) { selectCamera(selected); return; }
+      const position = hls?.liveSyncPosition;
+      if (Number.isFinite(position)) video.currentTime = position;
+      else if (video.seekable.length) video.currentTime = Math.max(video.seekable.start(video.seekable.length - 1), video.seekable.end(video.seekable.length - 1) - 3);
+      play();
+    });
+    $("fullscreenButton").addEventListener("click", async () => {
+      try {
+        if (video.requestFullscreen) await video.requestFullscreen();
+        else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+        else showToast("Ta przeglądarka nie udostępnia pełnego ekranu.");
+      } catch { showToast("Spróbuj przycisku pełnego ekranu w pasku odtwarzacza."); }
+    });
+    $("playlistButton").addEventListener("click", () => {
+      const content = `#EXTM3U\n#EXTINF:-1,${selected.name} — ${selected.view}\n${selected.stream}\n`;
+      const url = URL.createObjectURL(new Blob([content], { type: "audio/x-mpegurl;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `kamera-${selected.id}.m3u`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      showToast("Otwórz pobrany plik .m3u w VLC.");
+    });
+    $("search").addEventListener("input", renderCatalog);
+    $("filters").addEventListener("click", event => {
+      const button = event.target.closest("button[data-filter]");
+      if (!button) return;
+      filter = button.dataset.filter;
+      $("filters").querySelectorAll("button").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      renderCatalog();
+    });
+    $("clearFilters").addEventListener("click", () => {
+      $("search").value = "";
+      filter = "all";
+      $("filters").querySelectorAll("button").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.filter === "all")));
+      renderCatalog();
+      $("search").focus();
+    });
+    window.addEventListener("hashchange", () => {
+      const camera = byId.get(location.hash.slice(1));
+      if (camera && camera.id !== selected?.id) selectCamera(camera);
+    });
+    window.addEventListener("offline", () => fail("Brak połączenia z internetem", "Obraz wróci po odzyskaniu połączenia. Możesz też kliknąć „Spróbuj ponownie”."));
+    window.addEventListener("online", () => {
+      if (selected && phase === "error") selectCamera(selected);
+      grid.querySelectorAll(".card-picture img[hidden]").forEach(image => {
+        const card = image.closest(".camera-card");
+        const camera = byId.get(card.dataset.camera);
+        image.hidden = false;
+        card.querySelector(".picture-fallback").hidden = true;
+        image.src = `${camera.poster}?retry=${Date.now()}`;
+      });
+    });
+    window.addEventListener("pagehide", () => { clearPlaybackTimers(); if (hls) hls.destroy(); });
+    window.addEventListener("pageshow", event => { if (event.persisted && selected) selectCamera(selected); });
+
+    function updateClock() {
+      const now = new Date();
+      $("coastalTime").dateTime = now.toISOString();
+      $("coastalTime").textContent = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" }).format(now);
+    }
+    updateClock();
+    setInterval(updateClock, 30000);
+    renderCatalog();
+    selectCamera(byId.get(location.hash.slice(1)) || byId.get(storage.get("nad-morzem:selected", "")) || CAMERAS[0]);
+  }, { once: true });
+  </script>
+</body>
 </html>
