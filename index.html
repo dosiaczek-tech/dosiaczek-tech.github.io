@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f5ef">
-  <meta name="description" content="Twoje okno na Bałtyk. Kamery na żywo z Kołobrzegu, Brzeźna, Sopotu, Helu i innych nadmorskich miejscowości.">
+  <meta name="description" content="Twoje okno na całe polskie wybrzeże. Kamery na żywo: Stegna, Jantar, Kąty Rybackie, Krynica Morska, Kołobrzeg, Brzeźno, Sopot, Hel i inne nadmorskie miejscowości.">
   <title>Nad morzem — kamery Bałtyku na żywo</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230b7169'/%3E%3Cpath d='M10 26q11-12 22 0t22 0M10 39q11-12 22 0t22 0' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
@@ -282,7 +282,7 @@
         <h1 id="pageTitle">Zerknij nad Bałtyk.</h1>
         <p>Sprawdź fale, zajrzyj na molo, znajdź swój kawałek plaży.</p>
       </div>
-      <div class="collection-pill"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>12 kamer · od Międzyzdrojów po Gdańsk</span></div>
+      <div class="collection-pill"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span id="collectionSummary">Kamery całego polskiego wybrzeża</span></div>
     </section>
 
     <section id="viewer" class="viewer" aria-label="Wybrana kamera na żywo">
@@ -331,13 +331,14 @@
       <div class="filter-bar">
         <div id="filters" class="filters" role="group" aria-label="Filtruj kamery">
           <button class="filter" data-filter="all" aria-pressed="true" type="button">Całe wybrzeże</button>
+          <button class="filter" data-filter="mierzeja" aria-pressed="false" type="button">Mierzeja Wiślana</button>
           <button class="filter" data-filter="trojmiasto" aria-pressed="false" type="button">Trójmiasto</button>
           <button class="filter" data-filter="polwysep" aria-pressed="false" type="button">Półwysep i okolice</button>
           <button class="filter" data-filter="srodek" aria-pressed="false" type="button">Środkowe wybrzeże</button>
           <button class="filter" data-filter="zachod" aria-pressed="false" type="button">Zachodnie wybrzeże</button>
           <button class="filter filter-favorites" data-filter="favorites" aria-pressed="false" type="button"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>Ulubione <span id="favoritesCount">0</span></button>
         </div>
-        <span id="resultCount" class="result-count" aria-live="polite">12 z 12 kamer</span>
+        <span id="resultCount" class="result-count" aria-live="polite">Ładowanie kamer…</span>
       </div>
       <div id="cameraGrid" class="camera-grid"></div>
       <div id="emptyState" class="empty" hidden><h3 id="emptyTitle">Tu jeszcze nie ma widoków.</h3><p id="emptyText">Spróbuj innej miejscowości lub zmień filtr.</p><button id="clearFilters" class="primary-button" type="button">Pokaż wszystkie kamery</button></div>
@@ -346,7 +347,7 @@
   </main>
   <footer class="shell page-footer">
     <div><span class="footer-brand">nad morzem.</span><p>Morze jest bliżej, niż myślisz.</p></div>
-    <div class="footer-right"><p>Obraz: <a href="https://www.webcamera.pl/" target="_blank" rel="noopener noreferrer">WebCamera.pl</a> i właściciele kamer.</p><p>Statyczny HTML · wymaga internetu · źródła sprawdzone 19.09.2026</p></div>
+    <div class="footer-right"><p>Obraz: <a href="https://www.webcamera.pl/" target="_blank" rel="noopener noreferrer">WebCamera.pl</a> i właściciele kamer.</p><p>Statyczny HTML · wymaga internetu · źródła sprawdzone 21.09.2026</p></div>
   </footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Włącz JavaScript, aby wybierać i odtwarzać kamery. Możesz też otworzyć <a href="https://kolobrzeg.webcamera.pl/">kamerę w Kołobrzegu</a> na stronie źródłowej.</noscript>
@@ -369,6 +370,102 @@
   "use strict";
   // Edytuj tę listę, aby dodać lub zmienić kamery. Adres stream musi wskazywać
   // na publiczną listę HLS .m3u8, z nagłówkami CORS pozwalającymi na odtwarzanie.
+  const REGION_LABELS = {
+    mierzeja: "Mierzeja Wiślana",
+    trojmiasto: "Trójmiasto",
+    polwysep: "Półwysep i okolice",
+    srodek: "Środkowe wybrzeże",
+    zachod: "Zachodnie wybrzeże"
+  };
+  // Sprawdzone publiczne transmisje z katalogów wybrzeża WebCamera (21.09.2026).
+  // Różne adresy prowadzące do tej samej transmisji występują tylko raz.
+  const ADDITIONAL_CAMERAS = [
+    { id: "stegna-plaza", name: "Stegna", view: "Plaża, bulwar i morze", region: "mierzeja", host: 4, camera: "stegna_cam_c00d9b" },
+    { id: "jantar", name: "Jantar", view: "Plaża i morze", region: "mierzeja", host: 3, camera: "jantar_cam_8948dd" },
+    { id: "kamera-stegna-plaza", name: "Stegna", view: "Drugie ujęcie na plażę", region: "mierzeja", host: 4, camera: "stegna_cam_7e8d95" },
+    { id: "katyrybackie", name: "Kąty Rybackie", view: "Plaża", region: "mierzeja", host: 1, camera: "katyrybackie_cam_2d3c0c" },
+    { id: "krynica-morska-plaza", name: "Krynica Morska", view: "Widok na plażę", region: "mierzeja", host: 4, camera: "krynicamorska_cam_ba179a" },
+    { id: "krynica-morska-kamera", name: "Krynica Morska", view: "Wejście na plażę nr 30", region: "mierzeja", host: 4, camera: "krynicamorska_cam_35d15f" },
+    { id: "bobolin", name: "Bobolin", view: "Widok na plażę", region: "srodek", host: 4, camera: "gmina_darlowo_cam_2807ee" },
+    { id: "chlopy", name: "Chłopy", view: "Widok na kutry rybackie i morze", region: "zachod", host: 2, camera: "chlopy_cam_73ac3a" },
+    { id: "darlowo-plaza-darlowko", name: "Darłowo", view: "Plaża w Darłówku", region: "srodek", host: 4, camera: "darlowo_cam_1c6a5d" },
+    { id: "darlowo-rynek", name: "Darłowo", view: "Widok na Rynek", region: "srodek", host: 3, camera: "darlowo_cam_fd6665" },
+    { id: "darlowo", name: "Darłowo", view: "Widok na plażę wschodnią", region: "srodek", host: 1, camera: "darlowo_cam_dc4e72" },
+    { id: "darlowo-port", name: "Darłowo", view: "Widok z latarni morskiej", region: "srodek", host: 4, camera: "darlowo_cam_90431a" },
+    { id: "dziwnow-marina", name: "Dziwnów", view: "Widok na marinę", region: "zachod", host: 1, camera: "dziwnowum_cam_05f247" },
+    { id: "dziwnow-plaza", name: "Dziwnów", view: "Widok na plażę", region: "zachod", host: 1, camera: "dziwnowum_cam_a4181f" },
+    { id: "dabki", name: "Dąbki", view: "Promenada, plaża i Jezioro Bukowo", region: "srodek", host: 4, camera: "gmina_darlowo_cam_2d6aad" },
+    { id: "debki", name: "Dębki", view: "Widok na plażę", region: "polwysep", host: 2, camera: "debki_cam_284a24" },
+    { id: "dzwirzyno-plaza", name: "Dźwirzyno", view: "Odświeżony widok na plażę", region: "zachod", host: 2, camera: "dzwirzyno_cam_59c728" },
+    { id: "dzwirzyno-kamera", name: "Dźwirzyno", view: "Jezioro Resko Przymorskie", region: "zachod", host: 3, camera: "dzwirzyno_cam_bfebd5" },
+    { id: "dzwirzyno", name: "Dźwirzyno", view: "Widok na plażę", region: "zachod", host: 1, camera: "dzwirzyno_cam_2faeeb" },
+    { id: "gdansk-dlugi-targ", name: "Gdańsk", view: "Długi Targ", region: "trojmiasto", host: 4, camera: "umgdansk_cam_2e4f1b" },
+    { id: "gdansk-plaza-stogi", name: "Gdańsk", view: "Plaża Stogi", region: "trojmiasto", host: 2, camera: "umgdansk_cam_e25623" },
+    { id: "gdansk-stare-miasto", name: "Gdańsk", view: "Stare Miasto", region: "trojmiasto", host: 2, camera: "gdansk_cam_9e790c" },
+    { id: "gdynia", name: "Gdynia", view: "Przystań Jachtowa", region: "trojmiasto", host: 1, camera: "gdynia_cam_b3ccea" },
+    { id: "gdynia-imgw", name: "Gdynia", view: "Skwer Kościuszki", region: "trojmiasto", host: 1, camera: "gdynia_cam_a7916a" },
+    { id: "grzybowo", name: "Grzybowo", view: "Widok na plażę", region: "zachod", host: 2, camera: "grzybowo_cam_31ad63" },
+    { id: "hel-marina", name: "Hel", view: "Widok na marinę", region: "polwysep", host: 1, camera: "hel_cam_79fe71" },
+    { id: "jaroslawiec", name: "Jarosławiec", view: "Nadmorski deptak", region: "srodek", host: 3, camera: "jaroslawiec_cam_1cced2" },
+    { id: "jaroslawiec-dubaj", name: "Jarosławiec", view: "Sztuczna plaża „Dubaj”", region: "srodek", host: 1, camera: "jaroslawiec_cam_bc9f03" },
+    { id: "jaroslawiec-plaza", name: "Jarosławiec", view: "Widok na plażę", region: "srodek", host: 1, camera: "jaroslawiec_cam_40eca5" },
+    { id: "jastarnia-molo-kamera", name: "Jastarnia", view: "Widok na molo", region: "polwysep", host: 4, camera: "nat_cam_63d20f" },
+    { id: "jastarnia", name: "Jastarnia", view: "Widok na Zatokę Pucką", region: "polwysep", host: 2, camera: "jastarnia_cam_a14385" },
+    { id: "jastrzebia-gora", name: "Jastrzębia Góra", view: "Widok na plażę", region: "polwysep", host: 1, camera: "wladyslawowo_cam_250100" },
+    { id: "jurata", name: "Jurata", view: "Widok na molo", region: "polwysep", host: 1, camera: "jurata_cam_c060aa" },
+    { id: "jurata-plaza", name: "Jurata", view: "Widok na plażę", region: "polwysep", host: 4, camera: "jurata_cam_24f25d" },
+    { id: "karwia-plaza", name: "Karwia", view: "Widok na plażę", region: "polwysep", host: 2, camera: "wladyslawowo_cam_3c51c2" },
+    { id: "kolobrzeg-latarnia", name: "Kołobrzeg", view: "Latarnia morska", region: "zachod", host: 1, camera: "toya_cam_65488b" },
+    { id: "zachodnia-plaza-kolobrzeg", name: "Kołobrzeg", view: "Plaża zachodnia", region: "zachod", host: 4, camera: "kolobrzeg_cam_6df535" },
+    { id: "kolobrzeg-marina", name: "Kołobrzeg", view: "Widok na marinę", region: "zachod", host: 1, camera: "kolobrzegmarina_cam_967ce0" },
+    { id: "lubiatowo-kamera", name: "Lubiatowo", view: "Widok na morze", region: "srodek", host: 3, camera: "lubiatowo_cam_543fb2" },
+    { id: "mielno-jezioro-jamno", name: "Mielno", view: "Jezioro Jamno", region: "zachod", host: 3, camera: "mielno_cam_fef100" },
+    { id: "sofra-mielno-kamera", name: "Mielno", view: "Morze z Instytutu Zdrowia Sofra", region: "zachod", host: 3, camera: "soframielno_cam_d51834" },
+    { id: "mielno-promenada", name: "Mielno", view: "Panorama promenady", region: "zachod", host: 4, camera: "mielno_cam_67c8f9" },
+    { id: "mielno", name: "Mielno", view: "Widok na plażę", region: "zachod", host: 4, camera: "mielno_cam_0e2e7c" },
+    { id: "miedzywodzie", name: "Międzywodzie", view: "Widok na plażę", region: "zachod", host: 3, camera: "miedzywodzie_cam_6b6996" },
+    { id: "miedzyzdroje-plaza", name: "Międzyzdroje", view: "Plaża wschodnia", region: "zachod", host: 1, camera: "miedzyzdroje_cam_52898b" },
+    { id: "miedzyzdroje-plaza-zachod", name: "Międzyzdroje", view: "Plaża zachodnia", region: "zachod", host: 1, camera: "miedzyzdroje_cam_bcc4fd" },
+    { id: "mrzezyno", name: "Mrzeżyno", view: "Port Morski", region: "zachod", host: 1, camera: "airnet_cam_4279f5" },
+    { id: "mrzezyno-wejscie-do-portu", name: "Mrzeżyno", view: "Wejście do portu", region: "zachod", host: 2, camera: "mrzezyno_cam_905068" },
+    { id: "mrzezyno-plaza", name: "Mrzeżyno", view: "Widok na plażę", region: "zachod", host: 4, camera: "mrzezyno_cam_9c9575" },
+    { id: "mrzezyno-2", name: "Mrzeżyno", view: "Widok na port", region: "zachod", host: 3, camera: "mrzezyno_cam_8e2d5d" },
+    { id: "niechorze-latarnia-kamera", name: "Niechorze", view: "Latarnia morska", region: "zachod", host: 1, camera: "rewal_cam_a332c4" },
+    { id: "niechorze-molo-kamera", name: "Niechorze", view: "Molo i plaża", region: "zachod", host: 5, camera: "gminarewal_cam_6ec2a4" },
+    { id: "niechorze-plaza", name: "Niechorze", view: "Widok na plażę i morze", region: "zachod", host: 2, camera: "niechorzeplaza_cam_956637" },
+    { id: "ostrowo-plaza", name: "Ostrowo", view: "Plaża", region: "polwysep", host: 2, camera: "wladyslawowo_cam_270d97" },
+    { id: "pustkowo", name: "Pustkowo", view: "Widok na Krzyż Nadziei", region: "zachod", host: 1, camera: "gminarewal_cam_95ef9b" },
+    { id: "rewa", name: "Rewa", view: "Widok na Zatokę Pucką", region: "polwysep", host: 3, camera: "rewa_cam_c2a755" },
+    { id: "rewal-plaza", name: "Rewal", view: "Widok na plażę", region: "zachod", host: 2, camera: "gminarewal_cam_a882c3" },
+    { id: "rogowo", name: "Rogowo", view: "Widok na plażę", region: "zachod", host: 4, camera: "rogowo_cam_c81371" },
+    { id: "rowy-plaza", name: "Rowy", view: "Widok na plażę i morze", region: "srodek", host: 3, camera: "gminaustka_cam_294fb0" },
+    { id: "kamera-na-plazy-w-sarbinowie", name: "Sarbinowo", view: "Plaża — widok na zachód", region: "zachod", host: 3, camera: "sarbinowo_cam_390a25" },
+    { id: "sopot-monciak", name: "Sopot", view: "Monciak", region: "trojmiasto", host: 2, camera: "sopot_cam_7b9f92", source: "https://sopot.webcamera.pl/" },
+    { id: "sopot-plac-przyjaciol-sopotu", name: "Sopot", view: "Plac Przyjaciół Sopotu", region: "trojmiasto", host: 4, camera: "sopot_cam_caff26" },
+    { id: "trzesacz", name: "Trzęsacz", view: "Widok na plażę", region: "zachod", host: 2, camera: "gminarewal_cam_635a3d" },
+    { id: "ustka-rafa", name: "Ustka", view: "Plaża — kamera Rafa", region: "srodek", host: 1, camera: "ustka_cam_4feffd" },
+    { id: "ustronie-morskie", name: "Ustronie Morskie", view: "Widok na plażę", region: "zachod", host: 1, camera: "umustronie_cam_8305a4" },
+    { id: "wicie", name: "Wicie", view: "Widok na deptak", region: "srodek", host: 4, camera: "gmina_darlowo_cam_705510" },
+    { id: "wladyslawowo-druga-plaza", name: "Władysławowo", view: "Drugi widok na plażę", region: "polwysep", host: 2, camera: "wladyslawowo_cam_459a14", source: "https://wladyslawowo.webcamera.pl/" },
+    { id: "widok-na-plaze-w-lazach", name: "Łazy", view: "Widok na plażę", region: "zachod", host: 4, camera: "lazy_cam_a0366d", source: "https://www.webcamera.pl/kamera/widok-na-plaze-w-lazach/" },
+    { id: "leba-deptak", name: "Łeba", view: "Widok na deptak", region: "srodek", host: 1, camera: "leba_cam_6c8a01" },
+    { id: "leba-neptun", name: "Łeba", view: "Plaża z Hotelu Neptun", region: "srodek", host: 1, camera: "leba_cam_863fcf" },
+    { id: "swinoujscie-deptak", name: "Świnoujście", view: "Nadmorska promenada", region: "zachod", host: 3, camera: "deptakswinoujscie_cam_9f1552" },
+    { id: "swinoujscie", name: "Świnoujście", view: "Widok na plaże i morze", region: "zachod", host: 4, camera: "swinoujscie_cam_3be0ba" },
+    { id: "swinoujscie-plaza", name: "Świnoujście", view: "Widok na plażę", region: "zachod", host: 4, camera: "swinoujscie_cam_7eca1e" }
+  ];
+  const FEATURED_CAMERAS = new Map([
+    "kolobrzeg", "brzezno", "sopot", "stegna-plaza", "jantar", "kamera-stegna-plaza",
+    "katyrybackie", "krynica-morska-plaza", "krynica-morska-kamera"
+  ].map((id, index) => [id, index]));
+  function cameraTags(view) {
+    const matches = [
+      [/plaż/i, "Plaża"], [/molo/i, "Molo"], [/zatok/i, "Zatoka"], [/port|marin|przystań/i, "Port"],
+      [/latarni/i, "Latarnia"], [/jezior/i, "Jezioro"], [/deptak|promenad|bulwar|monciak/i, "Spacer"],
+      [/miast|rynek|targ|plac /i, "Miasto"]
+    ].filter(([pattern]) => pattern.test(view)).map(([, label]) => label);
+    return matches.length ? matches.slice(0, 3) : ["Wybrzeże"];
+  }
   const CAMERAS = [
     { id: "kolobrzeg", name: "Kołobrzeg", view: "Molo i plaża", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Molo"], description: "Spacerowicze na molo, piaszczysta plaża i otwarty Bałtyk. Widok z Sanatorium Bałtyk.", host: 5, camera: "nocowanie_cam_a32dd1", source: "https://kolobrzeg.webcamera.pl/" },
     { id: "brzezno", name: "Gdańsk · Brzeźno", view: "Molo w Brzeźnie", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Plaża", "Molo"], description: "Gdańskie Brzeźno z perspektywy nadmorskiej kamery. Sprawdź plażę i widok w okolicy molo.", host: 5, camera: "gdansk_cam_77aeaf", source: "https://gdansk.webcamera.pl/" },
@@ -380,19 +477,25 @@
     { id: "leba", name: "Łeba", view: "Wydmy i plaża", region: "srodek", regionLabel: "Środkowe wybrzeże", tags: ["Plaża", "Wydmy"], description: "Szeroka plaża i wydmowy krajobraz Łeby. Zobacz, jak wygląda morze po tej stronie wybrzeża.", host: 4, camera: "leba_cam_0d3c03", source: "https://leba.webcamera.pl/" },
     { id: "ustka", name: "Ustka", view: "Plaża wschodnia", region: "srodek", regionLabel: "Środkowe wybrzeże", tags: ["Plaża", "Morze"], description: "Widok na wschodnią plażę w Ustce. Zajrzyj nad wodę bez wychodzenia z domu.", host: 3, camera: "ustka_cam_104ebc", source: "https://ustka-widok-z-kamery-na-plaze-wschodnia.webcamera.pl/" },
     { id: "sarbinowo", name: "Sarbinowo", view: "Widok na plażę", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Morze"], description: "Nadmorskie Sarbinowo: plaża, linia brzegu i fale w zasięgu jednego kliknięcia.", host: 1, camera: "sarbinowo_cam_bd6ec8", source: "https://sarbinowo.webcamera.pl/" },
-    { id: "miedzyzdroje", name: "Międzyzdroje", view: "Nadmorski deptak", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Deptak", "Spacer"], description: "Nadmorski spacer w Międzyzdrojach. Obserwuj życie kurortu z kamery skierowanej na deptak.", host: 1, camera: "miedzyzdroje_cam_613997", source: "https://miedzyzdroje.webcamera.pl/" },
+    { id: "miedzyzdroje", name: "Międzyzdroje", view: "Panorama morza", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Morze", "Panorama"], description: "Panoramiczny widok na morze w Międzyzdrojach. Sprawdź, co dzieje się nad wodą.", host: 1, camera: "miedzyzdroje_cam_613997", source: "https://miedzyzdroje.webcamera.pl/" },
     { id: "gdansk-motlawa", name: "Gdańsk", view: "Motława i kładka", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Nabrzeże", "Miasto"], description: "Mała przerwa od plaży: gdańskie nabrzeże, Motława i kładka w samym sercu miasta.", host: 2, camera: "umgdansk_cam_11161c", source: "https://gdansk-motlawa.webcamera.pl/" }
-  ].map(camera => ({
+  ].concat(ADDITIONAL_CAMERAS).map(camera => ({
+    regionLabel: REGION_LABELS[camera.region],
+    description: `Obraz na żywo: ${camera.name} — ${camera.view.toLocaleLowerCase("pl")}. Wybierz ten widok, aby zajrzeć na wybrzeże.`,
+    tags: cameraTags(camera.view),
+    source: `https://${camera.id}.webcamera.pl/`,
     ...camera,
     stream: `https://hoktastream${camera.host}.webcamera.pl/${camera.camera}/${camera.camera}.stream/playlist.m3u8`,
     poster: `https://imageserver.webcamera.pl/miniaturki/${camera.camera}.jpg`
-  }));
+  })).sort((a, b) => (FEATURED_CAMERAS.get(a.id) ?? 100) - (FEATURED_CAMERAS.get(b.id) ?? 100)
+    || a.name.localeCompare(b.name, "pl") || a.view.localeCompare(b.view, "pl"));
 
   document.addEventListener("DOMContentLoaded", () => {
     const $ = id => document.getElementById(id);
     const video = $("video");
     const grid = $("cameraGrid");
     const byId = new Map(CAMERAS.map(camera => [camera.id, camera]));
+    $("collectionSummary").textContent = `${CAMERAS.length} kamer · całe polskie wybrzeże`;
     const storage = {
       get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
       set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Local files can have storage disabled. */ } }
