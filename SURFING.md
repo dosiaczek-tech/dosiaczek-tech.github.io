@@ -12,6 +12,9 @@
 - Rzeczywiste pobieranie profilu dna **EMODnet** i eksperymentalna transformacja 1D.
 - Osadzana mapa **Windy** (fale / wiatr), uruchamiana przyciskiem; link do Windy
   i lokalizacji na OpenStreetMap. Dane z iframe nie są wejściem modelu.
+- Osobna **mapa wyboru spotów** (Leaflet + OpenStreetMap): znaczniki otwierają
+  prognozę, grupy rozwijają się przy zbliżeniu, wybór i filtr regionu są
+  synchronizowane z listą. Pokazujemy także spoty bez kamery.
 - Brak danych nie jest zerem. Awaria wiatru nie usuwa prognozy fal, ale wyłącza
   ocenę. Niepełny profil dna wyłącza transformację, a nie całą prognozę.
 - Wykrywanie sekwencji onshore → słaby offshore / cisza przy utrzymującej się
@@ -229,6 +232,12 @@ Bez filtra ranking nadal uwzględnia dobre okna bez lokalnego nawiania.
   spotu zmienia klucz pamięci. Profil nie wymaga pobierania co zmianę prognozy.
 - Odpowiedź po zmianie spotu nie nadpisuje nowego wyboru; osobny licznik generacji.
 - `surf-app.js`: nawigacja, stany braku danych, tabela, wykres, mapy i kamera ↔ spot.
+- `surf-map.js`: interaktywna mapa wyboru z Leaflet 1.9.4 i MarkerCluster 1.5.3
+  (wersje CDN przypięte, kontrola integralności SRI). Podkład © OpenStreetMap
+  contributors, ODbL, standardowe kafle OSM. Mapa inicjalizuje się dopiero
+  w zakładce prognoz, a kliknięcie pobiera prognozę tylko wybranego spotu.
+  Przy awarii biblioteki mapy wybór z listy nadal działa. Mapa spotów jest
+  niezależna od iframe Windy; nie dodaje nowych danych do obliczeń prognozy.
 - `surf-community.js`: źródłowe pozycje i streszczenia WestCoast; ładowane przed
   `surf-spots.js`. Cache prognoz ma nową przestrzeń `surf-v2`, aby wymusić pobranie
   historii wymaganej przez detektor.
@@ -259,6 +268,10 @@ Sobieszewa; EMODnet potwierdził morskie położenie ich punktów wejściowych.
 brak historii, zanik fali, silny offshore, niezgodność modeli, brak podglądania
 przyszłości oraz kompletność importu mapy. Chrome: 71 opcji spotów, pobieranie
 historii, filtr wywiewki, Sobieszewo, opis PalikPoint, kamery „w okolicy” i mobile.
+Mapa wyboru: sprawdzono 71 punktów, widoczny podkład i atrybucję, wybór
+lista → mapa i znacznik → prognoza, rozwijanie gęstych grup w Kołobrzegu,
+filtr regionu także bez zmiany wybranego spotu, powrót z zakładki kamer,
+zmianę rozmiaru na telefonie i działanie listy przy niedostępności CDN mapy.
 
 ## Jak dojść do wiarygodnego modelu lokalnego
 

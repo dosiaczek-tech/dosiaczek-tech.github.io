@@ -23,12 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoreNode = score => { const e = node("span", fmt(score, 0), "surf-score"); e.dataset.quality = score >= 70 ? "good" : score < 45 ? "poor" : "fair"; return e; };
   let currentSpot = null, loaded = null, bath = null, rows = [], selectedDay = null, generation = 0, active = false, mapLayer = null;
   let lastAttempt = 0;
+  let spotMap = null;
 
   function populateSpots() {
     const region = $("surfRegion").value;
     const options = spots.filter(s => region === "all" || region === s.region);
     $("surfSpot").replaceChildren(...options.map(s => { const o = node("option", `${s.town} — ${s.name}`); o.value = s.id; return o; }));
     if (options.some(s => s.id === currentSpot?.id)) $("surfSpot").value = currentSpot.id;
+    if (spotMap) spotMap.setRegion(region);
   }
   populateSpots();
 
@@ -217,6 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfStatus").dataset.state = "loading";
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
     document.title = `${spot.town} — prognoza surfingu | Nad morzem`;
+    if (!spotMap && window.SurfSpotMap) {
+      spotMap = SurfSpotMap.create({ spots, region: $("surfRegion").value, selectedId: spot.id,
+        onSelect: id => { location.hash = `surf/${id}`; } });
+    } else if (spotMap) {
+      spotMap.resize();
+      spotMap.select(spot.id);
+    }
     renderSpotNotes();
     setMap();
     SurfAPI.bathymetry(spot).then(result => { if (token === generation && active) { bath = result; render(); } }).catch(() => { /* Forecast remains usable without the profile. */ });

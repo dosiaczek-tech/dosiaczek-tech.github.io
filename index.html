@@ -247,11 +247,16 @@
     }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
   <link rel="stylesheet" href="surf.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js"></script>
   <script defer src="surf-model.js"></script>
   <script defer src="surf-api.js"></script>
+  <script defer src="surf-map.js"></script>
   <script defer src="surf-app.js"></script>
 </head>
 <body>
@@ -367,6 +372,13 @@
         <label>Region<select id="surfRegion"><option value="all">Całe wybrzeże</option><option value="zachod">Zachodnie wybrzeże</option><option value="srodek">Środkowe wybrzeże</option><option value="polwysep">Półwysep — strona morska i okolice</option><option value="trojmiasto">Trójmiasto / Zatoka Gdańska</option><option value="mierzeja">Mierzeja Wiślana</option></select></label>
         <button id="surfRefresh" class="primary-button" type="button">Odśwież prognozę</button>
       </div>
+      <section class="surf-box surf-spot-map-box" aria-labelledby="surfSpotMapTitle">
+        <div class="surf-table-heading"><h3 id="surfSpotMapTitle">Wybierz spot na mapie</h3><div class="surf-map-actions"><button id="surfMapOverview" class="filter" type="button">Całe wybrzeże</button><button id="surfMapLocate" class="filter" type="button">Pokaż wybrany spot</button></div></div>
+        <p id="surfSpotMapStatus" class="surf-small" role="status" aria-live="polite">Ładowanie mapy spotów…</p>
+        <div id="surfSpotMap" aria-label="Interaktywna mapa spotów surfingowych" aria-describedby="surfSpotMapStatus"></div>
+        <div class="surf-map-legend"><span><i class="has-camera" aria-hidden="true"></i>Z kamerą</span><span><i class="no-camera" aria-hidden="true"></i>Bez bezpośredniej kamery</span><span>Obwódka: wybrany spot lub jego grupa</span></div>
+        <p id="surfSpotMapSelected" class="surf-small" role="status" aria-live="polite"></p>
+      </section>
       <p id="surfStatus" class="surf-status" role="status" aria-live="polite">Wybierz plażę, aby pobrać prognozę.</p>
       <section class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
       <div id="surfContent" hidden>

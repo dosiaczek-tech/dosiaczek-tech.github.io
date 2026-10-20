@@ -60,6 +60,25 @@
 .surf-camera-links { display: flex; gap: 8px; flex-wrap: wrap; }
 .surf-camera-links a { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; font-size: 12px; }
 .surf-map-actions { display: flex; gap: 8px; }
+.surf-spot-map-box .surf-table-heading { flex-wrap: wrap; }
+#surfSpotMap { height: 390px; width: 100%; border-radius: 12px; background: #e0e9e5; isolation: isolate; z-index: 0; }
+#surfSpotMap .leaflet-control-attribution { font-size: 10px; }
+#surfSpotMap .leaflet-control-zoom a { color: var(--ink); text-decoration: none; }
+.surf-map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; font-size: 10px; color: var(--muted); }
+.surf-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.surf-map-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.surf-map-legend .has-camera { background: var(--sea); }
+.surf-map-legend .no-camera { background: #b57b42; }
+.surf-spot-marker { background: transparent; border: 0; display: grid; place-items: center; }
+.surf-spot-marker > span { width: 17px; height: 17px; display: block; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 5px #18383e80; background: var(--sea); }
+.surf-spot-marker.no-camera > span { background: #b57b42; }
+.surf-spot-marker.is-selected > span { width: 23px; height: 23px; box-shadow: 0 0 0 3px var(--ink), 0 1px 6px #18383e80; }
+.surf-map-cluster { display: grid; place-items: center; border-radius: 50%; background: #d6e8de; border: 2px solid white; color: var(--sea-dark); box-shadow: 0 1px 6px #18383e50; font: 700 14px / 1 system-ui, sans-serif; }
+.surf-map-cluster.is-selected { box-shadow: 0 0 0 3px var(--ink); }
+.surf-map-popup { font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 12px; line-height: 1.5; }
+.surf-map-popup strong { display: block; color: var(--ink); }
+.surf-map-popup p { margin: 8px 0; color: var(--muted); }
+.surf-map-popup a { font-weight: 650; color: var(--sea); }
 #windyFrame { margin-top: 15px; width: 100%; height: 420px; border: 0; border-radius: 10px; }
 #surfCoverage { max-height: 380px; overflow-y: auto; }
 #surfCoverage p { font-size: 11px; margin: 6px 0; }
@@ -68,4 +87,5 @@
 .bath-point i { display: block; background: #b3d1c7; border-radius: 0 0 5px 5px; margin: 4px 0; min-height: 2px; }
 @media (max-width: 920px) { .surf-heading { display: block; } .model-pill { display: inline-block; } .surf-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); } .surf-toolbar { flex-wrap: wrap; } .surf-toolbar label { flex-basis: 40%; } .surf-detail-grid { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .surf-spot-facts { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { #surfSpotMap { height: 310px; } .surf-spot-map-box .surf-map-actions { flex-wrap: wrap; } }
 @media (max-width: 640px) { .section-nav { width: 100%; } .section-nav a { flex: 1; padding: 10px; font-size: 12px; text-align: center; } .section-nav span { display: none; } .surf-heading { padding-top: 28px; } .surf-toolbar { padding: 15px; gap: 10px; } .surf-toolbar label { flex-basis: 100%; } .surf-toolbar select { font-size: 16px; } .surf-toolbar button { width: 100%; } .surf-box { padding: 16px; } .surf-metrics { gap: 10px; } .surf-metric { padding: 14px; } .surf-metric strong { font-size: 25px; } .surf-windows { grid-template-columns: 1fr; } .surf-spot-heading { display: block; } .surf-spot-heading h2 { font-size: 26px; } #windyFrame { height: 350px; } .surf-chart svg { height: 170px; } }
