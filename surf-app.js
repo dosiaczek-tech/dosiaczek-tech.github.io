@@ -120,11 +120,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderHours() {
     const everyHour = $("surfHourly").checked;
+    const localHour = time => Number(date(time, { hour: "2-digit", hourCycle: "h23" }));
     $("surfHours").replaceChildren(...rows.filter(r => dayKey(r.time) === selectedDay)
-      .filter((r, i) => everyHour || i % 3 === 0).map(r => {
+      .filter((r, i) => everyHour || i === 0 || localHour(r.time) % 3 === 0).map(r => {
         const tr = node("tr"); tr.dataset.night = String(!r.daylight);
         const cell = content => { const td = node("td"); td.append(typeof content === "string" ? document.createTextNode(content) : content); tr.append(td); };
-        cell(`${hour(r.time)}${r.daylight ? "" : " · noc"}`); cell(scoreNode(r.score));
+        let end = r.time + 3600;
+        // Granice 00/03/06… w czasie polskim, także przy zmianie czasu letniego.
+        if (!everyHour) while (localHour(end) % 3 !== 0) end += 3600;
+        end = Math.min(end, rows[rows.length - 1].time + 3600);
+        const repeatedHour = dayKey(end) === dayKey(r.time) && hour(end) === hour(r.time);
+        const withZone = time => date(time, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+        cell(repeatedHour ? `${withZone(r.time)}–${withZone(end)}` : `${hour(r.time)}–${dayKey(end) !== dayKey(r.time) ? "24:00" : hour(end)}`);
+        cell(scoreNode(r.score));
         const hs = r.members.map(m => m.height).filter(M.finite);
         cell(hs.length ? `${fmt(Math.min(...hs))}–${fmt(Math.max(...hs))} m` : "—");
         cell(`${fmt(r.period)} s`);
