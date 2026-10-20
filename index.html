@@ -247,6 +247,12 @@
     }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="surf.css">
+  <script defer src="surf-community.js"></script>
+  <script defer src="surf-spots.js"></script>
+  <script defer src="surf-model.js"></script>
+  <script defer src="surf-api.js"></script>
+  <script defer src="surf-app.js"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -276,6 +282,11 @@
   </header>
 
   <main class="shell">
+    <nav class="section-nav" aria-label="Sekcje strony">
+      <a id="camerasTab" href="#kamery" aria-current="page">Kamery na żywo</a>
+      <a id="surfTab" href="#surf/wladyslawowo">Prognozy surfingowe <span>Bałtyk Surf</span></a>
+    </nav>
+    <div id="cameraPanel">
     <section class="intro" aria-labelledby="pageTitle">
       <div>
         <p class="eyebrow">BLISKO MORZA, GDZIEKOLWIEK JESTEŚ</p>
@@ -320,6 +331,7 @@
           <button id="reloadButton" class="icon-button reload-button" type="button" aria-label="Połącz ponownie z wybraną kamerą" title="Połącz ponownie"><svg class="icon" aria-hidden="true"><use href="#i-reload"/></svg></button>
         </div>
         <div class="source-links"><a id="sourceLink" href="https://kolobrzeg.webcamera.pl/" target="_blank" rel="noopener noreferrer">Strona kamery ↗</a><button id="playlistButton" class="text-button" type="button" title="Pobierz plik .m3u i otwórz go w VLC">Pobierz do VLC ↓</button></div>
+        <a id="cameraSurfLink" class="camera-surf-link" href="#surf/wladyslawowo" hidden>Prognoza fal dla tej plaży →</a>
       </div>
     </section>
 
@@ -343,6 +355,49 @@
       <div id="cameraGrid" class="camera-grid"></div>
       <div id="emptyState" class="empty" hidden><h3 id="emptyTitle">Tu jeszcze nie ma widoków.</h3><p id="emptyText">Spróbuj innej miejscowości lub zmień filtr.</p><button id="clearFilters" class="primary-button" type="button">Pokaż wszystkie kamery</button></div>
       <p class="catalog-note"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>Na kafelkach są zdjęcia podglądowe. Transmisja na żywo odtwarza się w dużym oknie — jedna kamera naraz.</p>
+    </section>
+    </div>
+    <section id="forecastPanel" class="surf-panel" aria-labelledby="surfTitle" hidden>
+      <div class="surf-heading">
+        <div><p class="eyebrow">WIATR · FALE · PROFIL DNA</p><h1 id="surfTitle">Znajdź swoje fale.</h1><p>Pięć dni nad Bałtykiem. Dwa modele fal, trzy modele wiatru i lokalna ekspozycja plaży.</p></div>
+        <span class="model-pill">Bałtyk Surf 0.2 · eksperymentalny</span>
+      </div>
+      <div class="surf-toolbar">
+        <label>Miejscowość / plaża<select id="surfSpot"></select></label>
+        <label>Region<select id="surfRegion"><option value="all">Całe wybrzeże</option><option value="zachod">Zachodnie wybrzeże</option><option value="srodek">Środkowe wybrzeże</option><option value="polwysep">Półwysep — strona morska i okolice</option><option value="trojmiasto">Trójmiasto / Zatoka Gdańska</option><option value="mierzeja">Mierzeja Wiślana</option></select></label>
+        <button id="surfRefresh" class="primary-button" type="button">Odśwież prognozę</button>
+      </div>
+      <p id="surfStatus" class="surf-status" role="status" aria-live="polite">Wybierz plażę, aby pobrać prognozę.</p>
+      <section class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
+      <div id="surfContent" hidden>
+        <div class="surf-spot-heading"><div><h2 id="surfSpotTitle"></h2><p id="surfSpotMeta"></p></div><a id="surfMapLink" target="_blank" rel="noopener noreferrer">Położenie plaży ↗</a></div>
+        <div id="surfNow" class="surf-metrics"></div>
+        <p class="surf-small">Teraz = estymacja z aktualnej godziny modelowej, nie pomiar. Hs to wysokość znacząca fal na morzu, nie wysokość ściany fali na desce. Wynik 0–100 opisuje potencjał do surfingu, nie bezpieczeństwo.</p>
+        <div id="surfFlags" class="surf-flags"></div>
+        <section class="surf-box"><h3>Po nawianiu: czy nadchodzi wywiewka?</h3><div id="surfSequence" aria-live="polite"></div><p class="surf-small">Analiza poprzednich 24 godzin modelowych, nie pomiarów. Szukamy dłuższego onshore, później słabego offshore lub ciszy oraz utrzymującej się fali. Zmiana wiatru nie gwarantuje wygładzenia fali ani sesji następnego dnia.</p></section>
+        <section class="surf-box"><div class="surf-table-heading"><h3>Najlepsze trzygodzinne okna</h3><label><input id="surfCleanupOnly" type="checkbox"> Tylko wywiewka po nawianiu</label></div><p class="surf-small">Tylko godziny dzienne. Ranking dotyczy wybranej plaży; także najlepsze okno może mieć słabe warunki. Filtr wywiewki wymaga potwierdzenia sekwencji przez wszystkie trzy godziny.</p><div id="surfWindows" class="surf-windows"></div></section>
+        <section class="surf-box"><h3>Fale w kolejnych dniach</h3><div id="surfChart" class="surf-chart"></div><p class="surf-small">Zielony: DWD EWAM · pomarańczowy: ECMWF WAM. Rozdzielczość modeli to kilometry; dane godzinowe mogą zawierać interpolację.</p></section>
+        <section class="surf-box"><div class="surf-table-heading"><h3>Prognoza godzinowa</h3><label><input id="surfHourly" type="checkbox"> Każda godzina</label></div><div id="surfDays" class="surf-days" role="group" aria-label="Dzień prognozy"></div><div class="surf-table-scroll" tabindex="0" role="region" aria-label="Tabela prognozy"><table class="surf-table"><thead><tr><th>Godzina</th><th>Potencjał</th><th>Hs na morzu</th><th>Okres</th><th>Fale z</th><th>Wiatr z / siła</th><th>Względem brzegu</th><th>Sekwencja wiatru i fal</th><th>Zgodność</th></tr></thead><tbody id="surfHours"></tbody></table></div></section>
+        <div class="surf-detail-grid">
+          <section class="surf-box"><h3>Co mówią poszczególne modele?</h3><div id="surfModels"></div><p class="surf-small">Zgodność modeli nie jest prawdopodobieństwem ani potwierdzoną trafnością. ECMWF występuje w prognozie fal i wiatru — te dane nie są niezależne.</p></section>
+          <section class="surf-box"><h3>Dno i transformacja fali</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Profil regionalny nie odwzorowuje aktualnych piaszczystych rew. Model 1D pomija falochrony, dyfrakcję, prądy i zmiany poziomu morza.</p></section>
+        </div>
+        <section class="surf-box"><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
+      </div>
+      <section class="surf-box">
+        <div class="surf-table-heading"><h3>Porównaj sytuację na Windy</h3><a id="windyLink" target="_blank" rel="noopener noreferrer">Otwórz Windy ↗</a></div>
+        <p class="surf-small">Mapa Windy to niezależny podgląd. Jej wartości nie są pobierane do naszego wyniku.</p>
+        <div class="surf-map-actions"><button id="windyWaves" class="filter" type="button">Pokaż mapę fal</button><button id="windyWind" class="filter" type="button">Pokaż mapę wiatru</button></div>
+        <iframe id="windyFrame" title="Mapa pogody Windy dla wybranej plaży" loading="lazy" allowfullscreen hidden></iframe>
+      </section>
+      <details class="surf-box"><summary>Jak liczymy prognozę? Źródła i ograniczenia</summary>
+        <p><strong>Bałtyk Surf 0.2</strong> łączy dwie prognozy fal oraz wektorowy konsensus trzech modeli wiatru. Każdą prognozę fal oceniamy osobno: wysokość, okres, kierunek względem brzegu i lokalny wiatr. Wynik to mediana ocen. Dodatkowo wykrywamy układ onshore → słaby offshore / cisza z utrzymującą się falą. Nie dodajemy drugiej premii punktowej za ten sam offshore — sekwencja pozwala filtrować okna i rozstrzyga remisy w rankingu. Nie jest to zwalidowany model typu LOTUS ani uruchomienie SWAN.</p>
+        <p>Jeśli dostępny jest morski profil EMODnet, liczymy orientacyjne shoaling i refrakcję z teorii fal liniowych oraz ograniczenie wysokości przez głębokość. Bez profilu używamy Hs na morzu i wyraźnie to oznaczamy. Orientacje plaż są przybliżone; prognoza nie rozróżnia jeszcze pojedynczych rew ani osłony przez półwysep.</p>
+        <p><strong>Satelity:</strong> w tej wersji nie asymilujemy obserwacji satelitarnych. Altimetry mierzą Hs wzdłuż toru przelotu, a nie stale przy każdej plaży. Kolejny etap to walidacja obserwacjami Copernicus Marine, bojami i raportami surferów oraz regionalny WAM/SWAN.</p>
+        <p>Dane: <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine</a> / DWD EWAM i ECMWF WAM; <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo Weather</a> / DWD ICON, NOAA GFS, ECMWF IFS; <a href="https://emodnet.ec.europa.eu/en/bathymetry" target="_blank" rel="noopener noreferrer">EMODnet Bathymetry Consortium (DTM, luki uzupełniane GEBCO)</a>. Dane Open-Meteo: CC BY 4.0, publiczny endpoint do użytku niekomercyjnego. Mapy: Windy oraz © OpenStreetMap contributors, ODbL.</p>
+        <p>Prognozy pobieramy na żądanie, pamięć podręczna: 30 minut; profil dna: 30 dni. Czas w tabeli: Europe/Warsaw. Godzina pobrania nie oznacza godziny uruchomienia modelu. <a href="SURFING.md">Pełna metodyka i plan rozwoju</a>.</p>
+      </details>
+      <details class="surf-box"><summary id="surfCoverageTitle">Które kamery i spoty mają prognozę?</summary><p>Prognozy obejmują morskie plaże, w tym Zatokę Gdańską, ale nie Zatokę Pucką. Dodatkowo uwzględniamy punkty surfingowe z mapy WestCoast i Sobieszewo, także bez kamery. Kamery portów, miast i zatoki nie są automatycznie przypisywane do tych spotów.</p><p>Źródło opisów: <a href="https://www.google.com/maps/d/viewer?mid=124V-0M-nOqrd7XHs2fK-J9E86LTFxQ-C" target="_blank" rel="noopener noreferrer">Surfing na Pomorze Zachodnie / WestCoast — mapa społecznościowa ↗</a>. Opisy i poziomy dotyczą surfingu; oceny kitesurfingowe nie są zamienne. Wskazana strona Unplug jest obecnie niedostępna (HTTP 503, sprawdzono 20.10.2026), więc nie importujemy jej ocen.</p><div id="surfCoverage"></div></details>
     </section>
   </main>
   <footer class="shell page-footer">
@@ -567,6 +622,7 @@
     let recoveryTimer;
     let toastTimer;
     let hasPlayed = false;
+    let cameraActive = !location.hash.startsWith("#surf/");
 
     const normalize = value => value.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/ł/g, "l");
     const favoriteLabel = camera => `${favorites.has(camera.id) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${camera.name}, ${camera.view}`;
@@ -706,6 +762,7 @@
     }
 
     function selectCamera(camera) {
+      if (!cameraActive || !camera) return;
       const token = ++generation;
       selected = camera;
       clearPlaybackTimers();
@@ -740,6 +797,7 @@
       }
       syncSelection();
       syncFavorites();
+      window.dispatchEvent(new CustomEvent("camera:selected", { detail: { id: camera.id } }));
       showNotice("Już za chwilę nad morzem…", `Łączę z kamerą: ${camera.name}, ${camera.view.toLocaleLowerCase("pl")}.`);
       if (!navigator.onLine) {
         fail("Brak połączenia z internetem", "Strona działa z pliku, ale do obrazu na żywo potrzebuje internetu.");
@@ -858,10 +916,24 @@
       $("search").focus();
     });
     window.addEventListener("hashchange", () => {
+      cameraActive = !location.hash.startsWith("#surf/");
       const camera = byId.get(location.hash.slice(1));
       if (camera && camera.id !== selected?.id) selectCamera(camera);
     });
-    window.addEventListener("offline", () => fail("Brak połączenia z internetem", "Obraz wróci po odzyskaniu połączenia. Możesz też kliknąć „Spróbuj ponownie”."));
+    window.addEventListener("surf:tab", event => {
+      cameraActive = event.detail.tab === "cameras";
+      if (!cameraActive) {
+        ++generation;
+        clearPlaybackTimers();
+        if (hls) { hls.destroy(); hls = null; }
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      } else if (!hls && !video.getAttribute("src")) {
+        selectCamera(byId.get(location.hash.slice(1)) || selected || byId.get(storage.get("nad-morzem:selected", "")) || CAMERAS[0]);
+      }
+    });
+    window.addEventListener("offline", () => { if (cameraActive) fail("Brak połączenia z internetem", "Obraz wróci po odzyskaniu połączenia. Możesz też kliknąć „Spróbuj ponownie”."); });
     window.addEventListener("online", () => {
       if (selected && phase === "error") selectCamera(selected);
       grid.querySelectorAll(".card-picture img[hidden]").forEach(image => {
