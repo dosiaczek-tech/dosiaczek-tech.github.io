@@ -159,7 +159,7 @@
     if (strong) flags.push("Silny wiatr lub wysokie fale — trudne warunki");
     if (incidence >= 85) flags.push("Fala spoza sektora ekspozycji");
     if (wave.period < 4) flags.push("Krótka, wiatrowa fala");
-    if (!local) flags.push("Ocena z Hs na morzu; brak wiarygodnego profilu przybrzeżnego");
+    if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
     return { score: Math.round(score), height, local, windType: type, flags };
   }
 

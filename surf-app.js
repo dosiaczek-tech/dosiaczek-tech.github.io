@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     el.append(profile, node("p", "Odległość od punktu spotu → głębokość. Profil biegnie w kierunku normalnym do brzegu; punkt z mapy może leżeć już na wodzie.", "surf-small"));
     const local = now?.members.find(m => m.rating?.local && !m.rating.local.blocked)?.rating.local;
-    if (local) el.append(node("p", `Orientacyjne Hs przy brzegu: ${fmt(now.nearHeight)} m. ${local.breaking ? "Modelowe załamanie" : "Ostatni punkt profilu"}: około ${Math.round(local.distance)} m od punktu spotu, głębokość ${fmt(local.depth)} m. To nie wysokość ściany fali.`, "surf-small"));
+    if (local) el.append(node("p", `Szacowana wysokość fal przy brzegu: ${fmt(now.nearHeight)} m. ${local.breaking ? "Modelowe załamanie" : "Ostatni punkt profilu"}: około ${Math.round(local.distance)} m od punktu spotu, głębokość ${fmt(local.depth)} m. To nie jest dokładna wysokość fali, na której będziesz surfować.`, "surf-small"));
     else el.append(node("p", `${valid.length}/6 poprawnych próbek. ${bath.complete ? "Transformacja niedostępna dla bieżącego kierunku lub danych fal." : "Niepełny profil albo punkt na lądzie: nie stosujemy korekty dna do oceny."}`, "surf-small"));
     el.append(node("p", `${currentSpot.geometry} Dane pobrano ${day(bath.fetchedAt / 1000)}.`, "surf-small"));
   }
@@ -170,9 +170,9 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfMapLink").href = `https://www.openstreetmap.org/?mlat=${currentSpot.lat}&mlon=${currentSpot.lon}#map=14/${currentSpot.lat}/${currentSpot.lon}`;
     const items = [
       [now ? `Potencjał · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 0)} / 100`, `${quality(now?.score)} · ${now?.agreement || ""}`],
-      ["Hs na morzu", `${fmt(now?.height)} m`, `Okres średni ${fmt(now?.period)} s · mediana modeli`],
+      ["Wysokość fal na morzu", `${fmt(now?.height)} m`, `Czas między falami: średnio ${fmt(now?.period)} s`],
       ["Wiatr przy plaży", `${fmt(now?.wind?.speed)} m/s`, `Z ${compass(now?.wind?.direction)} · porywy ${fmt(now?.wind?.gust)} m/s`],
-      ["Hs przy brzegu · szacunek", `${fmt(now?.nearHeight)} m`, M.finite(now?.nearHeight) ? "Transformacja 1D / ekspozycja, nie pomiar" : "Brak korekty dna — ocena z Hs na morzu"]
+      ["Wysokość fal przy brzegu — szacunek", `${fmt(now?.nearHeight)} m`, M.finite(now?.nearHeight) ? "Obliczenie uwzględniające dno i kierunek fal, nie pomiar" : "Brak danych do szacunku przy brzegu — oceniamy fale na morzu"]
     ];
     $("surfNow").replaceChildren(...items.map(([title, value, desc]) => { const el = node("div", undefined, "surf-metric"); el.append(node("small", title), node("strong", value), node("p", desc)); return el; }));
     $("surfFlags").replaceChildren(...(now?.flags || []).map(f => node("span", f)));
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now()), 3, { cleanupOnly: $("surfCleanupOnly").checked });
     $("surfWindows").replaceChildren(...windows.map(w => {
       const button = node("button", undefined, "surf-window"); button.type = "button";
-      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${w.score}/100 · ${quality(w.score)}`), node("small", `Hs na morzu ~${fmt(w.height)} m · pokaż dzień →`));
+      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${w.score}/100 · ${quality(w.score)}`), node("small", `Wysokość fal na morzu ~${fmt(w.height)} m · pokaż dzień →`));
       if (w.cleanupHours) button.append(node("small", `Wywiewka / ucichanie po nawianiu: ${w.cleanupHours}/3 h`));
       button.addEventListener("click", () => { selectedDay = dayKey(w.start); renderHours(); $("surfDays").scrollIntoView({ behavior: "smooth", block: "center" }); }); return button;
     }));
