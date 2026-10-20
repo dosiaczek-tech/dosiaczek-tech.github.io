@@ -33,7 +33,7 @@
       const age = Date.now() - data.fetchedAt;
       if (data.schema !== 1 || data.spotId !== spot.id || !M.finite(data.fetchedAt) || age < -300000 || age > 21600000 ||
           !Array.isArray(data.data?.hourly?.time) || !data.data.hourly.time.length) throw new Error("Nieaktualny pakiet wiatru");
-      const value = { ...data, stale: false };
+      const value = { ...data, stale: Boolean(data.reusedInputs) };
       memory.set(key, { loadedAt: Date.now(), value });
       return value;
     } catch {
@@ -47,7 +47,7 @@
     try {
       const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?profile=50m-v1&v=${Math.floor(Date.now() / 900000)}`);
       if (value.schema !== 2 || value.spot?.id !== spot.id) throw new Error("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
-      if (value.status === "ready" && (!M.finite(value.generatedAt) || !Array.isArray(value.hourly) ||
+      if (value.status === "ready" && (![value.generatedAt, value.windFetchedAt, value.boundaryFetchedAt].every(M.finite) || !Array.isArray(value.hourly) ||
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");
       memory.set(key, { loadedAt: Date.now(), value });
       return value;

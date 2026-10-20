@@ -102,6 +102,27 @@ def load(path):
         return None
 
 
+def archived_inputs(spot, cache, now):
+    """Reuse real input forecasts for at most six hours, preserving source dates."""
+    path = cache / "reproducibility" / f'{spot["id"]}.tar.gz'
+    try:
+        with tarfile.open(path, "r:gz") as archive:
+            stream = archive.extractfile("sources.json")
+            if stream is None:
+                return None
+            data = json.load(stream)
+        if geometry_key(data["spot"]) != geometry_key(spot) or len(data["wind"]) != 3:
+            return None
+        for bundle in [data["marine"], *data["wind"]]:
+            if not finite(bundle.get("fetchedAt")) or not 0 <= now - bundle["fetchedAt"] <= 6 * 3600:
+                return None
+            if not bundle.get("data", {}).get("hourly", {}).get("time"):
+                return None
+        return data
+    except (OSError, ValueError, KeyError, TypeError, tarfile.TarError):
+        return None
+
+
 def request(url, params=None):
     for attempt in range(4):
         try:
@@ -446,7 +467,10 @@ def parse_output(path, spot, bath, start, end):
 def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HOURS, calm_test=False):
     forecast_start = int(now // 3600) * 3600
     start = forecast_start - SPINUP_HOURS * 3600
-    end = forecast_start + hours * 3600
+    end = min(forecast_start + hours * 3600, max(marine["data"]["hourly"]["time"]),
+              *(max(w["data"]["hourly"]["time"]) for w in winds))
+    if end < forecast_start + min(hours, 24) * 3600:
+        raise ValueError("Insufficient actual forecast horizon; no extrapolation allowed")
     with tempfile.TemporaryDirectory(prefix=f"swan-{spot['id']}-", dir=cache) as temporary:
         directory = Path(temporary)
         boundary, used = prepare_run(directory, spot, bath, marine, winds, start, end, calm_test)
@@ -467,6 +491,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
                 if file.is_file():
                     archive.add(file, arcname=file.name)
     return {"schema": 2, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
+            "forecastHours": (end - forecast_start) // 3600,
             "shoreline": shoreline_reference(spot, bath), "maxShoreDistanceM": MAX_SHORE_DISTANCE,
             "profileGridM": COMPUTE_DX, "profileReference": "estimated-shoreline",
             "cycle": int(now // 43200) * 43200,
@@ -503,25 +528,50 @@ def main():
               old[s["id"]].get("geometryKey") != geometry_key(s) or old[s["id"]].get("cycle") != int(now // 43200) * 43200 or
               old[s["id"]].get("hourly", [{}])[-1].get("time", 0) < now + max(0, args.hours - 12) * 3600]
     print(f"Fetching wind for {len(spots)} spots; {len(needed)} SWAN runs due", flush=True)
+    saved_inputs = {}
+    reused = set()
+    refresh_warnings = []
+    def saved(s):
+        if s["id"] not in saved_inputs:
+            saved_inputs[s["id"]] = archived_inputs(s, args.cache, now)
+        return saved_inputs[s["id"]]
     # Three spatial nodes, ordered offshore -> shore; both the run and the
     # public table use the same BS Wind 3 algorithm and raw three-model data.
     points = [offshore(s, d) for s in spots for d in [5000, 2500, 0]]
-    winds = bulk_forecast(points)
-    wind_by_spot = {s["id"]: winds[i * 3:i * 3 + 3] for i, s in enumerate(spots)}
+    try:
+        winds = bulk_forecast(points)
+        wind_by_spot = {s["id"]: winds[i * 3:i * 3 + 3] for i, s in enumerate(spots)}
+    except (requests.RequestException, ValueError) as error:
+        refresh_warnings.append(f"Wind download failed: {type(error).__name__}")
+        wind_by_spot = {s["id"]: saved(s)["wind"] if saved(s) else None for s in spots}
+        reused.update(s["id"] for s in spots if wind_by_spot[s["id"]])
+        print(f"Using original wind snapshots (max age 6 h) for {len(reused)} spots; timestamps retained", flush=True)
     for s in spots:
+        if not wind_by_spot[s["id"]]:
+            dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "fetchedAt": 0, "data": None})
+            continue
         shore = wind_by_spot[s["id"]][-1]
         dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "fetchedAt": shore["fetchedAt"] * 1000,
-            "data": shore["data"], "source": "BS Wind 3 — ICON / GFS / ECMWF", "sourceType": "scheduled"})
-    marine = bulk_forecast([offshore(s, 5000) for s in needed], marine=True) if needed else []
-    marine_by_spot = {s["id"]: m for s, m in zip(needed, marine)}
+            "data": shore["data"], "source": "BS Wind 3 — ICON / GFS / ECMWF", "sourceType": "scheduled", "reusedInputs": s["id"] in reused})
+    try:
+        marine = bulk_forecast([offshore(s, 5000) for s in needed], marine=True) if needed else []
+        marine_by_spot = {s["id"]: m for s, m in zip(needed, marine)}
+    except (requests.RequestException, ValueError) as error:
+        refresh_warnings.append(f"Marine download failed: {type(error).__name__}")
+        marine_by_spot = {s["id"]: saved(s)["marine"] if saved(s) else None for s in needed}
+        reused.update(s["id"] for s in needed if marine_by_spot[s["id"]])
+        print("Using original boundary snapshots where still valid (max age 6 h)", flush=True)
     executable = install_engine(args.cache) if needed else None
     statuses = []
 
     def work(s):
         try:
+            if not wind_by_spot[s["id"]] or not marine_by_spot[s["id"]]:
+                raise ValueError("Brak świeżych danych wejściowych i zgodnego archiwum; nie tworzymy sztucznego wymuszenia")
             bath = bathymetry(s, args.cache)
             result = simulate(s, bath, marine_by_spot[s["id"]], wind_by_spot[s["id"]], executable, args.cache, now, args.hours)
             result["codeHash"] = code_hash
+            result["reusedInputs"] = s["id"] in reused
             dump(args.cache / "results" / f'{s["id"]}.json', result)
             return s["id"], result, None
         except Exception as error:
@@ -546,6 +596,7 @@ def main():
         dump(args.output / "nearshore" / f'{s["id"]}.json', document)
     dump(args.output / "status.json", {"generatedAt": int(time.time()), "engine": "SWAN 41.51AB", "version": VERSION,
         "spots": len(spots), "available": ready, "newRuns": len(needed), "errors": errors,
+        "reusedInputSpots": sorted(reused), "refreshWarnings": refresh_warnings,
         "windScheduleHours": 3, "simulationMaxAgeHours": 12})
     print(f"Published {ready}/{len(spots)} simulations to {args.output}", flush=True)
     if not ready:

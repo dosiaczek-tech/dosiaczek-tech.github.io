@@ -152,6 +152,13 @@ co trzy godziny. W publicznych repozytoriach GitHub może wyłączać harmonogra
 po długim okresie bez aktywności; stan widać w Actions oraz w datach na stronie.
 Odświeżenie w przeglądarce tylko pobiera ostatni wynik; nie uruchamia obliczeń.
 
+Jeśli serwer prognoz jest niedostępny, SWAN może przeliczyć nową siatkę na
+rzeczywistych danych wejściowych z archiwum, pod warunkiem zgodności geometrii
+i wieku źródeł do 6 h. Zachowujemy oryginalne `windFetchedAt` / `boundaryFetchedAt`
+i oznaczamy `reusedInputs`. Nie ekstrapolujemy danych poza dostępny horyzont;
+w takim przypadku liczba godzin może być mniejsza. Brak zgodnego archiwum
+oznacza brak nowego wyniku, a nie sztuczny wiatr czy falę.
+
 Przy błędzie zestawienia połączenia do Open-Meteo backend może odświeżyć rekord A
 przez publiczny DNS-over-HTTPS. Adres URL, nazwa hosta TLS i sprawdzanie certyfikatu
 pozostają niezmienione. Nie stosuje tego przy ograniczeniu liczby zapytań (HTTP 429)

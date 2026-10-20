@@ -170,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     info.append(node("p", `Prognoza ${simulation.engine} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)}.`, "surf-small"));
+    if (simulation.reusedInputs) info.append(node("p", `Obliczono nowy profil na ostatnim poprawnie pobranym zestawie prognoz. Dane wejściowe fal pobrano ${day(simulation.boundaryFetchedAt)} ${hour(simulation.boundaryFetchedAt)}. Daty pozostają oryginalne; pobieranie nowszych danych było chwilowo niedostępne.`, "surf-small"));
     if (!row?.simulation) {
       info.append(node("p", "Brak aktualnego wyniku z potwierdzoną odległością do 500 m od brzegu na tę godzinę. Nie wystawiamy oceny sesji na podstawie dalszego morza.", "surf-small")); return;
     }

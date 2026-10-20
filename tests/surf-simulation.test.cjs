@@ -8,6 +8,7 @@ const result = {time,height:.8,period:5,energyPeriod:5.7,direction:0,depth:2,dis
 const wind = M.windConsensus([{speed:3,direction:180},{speed:3,direction:180}]);
 const rows = [{time,score:20,wind,members:[],flags:[],height:5,period:12,powerKWm:90,energyKJm2:15}];
 const document = {schema:2,status:'ready',spot,generatedAt:time,maxShoreDistanceM:500,
+  windFetchedAt:time,boundaryFetchedAt:time,
   profileGridM:50,profileReference:'estimated-shoreline',
   shoreline:{landDistance:0,waterDistance:100,distance:50},hourly:[result],windUsed:[{time,speed:3,direction:180}]};
 
@@ -28,7 +29,7 @@ test('fresh SWAN result replaces the session rating without re-transforming its 
   assert.deepEqual(row.simulationWind,document.windUsed[0]);
 });
 test('expired, wrong-spot and invalid SWAN data never masquerade as a current simulation',()=>{
-  for(const doc of [{...document,generatedAt:time-19*3600},{...document,spot:{...spot,lon:19}},
+  for(const doc of [{...document,generatedAt:time-19*3600},{...document,windFetchedAt:time-19*3600},{...document,spot:{...spot,lon:19}},
     {...document,status:'unavailable'},{...document,hourly:[{...result,height:-9}]}, {...document,hourly:[]},
     {...document,schema:1},{...document,hourly:[{...result,distance:501,shoreDistance:451,shoreDistanceMin:401,shoreDistanceMax:501}]}]) {
     const row=M.applySimulation(rows,doc,spot,time*1000)[0];

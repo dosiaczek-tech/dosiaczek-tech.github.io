@@ -247,6 +247,7 @@
       ["lat", "lon", "normal"].every(k => document.spot[k] === spot[k]) && finite(document.generatedAt) &&
       [coast?.landDistance, coast?.waterDistance, coast?.distance].every(finite) && coast.waterDistance > coast.landDistance &&
       coast.waterDistance - coast.landDistance <= 100 && coast.distance >= coast.landDistance && coast.distance <= coast.waterDistance &&
+      [document.windFetchedAt, document.boundaryFetchedAt].every(t => finite(t) && now / 1000 - t <= 18 * 3600 && t <= now / 1000 + 300) &&
       now / 1000 >= document.generatedAt - 300 && now / 1000 - document.generatedAt <= 18 * 3600;
     const byTime = new Map((valid && Array.isArray(document.hourly) ? [...(Array.isArray(document.history) ? document.history : []), ...document.hourly] : []).map(r => [r.time, r]));
     const usedWind = new Map((valid && Array.isArray(document.windUsed) ? document.windUsed : []).map(r => [r.time, r]));
