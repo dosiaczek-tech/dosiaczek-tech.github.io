@@ -152,6 +152,11 @@ co trzy godziny. W publicznych repozytoriach GitHub może wyłączać harmonogra
 po długim okresie bez aktywności; stan widać w Actions oraz w datach na stronie.
 Odświeżenie w przeglądarce tylko pobiera ostatni wynik; nie uruchamia obliczeń.
 
+Przy błędzie zestawienia połączenia do Open-Meteo backend może odświeżyć rekord A
+przez publiczny DNS-over-HTTPS. Adres URL, nazwa hosta TLS i sprawdzanie certyfikatu
+pozostają niezmienione. Nie stosuje tego przy ograniczeniu liczby zapytań (HTTP 429)
+ani błędach autoryzacji; zmiana dotyczy tylko procesu pobierającego prognozy.
+
 Jeśli odświeżenie prognoz zawiedzie, publikacja interfejsu może użyć katalogu
 `data/` z ostatniego udanego artefaktu Pages. Zachowuje wszystkie oryginalne
 daty pobrania i obliczeń, więc limity wieku danych w interfejsie nadal działają.

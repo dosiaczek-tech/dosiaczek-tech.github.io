@@ -10,6 +10,7 @@ import argparse
 from bisect import bisect_right
 import concurrent.futures
 import hashlib
+import ipaddress
 import io
 import json
 import math
@@ -22,6 +23,7 @@ import tarfile
 import tempfile
 import time
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 from PIL import Image
 import requests
@@ -30,6 +32,42 @@ import urllib3.util.connection
 # Hosted runners can advertise IPv6 even when the provider route is unusable.
 # Keep TLS verification and hostname checks; only select the IPv4 transport.
 urllib3.util.connection.allowed_gai_family = lambda: socket.AF_INET
+_original_getaddrinfo = socket.getaddrinfo
+_dns_overrides = {}
+
+
+def resolve_address(host, port, *args, **kwargs):
+    return _original_getaddrinfo(_dns_overrides.get(host, host), port, *args, **kwargs)
+
+
+socket.getaddrinfo = resolve_address
+
+
+def refresh_forecast_dns(url):
+    """Retry unreachable forecast endpoints through a public DNS resolver.
+
+    URL, Host header, SNI and certificate verification stay unchanged. This
+    is never used for HTTP rate limits or authorization errors.
+    """
+    host = urlsplit(url).hostname
+    if host not in {"api.open-meteo.com", "marine-api.open-meteo.com"} or host in _dns_overrides:
+        return False
+    try:
+        response = requests.get("https://dns.google/resolve", params={"name": host, "type": "A", "edns_client_subnet": "0.0.0.0/0"}, timeout=(10, 15))
+        response.raise_for_status()
+        data = response.json()
+        if data.get("Status") != 0:
+            return False
+        for answer in data.get("Answer", []):
+            if answer.get("type") == 1:
+                address = ipaddress.IPv4Address(answer["data"])
+                if address.is_global:
+                    _dns_overrides[host] = str(address)
+                    print(f"Forecast DNS fallback: {host} -> {address}; TLS verification unchanged", flush=True)
+                    return True
+    except (requests.RequestException, ValueError, KeyError):
+        pass
+    return False
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "BS-SWAN-1.2-full-profile500"
@@ -77,6 +115,8 @@ def request(url, params=None):
             print(f"Network retry {attempt + 1}/4 for {url}: {type(error).__name__}", flush=True)
             if attempt == 3:
                 raise
+            if isinstance(error, (requests.ConnectionError, requests.Timeout)) and not isinstance(error, requests.exceptions.SSLError) and refresh_forecast_dns(url):
+                continue
             time.sleep(3 * (attempt + 1))
 
 
