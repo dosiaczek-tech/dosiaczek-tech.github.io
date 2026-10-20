@@ -19,8 +19,12 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
   70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
-- **Bałtyk Surf 0.2**: porównanie DWD EWAM / ECMWF WAM, konsensus wiatru
-  ICON / GFS / ECMWF, profil dna EMODnet i eksperymentalna transformacja fal 1D.
+- **Bałtyk Surf 1.0 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
+  przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
+  Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
+- Automatyczny backend GitHub Actions: wiatr co 3 h, nowe obliczenia SWAN
+  w cyklach 00/12 UTC. W tabeli wiatr pod komórkami fal i pięć klas kierunku:
+  onshore, cross-on, cross, cross-off, offshore.
 - Mapy Windy, godziny polskie, oznaczanie brakujących i nieaktualnych danych.
 - Szacowana **moc fal na morzu (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
   tabeli oraz porównaniu modeli, z objaśnieniem jednostek i sposobu obliczania.
@@ -38,21 +42,26 @@ Przykładowe nowe spoty: `#surf/sobieszewo`, `#surf/kolobrzeg-palikpoint`,
 `#surf/darlowko-zachod`.
 
 To model eksperymentalny, bez walidacji na lokalnych pomiarach i bez asymilacji
-satelitów. Pełny opis obliczeń, ograniczeń, źródeł i plan rozwoju: [SURFING.md](SURFING.md).
+satelitów. Konfiguracja solvera i odtwarzanie obliczeń: [MODEL.md](MODEL.md).
+Opis oceny surfingu, ograniczeń i źródeł: [SURFING.md](SURFING.md).
 
 ## Uruchomienie i publikacja
 
-Otwórz `index.html` w przeglądarce. Nie potrzeba instalacji ani procesu budowania.
+Frontend można uruchomić lokalnie przez `python3 -m http.server 8000`.
 Odtwarzanie wymaga internetu; biblioteka hls.js 1.6.13 jest pobierana z jsDelivr
 z weryfikacją integralności SRI.
 Prognozy pobierają publiczne dane Open-Meteo i EMODnet bez kluczy API;
-publiczny endpoint Open-Meteo służy do użytku niekomercyjnego. Nie wymagają backendu.
+publiczny endpoint Open-Meteo służy do użytku niekomercyjnego. Wyniki SWAN
+generuje backend opisany w `MODEL.md`; bez plików `data/` frontend wyraźnie
+oznacza brak symulacji i udostępnia pomocniczą prognozę regionalną.
 Skrypty i arkusz `surf-*` oraz `surf.css` muszą być publikowane obok `index.html`.
 
 Testy obliczeń i pobierania danych: `node --test tests/*.test.cjs`.
 
-GitHub Pages publikuje katalog główny gałęzi `master`. Plik `.nojekyll` oznacza,
-że pliki mają być udostępniane bez przetwarzania przez Jekyll.
+GitHub Pages publikuje artefakt `dist/` przez workflow `forecast-pages.yml`.
+Zmiana kodu, harmonogram lub ręczne uruchomienie workflow odświeżają publikację.
+Pliki obliczeniowe nie są dopisywane do historii Git; wejścia i logi SWAN
+są archiwizowane jako artefakty GitHub Actions.
 
 ## Dodawanie kamer
 

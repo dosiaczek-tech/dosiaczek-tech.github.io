@@ -1,0 +1,87 @@
+name: Forecasts and GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Recompute all SWAN transects now
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  forecasts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: model/requirements.txt
+      - name: Install model dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libgfortran5 libgomp1
+          python -m pip install -r model/requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: .forecast-cache
+          key: nearshore-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: nearshore-v1-${{ runner.os }}-
+      - name: Test frontend calculations and model utilities
+        run: |
+          node --test tests/*.test.cjs
+          SWAN_INTEGRATION=1 python -m unittest discover -s model -p 'test_*.py' -v
+      - name: Refresh wind and compute due SWAN forecasts
+        id: compute
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          args=()
+          if [ "$FORCE" = 'true' ]; then args+=(--force); fi
+          python -u model/nearshore.py --workers 4 "${args[@]}"
+          python model/build_site.py
+      - uses: actions/cache/save@v4
+        if: always() && steps.compute.outcome == 'success'
+        with:
+          path: .forecast-cache
+          key: nearshore-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Archive reproducible inputs and solver logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swan-inputs-and-logs-${{ github.run_id }}
+          path: .forecast-cache/reproducibility/
+          retention-days: 14
+          if-no-files-found: warn
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: forecasts
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

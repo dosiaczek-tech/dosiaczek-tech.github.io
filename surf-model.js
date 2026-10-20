@@ -3,7 +3,7 @@
  */
 (function (root) {
   "use strict";
-  const VERSION = "Bałtyk Surf 0.2";
+  const VERSION = "Bałtyk Surf 1.0 / SWAN";
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
@@ -42,7 +42,12 @@
     if (wind.speed < 1.5) return "cisza / słaby";
     if (!finite(wind.direction)) return null;
     const difference = angle(wind.direction, spot.normal);
-    return difference >= 135 ? "offshore" : difference <= 45 ? "onshore" : "cross-shore";
+    return difference <= 22.5 ? "onshore" : difference <= 67.5 ? "cross-on" : difference <= 112.5 ? "cross"
+      : difference < 157.5 ? "cross-off" : "offshore";
+  }
+
+  function windRelativeToWave(wind, direction) {
+    return finite(direction) ? windRelative(wind, { normal: direction }) : null;
   }
 
   // Diagnostyka poprzednich 24 h; żadnego odczytu przyszłości ani tworzenia fali z wiatru.
@@ -74,7 +79,7 @@
     const info = { buildingHours: runLength, buildingStart: series[runStart].time, buildingEnd: series[runEnd].time,
       clearingHours: 0, waveSupport: 0, checkedModels: 0, historySource: "Poprzednie godziny modelowe, nie obserwacje" };
     const relative = windRelative(row.wind, spot);
-    if (relative === "offshore" && !isClearing(row)) return { ...info, state: "strong-offshore", label: "Offshore zbyt silny dla okna wywiewki" };
+    if (["offshore", "cross-off"].includes(relative) && !isClearing(row)) return { ...info, state: "strong-offshore", label: "Offshore zbyt silny dla okna wywiewki" };
     if (!isClearing(row)) return { ...info, state: isBuilding(row) ? "building" : "changing",
       label: isBuilding(row) ? "Onshore nadal wzburza powierzchnię" : "Po nawianiu — brak słabego offshore / ciszy" };
     for (let j = index; j > runEnd && isClearing(series[j]); j--) info.clearingHours++;
@@ -93,7 +98,7 @@
     if (row.wind.speed >= 12 || (finite(row.wind.gust) && row.wind.gust >= 17) || row.members.some(m => m.height >= 3))
       return { ...info, state: "rough", label: "Fala pozostaje wysoka — trudne warunki" };
     if (info.clearingHours < 2) return { ...info, state: "turning", label: "Świeża zmiana — chop może się utrzymywać" };
-    return { ...info, state: "clean", label: relative === "offshore" ? "Okno wywiewki po nawianiu" : "Ucichanie po nawianiu" };
+    return { ...info, state: "clean", label: ["offshore", "cross-off"].includes(relative) ? "Okno wywiewki po nawianiu" : "Ucichanie po nawianiu" };
   }
 
   // Dyspersja liniowa omega² = g k tanh(k h); bisekcja unika przepełnienia Newtona.
@@ -154,18 +159,19 @@
     return result;
   }
 
-  function rate(wave, wind, spot, bathymetry) {
+  function rate(wave, wind, spot, bathymetry, localOverride = null) {
     if (!wind || ![wave.height, wave.period, wave.direction].every(finite) || wave.height < 0 || wave.period <= 0 ||
         (!finite(wind.direction) && wind.speed >= 0.5)) return null;
     const incidence = angle(wave.direction, spot.normal);
-    const local = transform(wave, spot, bathymetry);
+    const local = localOverride || transform(wave, spot, bathymetry);
     const height = local ? local.height : wave.height;
     const exposure = incidence >= 85 ? 0 : Math.sqrt(Math.max(0, Math.cos(radians(incidence))));
     const heightQuality = height < 0.4 ? height / 0.4 : height <= 1.6 ? 1 : clamp(1 - (height - 1.6) / 1.9, 0, 1);
     const periodQuality = clamp((wave.period - 2) / 5, 0, 1);
     const type = windRelative(wind, spot);
     const windQuality = wind.speed < 1.5 ? 1 : type === "offshore" ? clamp(1 - Math.max(0, wind.speed - 4) / 9, 0, 1)
-      : type === "onshore" ? clamp(1 - wind.speed / 10, 0, 1) : clamp(1 - wind.speed / 13, 0, 1);
+      : type === "cross-off" ? clamp(1 - Math.max(0, wind.speed - 3) / 10, 0, 1)
+      : type === "onshore" ? clamp(1 - wind.speed / 10, 0, 1) : type === "cross-on" ? clamp(1 - wind.speed / 11.5, 0, 1) : clamp(1 - wind.speed / 13, 0, 1);
     let score = 100 * exposure * heightQuality * (0.55 * periodQuality + 0.45 * windQuality);
     const strong = wind.speed >= 12 || (finite(wind.gust) && wind.gust >= 17) || wave.height >= 3;
     if (strong) score = Math.min(score, 25);
@@ -224,7 +230,8 @@
       const cleanupHours = window.filter(r => r.cleanup?.state === "clean").length;
       if (window.every((r, n) => r.daylight && finite(r.score) && r.time === window[0].time + n * 3600) && (!cleanupOnly || cleanupHours === 3)) {
         candidates.push({ start: window[0].time, end: window[2].time + 3600,
-          score: Math.round(window.reduce((s, r) => s + r.score, 0) / 3), height: median(window.map(r => r.height)), cleanupHours });
+          score: Math.round(window.reduce((s, r) => s + r.score, 0) / 3), height: median(window.map(r => r.height)), cleanupHours,
+          nearHeight: median(window.map(r => r.simulation?.height)), simulationHours: window.filter(r => r.simulation).length });
       }
     }
     const selected = [];
@@ -234,6 +241,25 @@
     }
     return selected;
   }
-  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows };
+  function applySimulation(rows, document, spot, now = Date.now()) {
+    const valid = document?.status === "ready" && document.schema === 1 && document.spot?.id === spot.id &&
+      ["lat", "lon", "normal"].every(k => document.spot[k] === spot[k]) && finite(document.generatedAt) &&
+      now / 1000 >= document.generatedAt - 300 && now / 1000 - document.generatedAt <= 18 * 3600;
+    const byTime = new Map((valid && Array.isArray(document.hourly) ? document.hourly : []).map(r => [r.time, r]));
+    const usedWind = new Map((valid && Array.isArray(document.windUsed) ? document.windUsed : []).map(r => [r.time, r]));
+    return rows.map(row => {
+      const result = byTime.get(row.time);
+      if (!result || ![result.height, result.depth, result.powerKWm].every(finite) || result.height < 0 || result.depth <= 0 ||
+          result.powerKWm < 0 || (result.height > .001 && (!finite(result.period) || result.period <= 0 || !finite(result.direction))))
+        return { ...row, simulation: null, scoreSource: "regional" };
+      const rating = result.height <= .001 ? { score: 0, flags: ["SWAN: praktycznie brak fali przy brzegu"] } :
+        rate({ height: result.height, period: result.period, direction: result.direction }, row.wind, spot, null,
+          { ...result, basis: "SWAN", blocked: false });
+      return { ...row, regionalScore: row.score, score: rating?.score ?? null, scoreSource: "swan",
+        simulation: result, simulationWind: usedWind.get(row.time) || null,
+        flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
+    });
+  }
+  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows, applySimulation };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

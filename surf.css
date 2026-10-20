@@ -49,6 +49,7 @@
 .surf-table { border-collapse: collapse; width: 100%; white-space: nowrap; font-size: 12px; }
 .surf-table th { text-align: left; font-weight: 550; font-size: 10px; color: var(--muted); }
 .surf-table th, .surf-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); }
+.surf-cell-wind { display: block; max-width: 175px; margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.5; white-space: normal; }
 .surf-table tr[data-night="true"] { opacity: .6; }
 .surf-score { display: inline-block; min-width: 43px; padding: 3px 8px; border-radius: 6px; background: #edf0e7; text-align: center; font-weight: 700; }
 .surf-score[data-quality="good"] { background: #d7ebd9; color: #17653a; }

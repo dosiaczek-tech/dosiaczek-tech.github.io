@@ -1,0 +1,5 @@
+.forecast-cache/
+dist/
+__pycache__/
+*.pyc
+.venv/

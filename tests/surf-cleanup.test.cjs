@@ -63,7 +63,7 @@ test('a single optimistic wave model cannot declare a confirmed cleanup', () => 
 
 test('same north/south sequence on an east-facing beach is not onshore followed by offshore', () => {
   assert.notEqual(M.detectCleanup(sequence(), 24, { ...sobieszewo, normal: 90 }).state, 'clean');
-  assert.equal(M.windRelative(wind(4, 180), { ...sobieszewo, normal: 90 }), 'cross-shore');
+  assert.equal(M.windRelative(wind(4, 180), { ...sobieszewo, normal: 90 }), 'cross');
 });
 
 test('detector never reads later times and ignores build-up older than 24 hours', () => {

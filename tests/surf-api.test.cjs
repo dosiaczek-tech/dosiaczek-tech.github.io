@@ -12,6 +12,7 @@ function harness() {
     Date: class extends Date { static now() { return now; } },
     localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
     fetch: async url => {
+      if (url.startsWith('data/')) return {ok:false,status:404};
       calls++;
       if (mode === 'offline' || (mode === 'weather-down' && url.includes('api.open-meteo.com/v1/forecast'))) throw new Error('offline');
       if (mode === 'rate-limit') return { ok: false, status: 429 };

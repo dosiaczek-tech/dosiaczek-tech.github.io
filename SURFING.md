@@ -1,4 +1,9 @@
-# Bałtyk Surf 0.2 — model, źródła i kierunek rozwoju
+# Bałtyk Surf 1.0 — model, źródła i kierunek rozwoju
+
+**Aktualny silnik przybrzeżny: SWAN 41.51AB, niestacjonarny przekrój 1D.**
+Konfiguracja, harmonogram, wejścia i sposób odtworzenia: [MODEL.md](MODEL.md).
+Poniższe wzory liniowe pozostają narzędziami pomocniczymi do porównania danych;
+główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN.
 
 ## Co już działa
 
@@ -9,7 +14,8 @@
 - Pięć kolejnych dób, wartości godzinowe, porównanie modeli, trzy najlepsze
   niepokrywające się okna dzienne po trzy godziny dla wybranej plaży.
 - Fale: **DWD EWAM + ECMWF WAM**. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
-- Rzeczywiste pobieranie profilu dna **EMODnet** i eksperymentalna transformacja 1D.
+- Raster dna **EMODnet WCS**, niestacjonarny model SWAN z rzeczywistym wymuszeniem
+  wiatrowym w trzech punktach przekroju, transportem widma, tarciem i załamywaniem.
 - Osadzana mapa **Windy** (fale / wiatr), uruchamiana przyciskiem; link do Windy
   i lokalizacji na OpenStreetMap. Dane z iframe nie są wejściem modelu.
 - Osobna **mapa wyboru spotów** (Leaflet + OpenStreetMap): znaczniki otwierają
@@ -23,8 +29,8 @@
 - 30 opisów społecznościowej mapy WestCoast i dodatkowo Sobieszewo. 28 spotów
   nie ma kamery konkretnego peaku; kamery sąsiednich plaż są oznaczone jako pobliskie.
 
-To działający prototyp predykcji lokalnej, **nie zwalidowany odpowiednik LOTUS
-ani uruchomiony model SWAN**. Nie znamy jeszcze jego błędu względem obserwacji.
+To działający model lokalny oparty o uruchomiony solver **SWAN**, ale nie
+zwalidowany odpowiednik LOTUS. Nie znamy jeszcze jego błędu względem obserwacji.
 Wynik oznacza potencjał dla rekreacyjnego surfingu na falach, nie kitesurfingu
 czy windsurfingu, ani ocenę bezpieczeństwa.
 
@@ -78,13 +84,14 @@ ani poziomów. Ocena początkującego kitesurfera nie jest oceną początkujące
 surfera: m.in. offshore może poprawiać powierzchnię fali, ale być niekorzystny
 dla nauki kitesurfingu. Vättern jest jeziorem, nie częścią katalogu bałtyckich spotów.
 
-## Źródła wykorzystane w v0.2
+## Źródła danych
 
 | Dane | Źródło / dostęp | Zastosowanie |
 | --- | --- | --- |
 | Hs, średni okres, kierunek fal | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam` | Dwie równoległe prognozy, bez udawania niezależnych obserwacji |
 | Wiatr 10 m, porywy, temperatura, dzień/noc | [Open-Meteo Weather](https://open-meteo.com/en/docs), `icon_seamless,gfs_seamless,ecmwf_ifs025` | Konsensus wiatru i wybór okien dziennych |
 | Głębokość | [EMODnet Bathymetry WMS](https://ows.emodnet-bathymetry.eu/wms?service=WMS&request=GetCapabilities), warstwa `emodnet:mean`, `GetFeatureInfo` | Sześć próbek profilu poprzecznego do brzegu |
+| Dno SWAN | EMODnet WCS `emodnet:mean`, GeoTIFF 1/16 minuty | Pełny przekrój próbkowany co 100 m, a nie tylko sześć punktów |
 | Mapa pogody | [Windy](https://www.windy.com/), oficjalny embed | Wizualne porównanie, osobne od wyniku |
 | Położenie plaży | [OpenStreetMap](https://www.openstreetmap.org/) | Link do mapy, nie numeryczna maska brzegu |
 
@@ -172,8 +179,10 @@ To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
 - Ekspozycja: `sqrt(max(0,cos(θ)))`, gdzie θ to kąt nadejścia względem normalnej.
   Fala pod kątem ≥85° jest poza przyjętym sektorem — ocena 0. To uproszczona
   ekspozycja, nie numeryczny fetch ani model cienia falowego.
-- Wiatr: cisza / słaby <1,5 m/s; offshore gdy kąt ≥135°, onshore ≤45°,
-  pomiędzy cross-shore. Słaby offshore jest korzystniejszy, silny jest karany.
+- Wiatr: cisza / słaby <1,5 m/s; kąt od normalnej 0–22,5°: onshore,
+  do 67,5°: cross-on, do 112,5°: cross, poniżej 157,5°: cross-off,
+  pozostałe: offshore. Pod komórkami pokazujemy osobno taką relację względem
+  kierunku fali. Słaby offshore jest korzystniejszy, silny jest karany.
 - `score = 100 × ekspozycja × użyteczność_wysokości ×
   (0,55 × jakość_okresu + 0,45 × jakość_wiatru)`.
 - Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs na morzu ≥3 m ograniczają ocenę do 25.
@@ -201,7 +210,7 @@ Detektor `detectCleanup` analizuje ostatnie 24 h przed daną godziną:
 2. Wymaga ciągłych danych od tej fazy do ocenianej godziny. Brak danych nie
    oznacza ciszy. Przy braku takiej sekwencji i niepełnej historii wynik jest
    „niepełna historia”, a nie „nie było nawiania”.
-3. Słaby offshore (sektor ±45° wokół kierunku od lądu, prędkość ≤7 m/s, znane
+3. Słaby offshore lub bardziej odbrzegowy cross-off (sektor ±45° wokół kierunku od lądu, prędkość ≤7 m/s, znane
    porywy <12 m/s) albo cisza / słaby wiatr <1,5 m/s rozpoczynają zmianę fazy.
    Pierwsza godzina jest „świeżą zmianą”; dwie kolejne mogą utworzyć okno.
 4. **Oba modele fal** muszą nadal pokazywać Hs ≥0,4 m i ≥35% swojego maksimum
@@ -256,7 +265,8 @@ uwzględnia wysokość i okres fal. Jednostki i objaśnienia są widoczne na str
 
 ## Architektura i utrzymanie
 
-- GitHub Pages pozostaje statyczne. Przeglądarka pobiera dane wybranego spotu;
+- GitHub Pages udostępnia statyczny frontend i JSON z backendu GitHub Actions.
+  Harmonogram backendu jest opisany w `MODEL.md`. Przeglądarka pobiera dane wybranego spotu;
   zmiana plaży nie pobiera całego wybrzeża. Żadnych kluczy w kodzie.
 - `surf-api.js`: timeout 18 s, deduplikacja równoległych zapytań, pamięć RAM
   i localStorage. Prognozy: TTL 30 min; przy awarii jawnie oznaczony cache do 6 h,
@@ -349,9 +359,13 @@ Altimetria jest rzadka w czasie i przestrzeni i zwykle nie opisuje strefy
 łamania. Sentinel-1 SAR może dostarczyć informacji o widmie w odpowiednich
 warunkach, ale nie jest gotowym odczytem fal przy każdej polskiej plaży.
 Optyczna batymetria Sentinel-2 bywa ograniczana przez mętność Bałtyku i chmury.
-W v0.2 **nie ma asymilacji ani odczytu satelitów**; nie pokazujemy fikcyjnych pomiarów.
+W v1.0 **nie ma asymilacji ani odczytu satelitów**; nie pokazujemy fikcyjnych pomiarów.
 
-### Etap 4 — własny SWAN i lokalny downscaling
+### Etap 4 — rozbudowa działającego SWAN 1D do domen 2D
+
+SWAN 1D już działa w backendzie. Poniższe punkty opisują kolejną warstwę:
+pełne domeny 2D, osłonę konstrukcji i lepsze warunki brzegowe, a nie wymagania
+do uruchomienia obecnej wersji.
 
 SWAN to oprogramowanie modelu spektralnego rozwijane na TU Delft, a nie
 automatycznie dostępny feed prognozy wszystkich polskich plaż. Do własnego
