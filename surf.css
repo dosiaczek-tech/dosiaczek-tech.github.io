@@ -69,10 +69,10 @@
 .surf-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .surf-map-legend i { width: 10px; height: 10px; border-radius: 50%; }
 .surf-map-legend .has-camera { background: var(--sea); }
-.surf-map-legend .no-camera { background: #000; }
+.surf-map-legend .no-camera { background: #fff; border: 1px solid #94a3a0; }
 .surf-spot-marker { background: transparent; border: 0; display: grid; place-items: center; }
 .surf-spot-marker > span { width: 17px; height: 17px; display: block; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 5px #18383e80; background: var(--sea); }
-.surf-spot-marker.no-camera > span { background: #000; }
+.surf-spot-marker.no-camera > span { background: #fff; border-color: #94a3a0; }
 .surf-spot-marker.is-selected > span { width: 23px; height: 23px; box-shadow: 0 0 0 3px var(--ink), 0 1px 6px #18383e80; }
 .surf-map-cluster { display: grid; place-items: center; border-radius: 50%; background: #d6e8de; border: 2px solid white; color: var(--sea-dark); box-shadow: 0 1px 6px #18383e50; font: 700 14px / 1 system-ui, sans-serif; }
 .surf-map-cluster.is-selected { box-shadow: 0 0 0 3px var(--ink); }
