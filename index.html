@@ -347,7 +347,7 @@
   </main>
   <footer class="shell page-footer">
     <div><span class="footer-brand">nad morzem.</span><p>Morze jest bliżej, niż myślisz.</p></div>
-    <div class="footer-right"><p>Obraz: <a href="https://www.webcamera.pl/" target="_blank" rel="noopener noreferrer">WebCamera.pl</a> i właściciele kamer.</p><p>Statyczny HTML · wymaga internetu · źródła sprawdzone 21.09.2026</p></div>
+    <div class="footer-right"><p>Obraz: <a href="https://www.webcamera.pl/" target="_blank" rel="noopener noreferrer">WebCamera.pl</a>, <a href="https://nadmorski24.pl/kamery" target="_blank" rel="noopener noreferrer">Nadmorski24.pl</a> i właściciele kamer.</p><p>Statyczny HTML · wymaga internetu · katalog uzupełniony 20.10.2026</p></div>
   </footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <noscript>Włącz JavaScript, aby wybierać i odtwarzać kamery. Możesz też otworzyć <a href="https://kolobrzeg.webcamera.pl/">kamerę w Kołobrzegu</a> na stronie źródłowej.</noscript>
@@ -380,6 +380,9 @@
   // Sprawdzone publiczne transmisje z katalogów wybrzeża WebCamera (21.09.2026).
   // Różne adresy prowadzące do tej samej transmisji występują tylko raz.
   const ADDITIONAL_CAMERAS = [
+    { id: "gdynia-plaza", name: "Gdynia", view: "Plaża miejska i marina", region: "trojmiasto", host: 1, camera: "gdynia_cam_b80d1e" },
+    { id: "krynicamorska", name: "Krynica Morska", view: "Plaża — panorama morza", region: "mierzeja", host: 1, camera: "krynicamorska_cam_b92412" },
+    { id: "ustka-panorama", name: "Ustka", view: "Port i plaża z pylonu", region: "srodek", host: 1, camera: "ustka_cam_4b0fca" },
     { id: "stegna-plaza", name: "Stegna", view: "Plaża, bulwar i morze", region: "mierzeja", host: 4, camera: "stegna_cam_c00d9b" },
     { id: "jantar", name: "Jantar", view: "Plaża i morze", region: "mierzeja", host: 3, camera: "jantar_cam_8948dd" },
     { id: "kamera-stegna-plaza", name: "Stegna", view: "Drugie ujęcie na plażę", region: "mierzeja", host: 4, camera: "stegna_cam_7e8d95" },
@@ -454,6 +457,56 @@
     { id: "swinoujscie", name: "Świnoujście", view: "Widok na plaże i morze", region: "zachod", host: 4, camera: "swinoujscie_cam_3be0ba" },
     { id: "swinoujscie-plaza", name: "Świnoujście", view: "Widok na plażę", region: "zachod", host: 4, camera: "swinoujscie_cam_7eca1e" }
   ];
+  // Publiczne źródła odczytane z odtwarzaczy Nadmorski24 (20.10.2026).
+  // Osobny identyfikator źródła pozwala zachować dotychczasowe linki i ulubione.
+  const NADMORSKI_CAMERAS = [
+    ["gdynia-orlowo", "Gdynia", "Orłowo — plaża i molo", "trojmiasto", "2-Gdynia-Orłowo-Gdynia", "gdynia_orlowo_plaza_obrotowa", "119139/w0y5u6s1j0y0y1d7c5m24185g3d0u995"],
+    ["gdansk-olowianka", "Gdańsk", "Ołowianka — Stare Miasto i Motława", "trojmiasto", "3-Gdańsk---Stare-Miasto,-Motława-Gdańsk", "gdansk_olowianka_widok_motlawa_obrotowa", "239209/o02734b890y0k117o5m2f1r522v3h122"],
+    ["bialogora-plaza", "Białogóra", "Plaża — kamera obrotowa", "polwysep", "4-Białogóra---Plaża-Białogóra", "bialogora_plaza_obrotowa", "59df3e/f5c5l285c020w1i7a3s434g3q5e5m9u0"],
+    ["chalupy-przystan", "Chałupy", "Przystań — kamera obrotowa", "polwysep", "7-Chałupy-Przystań-Chałupy", "chalupy_molo_obrotowa", "366a51/37h7o7h3a0f0n1r7p5y2v0v5o9n4x9d5"],
+    ["debki-morska", "Dębki", "Ulica Morska", "polwysep", "8-Dębki---ul.-Morska-Dębki", "debki_ulica_morska_static", "0b0fe0/o601n229m0x0z1t745m280e6n8u7g352"],
+    ["debki-plaza-n24", "Dębki", "Plaża — kamera stała, Nadmorski24", "polwysep", "9-Dębki---plaża-Dębki", "debki_plaza_static", "ebd8d5/z4d1w0a4j060p1j7c5k2t0p6n8q8f8q8"],
+    ["debki-plaza-obrotowa", "Dębki", "Plaża — kamera obrotowa", "polwysep", "10-Dębki---plaża-(kamera-obrotowa)-Dębki", "debki_plaza_obrotowa", "a2ce00/s8o0h6r8v0p081u7o5y290d6e9v086e7"],
+    ["gdansk-gorki-zachodnie", "Gdańsk", "Górki Zachodnie — NCŻ", "trojmiasto", "11-Gdańsk---Górki-Zachodnie-NCŻ-Gdańsk", "gdansk_gorki_zachodnie_ncz_obrotowa", "4018aa/p5g5v0h7n010i1k7x5a2e0l689k4i0u3"],
+    ["gdansk-teatr-szekspirowski", "Gdańsk", "Teatr Szekspirowski", "trojmiasto", "12-Gdańsk---Teatr-Szekspirowski-Gdańsk", "gdansk_centrum_teatr_szekspirowski_obrotowa", "86144b/89q2c9n8c0p0d1o7m5m2x5l8n437r2c6"],
+    ["gdynia-marina-n24", "Gdynia", "Przystań jachtowa — Nadmorski24", "trojmiasto", "13-Gdynia---przystań-jachtowa-Gdynia", "gdynia_marina_obrotowa", "19bf82/m1q7m1w18010i1n7p5m2q1k5v3y1p9s5"],
+    ["gdynia-molo-poludniowe", "Gdynia", "Molo Południowe", "trojmiasto", "14-Gdynia---Molo-Południowe-Gdynia", "gdynia_al_jana_pawla_nabrzerze_pomorskie_obrotowa", "520840/w0r5y4a9d000v1m7g5i2s1h56217t6k9"],
+    ["hel-bulwar-n24", "Hel", "Bulwar Nadmorski — Nadmorski24", "polwysep", "18-Hel---Bulwar-Nadmorski-Hel", "hel_bulwar_nadmorski_obrotowa", "ff244d/f7f2n6h6u040i1e7r5x261e5b494x9w1"],
+    ["hel-dworcowa", "Hel", "Ulica Dworcowa", "polwysep", "19-Hel---ul.-Dworcowa-Hel", "hel_skrzyzowanie_dworcowa_przybyszewskiego_static", "043028/v5e5n1g2m0a0j1m7w54251k5g4e6n355"],
+    ["jastarnia-molo-n24", "Jastarnia", "Molo — Nadmorski24", "polwysep", "20-Jastarnia---molo-Jastarnia", "jastarnia_molo_static", "d149dd/u441n8s1u0j051x7t5h211u5k4x7h339"],
+    ["jastarnia-rondo", "Jastarnia", "Rondo", "polwysep", "21-Jastarnia---rondo-Jastarnia", "jastarnia_rondo_static", "18b2b1/d3e1c5n6i0m0x1u7h5v2i125k449i2p9"],
+    ["jastrzebia-gora-n24", "Jastrzębia Góra", "Plaża — Nadmorski24", "polwysep", "22-Jastrzębia-Góra---plaża-Jastrzębia-Góra", "jastrzebiagora_plaza_static", "6f34ac/x3e4d6a4s0j021j7l5c2i1j5m5v0d613"],
+    ["jurata-molo-n24", "Jurata", "Molo — Nadmorski24", "polwysep", "23-Jurata---molo-Jurata", "jurata_molo_static", "9431e7/u4t1k9x9n0h081v7a572g1r5r5y1f4b2"],
+    ["karwia-plaza-n24", "Karwia", "Plaża — Nadmorski24", "polwysep", "24-Karwia---plaża-Karwia", "karwia_plaza_static", "8b29ac/y2h534h9n0w0f1o735m2k11535r2g9m5"],
+    ["puck-plaza-przystan", "Puck", "Plaża, przystań i molo — kamera obrotowa", "polwysep", "27-Puck---plaża,-przystań,-molo-Puck", "puck_molo_port_jachtowy_obrotowa", "727088/e170r0v2u0w0n1q7k5n2c2a3h650j833"],
+    ["puck-molo", "Puck", "Molo — kamera stała", "polwysep", "28-Puck---molo-Puck", "puck_molo_static", "518c71/j6d0a0174050k1u7s5l2i223q5e8a8f2"],
+    ["puck-stary-rynek", "Puck", "Stary Rynek", "polwysep", "29-Puck---Stary-Rynek-Puck", "puck_stary_rynek_static", "2e81ec/i5q1x5v2g0d0x1o7v5o2f2h316p1h7f2"],
+    ["sopot-molo-n24", "Sopot", "Molo i Skwer Kuracyjny", "trojmiasto", "32-Sopot---molo-Sopot", "sopot_molo_skwer_kuracyjny_obrotowa", "3d1876/x8j9y7m4v0k031l7a5n2o2x3y7k1h982"],
+    ["sopot-male-molo", "Sopot", "Plaża i małe molo", "trojmiasto", "33-Sopot---plaża,-małe-molo-Sopot", "sopot_plaza_male_molo_obrotowa", "70ada5/447324i3m0j0z197t5n2u2d377p2c5z6"],
+    ["wladyslawowo-aleja-gwiazd", "Władysławowo", "Aleja Gwiazd Sportu", "polwysep", "38-Władysławowo---Aleja-Gwiazd-Sportu-Władysławowo", "wladyslawowo_aleja_gwiazd", "5510cb/24o7i7j6j010m1t795p265h8v6y2d6k7"],
+    ["wladyslawowo-baltyk", "Władysławowo", "Bałtyk z wieży Domu Rybaka", "polwysep", "39-Władysławowo---widok-na-Bałtyk-Władysławowo", "wladyslawowo_widok_na_baltyk_z_wiezy_domu_rybaka_static", "c47698/i5m0e021a0s0r127j5x2t2r3d9o3p1q3"],
+    ["wladyslawowo-male-morze", "Władysławowo", "Kemping Małe Morze", "polwysep", "40-Władysławowo---Małe-Morze-Władysławowo", "wladyslawowo_kemping_male_morze_molo_obrotowa", "1484fb/q471w9s750x0m1s7w5o2h2l3w8e7i7j3"],
+    ["wladyslawowo-plaza-n24", "Władysławowo", "Plaża — Nadmorski24", "polwysep", "41-Władysławowo---plaża-Władysławowo", "wladyslawowo_plaza_obrotowa", "fb8370/43q8e2n2f0o071c7r5i2c2s348a8a8j7"],
+    ["wladyslawowo-polwysep-n24", "Władysławowo", "Półwysep Helski z wieży", "polwysep", "42-Władysławowo---Półwysep-Helski-Władysławowo", "wladyslawowo_widok_na_polwysep_helski_z_wiezy_static", "01dbcb/f0e4a6g1f06041m7x512y24348s9k7e5"],
+    ["wladyslawowo-port", "Władysławowo", "Port i nabrzeże", "polwysep", "43-Władysławowo---port-Władysławowo", "wladyslawowo_port_nabrzeze_static", "85166a/p280z8r4l0j0n1i785k2a273y9a1p2p6"],
+    ["wladyslawowo-rondo", "Władysławowo", "Rondo — Gdańska i Starowiejska", "polwysep", "44-Władysławowo---rondo-Władysławowo", "wladyslawowo_rondo_gdanska_starowiejska_obrotowa", "2ec590/s9c6l0y8y0b0h1h7n51222m3b9e2x4e4"],
+    ["debki-wieza", "Dębki", "Widok z wieży Rybaczówki", "polwysep", "50-Dębki---widok-z-wieży-Dębki", "debki_wieza_rybaczowka_obrotowa", "203dc2/b2l8v3k2m0o0s1y7x5x2b0v6t9h239u3"],
+    ["puck-zatoka-pucka", "Puck", "Zatoka Pucka — widok z wieży", "polwysep", "54-Puck---Zatoka-Pucka-Puck", "puck_wieza_kosciola_zatokapucka_obrotowa", "5e3bb4/h6f7y3i2v0r0o107h5a2j2g3n6d2o9y3"],
+    ["jastarnia-maszoperia", "Jastarnia", "Kemping Maszoperia", "polwysep", "83-Jastarnia---Kemping-Maszoperia-Jastarnia", "jastarnia_kemping_maszoperia_obrotowa", "447a65/48s9l1r5x0o0w107m5p2z2s4n0r479p6"],
+    ["kolobrzeg-port-n24", "Kołobrzeg", "Port — Nadmorski24", "zachod", "91-Kołobrzeg---port-Kołobrzeg", "kolobrzeg_port_static", "f3d85d/c8f4i0u9v0e0q1p70592m1t5o5f318p3"],
+    ["chlapowo-lazurowe", "Chłapowo", "Bałtyk z kempingu Lazurowe", "polwysep", "96-Chłapowo,-Bałtyk-z-kempingu-Lazurowe-Chłapowo", "wladyslawowo_kemping_lazurowe_obrotowa", "3dfb47/y0m9i1j6o060d1i73755v1m3d0h6w0v8"],
+    ["jastarnia-dom-zdrojowy", "Jastarnia", "Plaża — Dom Zdrojowy", "polwysep", "99-Jastarnia---plaża,-Dom-Zdrojowy-Jastarnia", "jastarnia_plaza_dom_zdrojowy_obrotowa", "6d37d3/e3z5s781j0x0l1r7q5h2k1x5a4o8k0r4"],
+    ["swinoujscie-centrum", "Świnoujście", "Centrum — kamera obrotowa", "zachod", "101-Świnoujście---centrum-Świnoujście", "swinoujscie_centrum_obrotowa", "ab8492/91r823c520g011z7k522l2v3f7r4b529"],
+    ["rewa-surfstacja", "Rewa", "Surfstacja — kamera obrotowa", "polwysep", "106-Rewa---Surfstacja-Rewa", "rewa_surf_stacja_obrotowa", "1d8c2a/t6o5r3s6h0l0z1i7y5h2j2x3m6b9q4y7"],
+    ["sopot-meridian", "Sopot", "Widok z mola — Meridian", "trojmiasto", "10113-Sopot-Widok-z-mola-Sopot", "sopot_molo_meridian_obrotowa", "99e80f/j900f2w0w0b0d1v7o7l9u4t4i1j8w8b9"],
+    ["chalupy-solar", "Chałupy", "Solar EASY/SURF", "polwysep", "10114-Chałupy-Solar-EASY/SURF-Chałupy", "easysurf_1080P", "ee6583/w952b0j2v0a0n137y7f9z404l416z0x8"]
+  ].map(([id, name, view, region, page, stream, image]) => ({
+    id, name, view, region,
+    provider: "Nadmorski24.pl",
+    source: `https://nadmorski24.pl/kamery/${page}`,
+    stream: `https://ls.tkchopin.pl/live/${stream}.stream/playlist.m3u8`,
+    poster: `https://nadmorski24.pl/publicTmp/pictures/500x/${image}.jpg`
+  }));
   const FEATURED_CAMERAS = new Map([
     "kolobrzeg", "brzezno", "sopot", "stegna-plaza", "jantar", "kamera-stegna-plaza",
     "katyrybackie", "krynica-morska-plaza", "krynica-morska-kamera"
@@ -479,14 +532,15 @@
     { id: "sarbinowo", name: "Sarbinowo", view: "Widok na plażę", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Plaża", "Morze"], description: "Nadmorskie Sarbinowo: plaża, linia brzegu i fale w zasięgu jednego kliknięcia.", host: 1, camera: "sarbinowo_cam_bd6ec8", source: "https://sarbinowo.webcamera.pl/" },
     { id: "miedzyzdroje", name: "Międzyzdroje", view: "Panorama morza", region: "zachod", regionLabel: "Zachodnie wybrzeże", tags: ["Morze", "Panorama"], description: "Panoramiczny widok na morze w Międzyzdrojach. Sprawdź, co dzieje się nad wodą.", host: 1, camera: "miedzyzdroje_cam_613997", source: "https://miedzyzdroje.webcamera.pl/" },
     { id: "gdansk-motlawa", name: "Gdańsk", view: "Motława i kładka", region: "trojmiasto", regionLabel: "Trójmiasto", tags: ["Nabrzeże", "Miasto"], description: "Mała przerwa od plaży: gdańskie nabrzeże, Motława i kładka w samym sercu miasta.", host: 2, camera: "umgdansk_cam_11161c", source: "https://gdansk-motlawa.webcamera.pl/" }
-  ].concat(ADDITIONAL_CAMERAS).map(camera => ({
+  ].concat(ADDITIONAL_CAMERAS, NADMORSKI_CAMERAS).map(camera => ({
     regionLabel: REGION_LABELS[camera.region],
     description: `Obraz na żywo: ${camera.name} — ${camera.view.toLocaleLowerCase("pl")}. Wybierz ten widok, aby zajrzeć na wybrzeże.`,
     tags: cameraTags(camera.view),
     source: `https://${camera.id}.webcamera.pl/`,
-    ...camera,
+    provider: "WebCamera.pl",
     stream: `https://hoktastream${camera.host}.webcamera.pl/${camera.camera}/${camera.camera}.stream/playlist.m3u8`,
-    poster: `https://imageserver.webcamera.pl/miniaturki/${camera.camera}.jpg`
+    poster: `https://imageserver.webcamera.pl/miniaturki/${camera.camera}.jpg`,
+    ...camera,
   })).sort((a, b) => (FEATURED_CAMERAS.get(a.id) ?? 100) - (FEATURED_CAMERAS.get(b.id) ?? 100)
     || a.name.localeCompare(b.name, "pl") || a.view.localeCompare(b.view, "pl"));
 
@@ -617,7 +671,7 @@
       const query = normalize($("search").value.trim());
       const visible = CAMERAS.filter(camera => {
         const inRegion = filter === "all" || (filter === "favorites" ? favorites.has(camera.id) : camera.region === filter);
-        const matches = normalize([camera.name, camera.view, camera.regionLabel, ...camera.tags].join(" ")).includes(query);
+        const matches = normalize([camera.name, camera.view, camera.regionLabel, camera.provider, ...camera.tags].join(" ")).includes(query);
         return inRegion && matches;
       });
       const fragment = document.createDocumentFragment();
@@ -671,6 +725,7 @@
       $("selectedDescription").textContent = camera.description;
       $("screenCaption").textContent = `${camera.name} · ${camera.view}`;
       $("sourceLink").href = camera.source;
+      $("sourceLink").textContent = `${camera.provider} ↗`;
       $("resolution").textContent = "Łączenie…";
       $("selectedTags").replaceChildren(...camera.tags.map(text => {
         const span = document.createElement("span");

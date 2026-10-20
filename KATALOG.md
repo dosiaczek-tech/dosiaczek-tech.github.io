@@ -1,8 +1,48 @@
 # Katalog kamer polskiego wybrzeża
 
-Ostatnia weryfikacja: **21.09.2026**.
+Ostatnie uzupełnienie i porównanie źródeł: **20.10.2026**.
 
-## Zakres
+## Aktualizacja 20.10.2026
+
+Katalog zawiera **128 źródeł transmisji**: 88 WebCamera i 40 Nadmorski24.
+Porównano trzy poniższe kategorie WebCamera z aktualnym katalogiem
+[Nadmorski24](https://nadmorski24.pl/kamery). Identyczne identyfikatory
+transmisji WebCamera pominięto; niezależne źródła obu dostawców zachowano
+i oznaczono nazwą dostawcy. Różne źródła mogą pokazywać to samo miejsce.
+
+- Dodano 40 źródeł Nadmorski24 z miejscowości nad Bałtykiem i Zatoką Pucką:
+  Białogóra, Chałupy, Chłapowo, Dębki, Gdańsk, Gdynia, Hel, Jastarnia,
+  Jastrzębia Góra, Jurata, Karwia, Kołobrzeg, Puck, Rewa, Sopot,
+  Świnoujście i Władysławowo.
+- Przywrócono trzy działające źródła WebCamera: Gdynia — plaża i marina,
+  Krynica Morska — panorama plaży oraz Ustka — port i plaża z pylonu.
+- Darłowo — plaża w Darłówku było już dostępne pod `#darlowo-plaza-darlowko`.
+- Dla wszystkich 43 dodanych źródeł pobrano playlistę HLS, listę segmentów
+  i segment obrazu (HTTP 200); sprawdzono CORS dla playlisty i segmentu.
+- Serwer `ls.tkchopin.pl` nie przesyła pełnego łańcucha certyfikatu TLS.
+  W narzędziu kontrolnym dołączono certyfikaty pośrednie z oficjalnego
+  repozytorium Certum, zachowując weryfikację TLS. Aplikacja nie wyłącza
+  weryfikacji certyfikatów; dostępność zależy również od przeglądarki.
+- W Chrome potwierdzono ruchomy obraz z Pucka — Zatoki Puckiej, Chałup —
+  Solar EASY/SURF, Darłowa — portu oraz trzech przywróconych kamer WebCamera,
+  bez wyłączania weryfikacji TLS. Sprawdzono wyszukiwanie po dostawcy,
+  ulubione, układ mobilny i unikalność identyfikatorów oraz adresów HLS.
+- Wolin — Dziwna: odtwarzacz wskazuje serwer `kamera.smslowianin.pl:8181`,
+  którego certyfikatu nie udało się zweryfikować; źródła nie dodano.
+- Świnoujście — plaża w Nadmorski24: oznaczone przerwą techniczną.
+- Pominięto kamery śródlądowe, transmisje kościelne, płatne oraz zbiorcze
+  playlisty zmieniające widoki. Zakres dotyczy publicznych kamer wybrzeża
+  znalezionych w wymienionych katalogach, nie wszystkich kamer w internecie.
+
+| Region | Źródła |
+| --- | ---: |
+| Mierzeja Wiślana | 7 |
+| Trójmiasto | 20 |
+| Półwysep Helski i okolice | 43 |
+| Środkowe wybrzeże | 18 |
+| Zachodnie wybrzeże | 40 |
+
+## Poprzednia weryfikacja — 21.09.2026
 
 Przejrzano katalogi WebCamera:
 
@@ -33,10 +73,11 @@ prowadziło do już uwzględnionych transmisji; zostały połączone z tymi kame
 - [Krynica Morska — plaża](https://dosiaczek-tech.github.io/#krynica-morska-plaza)
 - [Krynica Morska — wejście nr 30](https://dosiaczek-tech.github.io/#krynica-morska-kamera)
 
-## Strumienie niedostępne podczas sprawdzania
+## Strumienie niedostępne podczas sprawdzania 21.09.2026
 
 Poniższe 20 źródeł dwukrotnie zwróciło HTTP 404 przy pobieraniu transmisji.
-Mogą zostać dodane przy kolejnej aktualizacji, jeśli odtwarzanie wróci:
+Trzy z nich przywrócono 20.10.2026, zgodnie z opisem powyżej.
+Pozostałe nadal wymagają ponownej weryfikacji przed dodaniem:
 
 - [Chałupy — Kite.pl](https://chalupy-kitepl.webcamera.pl/)
 - [Chałupy — Surf People](https://chalupy-surf-people.webcamera.pl/)
