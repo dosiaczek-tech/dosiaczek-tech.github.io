@@ -136,6 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const hs = r.members.map(m => m.height).filter(M.finite);
         cell(hs.length ? `${fmt(Math.min(...hs))}–${fmt(Math.max(...hs))} m` : "—");
         cell(`${fmt(r.period)} s`);
+        cell(M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : "—");
+        cell(M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : "—");
         cell(r.members.filter(m => M.finite(m.direction)).map(m => compass(m.direction)).join(" / ") || "—");
         cell(r.wind ? `${compass(r.wind.direction)} · ${fmt(r.wind.speed)} m/s` : "Brak wiatru");
         cell(r.members.find(m => m.rating)?.rating.windType || "—");
@@ -180,7 +182,11 @@ document.addEventListener("DOMContentLoaded", () => {
       [now ? `Potencjał · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 0)} / 100`, `${quality(now?.score)} · ${now?.agreement || ""}`],
       ["Wysokość fal na morzu", `${fmt(now?.height)} m`, `Czas między falami: średnio ${fmt(now?.period)} s`],
       ["Wiatr przy plaży", `${fmt(now?.wind?.speed)} m/s`, `Z ${compass(now?.wind?.direction)} · porywy ${fmt(now?.wind?.gust)} m/s`],
-      ["Wysokość fal przy brzegu — szacunek", `${fmt(now?.nearHeight)} m`, M.finite(now?.nearHeight) ? "Obliczenie uwzględniające dno i kierunek fal, nie pomiar" : "Brak danych do szacunku przy brzegu — oceniamy fale na morzu"]
+      ["Wysokość fal przy brzegu — szacunek", `${fmt(now?.nearHeight)} m`, M.finite(now?.nearHeight) ? "Obliczenie uwzględniające dno i kierunek fal, nie pomiar" : "Brak danych do szacunku przy brzegu — oceniamy fale na morzu"],
+      ["Moc fal na morzu — szacunek", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", M.finite(now?.powerKWm)
+        ? `${now.powerModels}/2 modeli · ${M.finite(now.powerDepth) ? `uwzględniona głębokość ${fmt(now.powerDepth)} m` : "przybliżenie głębokiej wody"}` : "Potrzebna wysokość fal i czas między nimi"],
+      ["Energia fal na morzu", M.finite(now?.energyKJm2) ? `~${fmt(now.energyKJm2, 2)} kJ/m²` : "—", M.finite(now?.energyKJm2)
+        ? `Na m² powierzchni morza · ${now.energyModels}/2 modeli` : "Brak prognozy wysokości fal"]
     ];
     $("surfNow").replaceChildren(...items.map(([title, value, desc]) => { const el = node("div", undefined, "surf-metric"); el.append(node("small", title), node("strong", value), node("p", desc)); return el; }));
     $("surfFlags").replaceChildren(...(now?.flags || []).map(f => node("span", f)));
@@ -200,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHours();
     $("surfModels").replaceChildren();
     const modelRow = (name, text) => { const el = node("div", undefined, "surf-model-row"); el.append(node("b", name), node("span", text)); $("surfModels").append(el); };
-    for (const m of now?.members || []) modelRow(M.WAVE_MODELS[m.model], `${fmt(m.height)} m · ${fmt(m.period)} s · z ${compass(m.direction)} · ${fmt(m.rating?.score, 0)}/100`);
+    for (const m of now?.members || []) modelRow(M.WAVE_MODELS[m.model], `${fmt(m.height)} m · ${fmt(m.period)} s · z ${compass(m.direction)} · moc ~${fmt(m.energetics.powerKWm, 2)} kW/m · energia ~${fmt(m.energetics.energyKJm2, 2)} kJ/m² · ${fmt(m.rating?.score, 0)}/100`);
     for (const m of now?.wind?.members || []) modelRow(M.WIND_MODELS[m.model], `${fmt(m.speed)} m/s · z ${compass(m.direction)}`);
     if (!now) modelRow("Bieżąca godzina", "Brak danych");
     renderBathymetry(now);

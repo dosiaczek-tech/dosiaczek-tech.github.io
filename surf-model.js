@@ -110,6 +110,20 @@
     return { c, cg: n * c, wavelength: 2 * Math.PI / k };
   }
 
+  // Morze nieregularne: E = rho*g*Hs²/16, a strumień energii P ≈ E*Cg.
+  // Średni okres zastępuje okres energetyczny / całkę widmową: moc jest przybliżeniem.
+  // rho=1025 kg/m³ to stała referencyjna, nie pomiar zasolenia Bałtyku.
+  function waveEnergy(wave, depth = null) {
+    const missing = { energyKJm2: null, powerKWm: null, method: null };
+    if (!finite(wave?.height) || wave.height < 0) return missing;
+    const energyKJm2 = 1025 * 9.81 * wave.height ** 2 / 16000;
+    if (wave.height === 0) return { energyKJm2: 0, powerKWm: 0, method: "calm" };
+    if (!finite(wave.period) || wave.period <= 0) return { ...missing, energyKJm2 };
+    if (depth !== null && (!finite(depth) || depth <= 0)) return { ...missing, energyKJm2 };
+    const groupSpeed = depth === null ? 9.81 * wave.period / (4 * Math.PI) : dispersion(wave.period, depth).cg;
+    return { energyKJm2, powerKWm: energyKJm2 * groupSpeed, method: depth === null ? "deep-water" : "finite-depth" };
+  }
+
   function transform(wave, spot, bathymetry) {
     if (![wave.height, wave.period, wave.direction].every(finite) || wave.height < 0 || wave.period <= 0) return null;
     const incidence = angle(wave.direction, spot.normal);
@@ -167,6 +181,8 @@
     const wh = weather?.hourly, mh = marine?.hourly;
     if (!Array.isArray(mh?.time)) return [];
     const windIndex = new Map((wh?.time || []).map((t, i) => [t, i]));
+    const sampleDepth = bathymetry?.samples?.find(p => p.distance === 5000)?.depth;
+    const powerDepth = finite(sampleDepth) && sampleDepth > 0 ? sampleDepth : null;
     const value = (data, variable, model, i) => {
       const v = data?.[`${variable}_${model}`]?.[i];
       return finite(v) ? v : null;
@@ -178,7 +194,7 @@
         gust: value(wh, "wind_gusts_10m", model, wi) })));
       const members = Object.keys(WAVE_MODELS).map(model => {
         const wave = { model, height: value(mh, "wave_height", model, i), period: value(mh, "wave_period", model, i), direction: value(mh, "wave_direction", model, i) };
-        return { ...wave, rating: rate(wave, wind, spot, bathymetry) };
+        return { ...wave, rating: rate(wave, wind, spot, bathymetry), energetics: waveEnergy(wave, powerDepth) };
       });
       const scores = members.map(m => m.rating?.score).filter(finite);
       const heights = members.map(m => m.height).filter(finite);
@@ -190,6 +206,10 @@
       const daylight = Object.keys(WIND_MODELS).map(m => value(wh, "is_day", m, wi)).find(finite);
       return { time, members, wind, score: median(scores), height: median(heights),
         period: median(members.map(m => m.period)), nearHeight: median(members.map(m => m.rating?.local?.height)),
+        energyKJm2: median(members.map(m => m.energetics.energyKJm2)),
+        powerKWm: median(members.map(m => m.energetics.powerKWm)), powerDepth,
+        energyModels: members.filter(m => finite(m.energetics.energyKJm2)).length,
+        powerModels: members.filter(m => finite(m.energetics.powerKWm)).length,
         spread, agreement, daylight: daylight === 1, temperature: median(Object.keys(WIND_MODELS).map(m => value(wh, "temperature_2m", m, wi))),
         flags: [...new Set(members.flatMap(m => m.rating?.flags || []))] };
     });
@@ -214,6 +234,6 @@
     }
     return selected;
   }
-  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, detectCleanup, dispersion, transform, rate, buildForecast, bestWindows };
+  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

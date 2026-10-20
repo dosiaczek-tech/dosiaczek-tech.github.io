@@ -22,6 +22,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - **Bałtyk Surf 0.2**: porównanie DWD EWAM / ECMWF WAM, konsensus wiatru
   ICON / GFS / ECMWF, profil dna EMODnet i eksperymentalna transformacja fal 1D.
 - Mapy Windy, godziny polskie, oznaczanie brakujących i nieaktualnych danych.
+- Szacowana **moc fal na morzu (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
+  tabeli oraz porównaniu modeli, z objaśnieniem jednostek i sposobu obliczania.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
   prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą
   i filtrem regionu. Kolory odróżniają spoty z kamerą od pozostałych.

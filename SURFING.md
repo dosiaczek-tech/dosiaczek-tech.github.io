@@ -220,6 +220,40 @@ umożliwia filtr „Tylko wywiewka po nawianiu” i rozstrzyga remis ocen okien.
 Filtr wymaga trzech kolejnych dziennych godzin ze zgodnie potwierdzoną sekwencją.
 Bez filtra ranking nadal uwzględnia dobre okna bez lokalnego nawiania.
 
+### 6. Energia i moc fal na morzu
+
+Funkcja `waveEnergy` oblicza niezależnie dla każdej prognozy fal:
+
+- Średnią energię fal nieregularnych na powierzchnię: `E = ρ g Hs² / 16`,
+  przeliczoną z J/m² na **kJ/m²**. Przyjęto referencyjne `ρ = 1025 kg/m³`
+  i `g = 9,81 m/s²`. Gęstość nie jest pomiarem lokalnego zasolenia Bałtyku;
+  w słonawym Bałtyku może być mniejsza, co jest dodatkowym błędem przybliżenia.
+- Przybliżony strumień energii: `P ≈ E Cg`, w **kW/m** szerokości grzbietu.
+  Jeśli jest poprawna próbka EMODnet 5000 m od punktu spotu, prędkość grupową
+  liczymy z dyspersji dla tej głębokości. Nie potrzeba pełnego profilu przybrzeżnego.
+- Bez głębokości stosujemy jawnie opisane przybliżenie głębokiej wody:
+  `Cg = g T / (4π)`, czyli `P ≈ 0,491 Hs² T` kW/m.
+
+`T` to obecnie **średni okres z API**, nie okres energetyczny `Te` ani okres
+szczytowy `Tp`. Dla głębokiej wody dokładniejsza relacja wykorzystuje `Te`;
+przy skończonej głębokości potrzebna byłaby całka po widmie z `Cg(f,h)`.
+Obecny wynik jest wskaźnikiem przybliżonym i tak jest opisany w UI.
+Podstawa: [energia i strumień energii fal](https://en.wikipedia.org/wiki/Wave_power#Energy_and_energy_flux)
+oraz teoria fal liniowych. Dla Hs=1 m, T=5 s: E≈0,63 kJ/m² i P≈2,45 kW/m
+w przybliżeniu głębokiej wody.
+
+Wyświetlamy medianę **obliczonych wartości modeli**, nie energię wyliczoną
+z mediany wysokości (podnoszenie do kwadratu nie jest operacją liniową).
+Brak okresu pozostawia energię, ale wyłącza moc dla niezerowych fal. Brak
+wysokości oznacza brak obu wartości, nie zero. Liczba modeli jest podana
+na kafelkach. Wartości mogą się pojawić również przy braku danych wiatru.
+
+To energia i moc **na morzu**, bez projekcji na normalną brzegu. Nie są
+siłą uderzenia łamiącej się fali, energią jednej fali w kJ ani miarą jakości
+surfingu. Nie można ich bezpośrednio porównywać z nieopisanymi wskaźnikami
+„kJ” innych serwisów. Nie dodajemy ich ponownie do punktacji, która już
+uwzględnia wysokość i okres fal. Jednostki i objaśnienia są widoczne na stronie.
+
 ## Architektura i utrzymanie
 
 - GitHub Pages pozostaje statyczne. Przeglądarka pobiera dane wybranego spotu;
