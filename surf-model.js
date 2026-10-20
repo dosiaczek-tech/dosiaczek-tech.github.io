@@ -3,7 +3,7 @@
  */
 (function (root) {
   "use strict";
-  const VERSION = "Bałtyk Surf 1.1 / strefa 0–500 m";
+  const VERSION = "Bałtyk Surf 1.2 / pełny profil 0–500 m";
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
@@ -254,13 +254,31 @@
       point.shoreDistanceMin >= 0 && point.shoreDistance >= point.shoreDistanceMin && point.shoreDistance <= point.shoreDistanceMax &&
       point.shoreDistanceMax <= 500 && Math.abs(point.shoreDistanceMin - (point.distance - coast.waterDistance)) < .1 &&
       Math.abs(point.shoreDistanceMax - (point.distance - coast.landDistance)) < .1;
+    const nominalWetPoint = p => p && [p.height, p.depth, p.distance, p.shoreDistance, p.shoreDistanceMin, p.shoreDistanceMax].every(finite) &&
+      p.height >= 0 && p.depth > 0 && p.shoreDistance > 0 && p.shoreDistance <= 500 &&
+      Math.abs(p.distance - coast.distance - p.shoreDistance) < .1 &&
+      Math.abs(p.shoreDistanceMin - (p.distance - coast.waterDistance)) < .1 &&
+      Math.abs(p.shoreDistanceMax - (p.distance - coast.landDistance)) < .1;
+    const fullProfile = (profile, target) => {
+      if (document?.profileGridM !== 50 || document.profileReference !== "estimated-shoreline" || !Array.isArray(profile) || profile.length !== 11 || profile.some(p => !p || typeof p !== "object")) return [];
+      const sorted = [...profile].sort((a, b) => a.shoreDistance - b.shoreDistance);
+      const correct = sorted.every((p, i) => p && [p.height, p.depth, p.distance, p.shoreDistance, p.shoreDistanceMin, p.shoreDistanceMax].every(finite) &&
+        p.shoreDistance === i * 50 && p.height >= 0 && p.depth >= 0 &&
+        Math.abs(p.distance - coast.distance - p.shoreDistance) < .1 &&
+        Math.abs(p.shoreDistanceMin - (p.distance - coast.waterDistance)) < .1 &&
+        Math.abs(p.shoreDistanceMax - (p.distance - coast.landDistance)) < .1 &&
+        (i === 0 ? p.kind === "land-boundary" && p.height === 0 && p.depth === 0 :
+          (p.kind === "swan-node" && p.depth > 0) || (p.kind === "dry-model-node" && p.height === 0 && p.depth <= .05)));
+      const atTarget = sorted.find(p => p.shoreDistance === target.shoreDistance);
+      return correct && atTarget && Math.abs(atTarget.height - target.height) < .001 && Math.abs(atTarget.depth - target.depth) < .001 ? sorted : [];
+    };
     return rows.map(row => {
       const result = byTime.get(row.time);
       if (!result || !inZone(result) || ![result.height, result.depth, result.powerKWm, result.lat, result.lon].every(finite) || result.height < 0 || result.depth <= 0 ||
           result.powerKWm < 0 || (result.height > .001 && (!finite(result.period) || result.period <= 0 || !finite(result.direction))))
         return { ...row, simulation: null, scoreSource: "unavailable", score: null, height: null, period: null, direction: null,
           powerKWm: null, energyKJm2: null, nearHeight: null, flags: ["Brak potwierdzonej prognozy w strefie 0–500 m od brzegu"] };
-      const local = { ...result, profile: (result.profile || []).filter(inZone), breaking: inZone(result.breaking) ? result.breaking : null };
+      const local = { ...result, profile: fullProfile(result.profile, result), breaking: nominalWetPoint(result.breaking) ? result.breaking : null };
       const rating = result.height <= .001 ? { score: 0, flags: ["SWAN: praktycznie brak fali przy brzegu"] } :
         rate({ height: result.height, period: result.period, direction: result.direction }, row.wind, spot, null,
           { ...result, basis: "SWAN", blocked: false });

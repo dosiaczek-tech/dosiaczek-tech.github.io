@@ -42,10 +42,10 @@
     }
   }
   async function nearshore(spot, force = false) {
-    const key = `swan-coast500-${spotKey(spot)}`, previous = memory.get(key);
+    const key = `swan-profile50-${spotKey(spot)}`, previous = memory.get(key);
     if (previous && !force && Date.now() - previous.loadedAt < 900000) return previous.value;
     try {
-      const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?v=${Math.floor(Date.now() / 900000)}`);
+      const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?profile=50m-v1&v=${Math.floor(Date.now() / 900000)}`);
       if (value.schema !== 2 || value.spot?.id !== spot.id) throw new Error("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
       if (value.status === "ready" && (!M.finite(value.generatedAt) || !Array.isArray(value.hourly) ||
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");

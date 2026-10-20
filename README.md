@@ -19,10 +19,13 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
   70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
-- **Bałtyk Surf 1.1 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
+- **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
-- Wszystkie prezentowane parametry fal, główny wykres i ranking dotyczą
+- Główny wykres pokazuje **pełny przekrój 0, 50, 100, …, 500 m** i jest od razu
+  widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
+  jest zaznaczeniem na całej krzywej, nie początkiem wykresu.
+- Podsumowanie, tabela, wykres czasowy i ranking dotyczą
   **tego samego punktu w strefie do 500 m od oszacowanego brzegu**. Podajemy
   odległość, głębokość oraz link do punktu prognozy na mapie. Brak wyniku
   przybrzeżnego nie jest zastępowany prognozą z dalszego morza.

@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from nearshore import (DX, LENGTH, SPINUP_HOURS, WIND_MODELS, consensus, install_engine,
+from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, WIND_MODELS, calculation_grid, consensus, install_engine,
                        local_direction, offshore, parse_output, shoreline_reference, simulate, swan_time, wind_components)
 
 
@@ -49,6 +49,13 @@ class ModelUtilities(unittest.TestCase):
     def test_point_is_within_500_m_even_if_deeper_target_is_farther_away(self):
         self.check_coastal_selection(0)
 
+    def test_shallow_dry_cells_are_distinguished_from_missing_wet_results(self):
+        row = self.check_coastal_selection(0, first_depth=.02)
+        self.assertEqual(row["profile"][1]["kind"], "dry-model-node")
+        self.assertEqual(row["profile"][1]["height"], 0)
+        with self.assertRaisesRegex(ValueError, "Incomplete SWAN profile"):
+            self.check_coastal_selection(0, mask_wet=True)
+
     def test_inland_map_pin_does_not_shift_the_distance_reference(self):
         row = self.check_coastal_selection(900)
         self.assertGreater(row["distance"], 500)
@@ -60,9 +67,9 @@ class ModelUtilities(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"za przeszkodą"):
             shoreline_reference({"lat":54.3,"lon":18.8,"normal":0},bath)
 
-    def check_coastal_selection(self, shore):
+    def check_coastal_selection(self, shore, first_depth=.5, mask_wet=False):
         distances = list(range(-1000, LENGTH+1, DX))
-        depth = [None if d < shore else .5 + (d-shore)*.0018 for d in distances]
+        depth = [None if d < shore else first_depth + (d-shore)*.0018 for d in distances]
         bath = {"depth":depth,"distances":distances,"wetStart":distances.index(shore),
                 "elevation":[1 if d is None else -d for d in depth]}
         spot = {"lat":54.35,"lon":18.831,"normal":0}
@@ -70,17 +77,27 @@ class ModelUtilities(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"profile.tbl"
             lines=[]
-            for d, z in zip(distances,depth):
+            coast, grid_distances, grid_depths = calculation_grid(spot, bath)
+            self.assertEqual(grid_distances[0], coast["distance"])
+            self.assertEqual(grid_depths[0], 0)
+            for d, z in zip(grid_distances,grid_depths):
                 # At 800 m from the first wet node the depth is closer to 2 m,
                 # but that attractive-looking wave must not be selected.
-                lines.append(f'{swan_time(timestamp)} {LENGTH-d} {z if z is not None else -99} {1+(d-shore)/1000 if z is not None else -9} 5 6 270 {0.2 if d-shore>=800 else 0} 1000 0')
+                active = z > .05 and not (mask_wet and d == shore + 300)
+                lines.append(f'{swan_time(timestamp)} {LENGTH-d} {z if active else -99} {1+(d-shore)/1000 if active else -9} 5 6 270 {0.2 if d-shore>=800 else 0} 1000 0')
             path.write_text('\n'.join(lines))
             row=parse_output(path,spot,bath,timestamp,timestamp)[0]
         self.assertEqual(row["distance"], shore+400)
         self.assertEqual(row["shoreDistance"], 450)
         self.assertEqual(row["shoreDistanceMax"], 500)
         self.assertIsNone(row["breaking"])
-        self.assertTrue(all(0 <= p["shoreDistance"] <= p["shoreDistanceMax"] <= 500 for p in row["profile"]))
+        self.assertEqual([p["shoreDistance"] for p in row["profile"]],list(range(0,501,COMPUTE_DX)))
+        self.assertEqual(row["profile"][0]["kind"],"land-boundary")
+        self.assertEqual(row["profile"][0]["height"],0)
+        self.assertEqual(row["profile"][-1]["kind"],"swan-node")
+        self.assertGreater(row["profile"][-1]["height"],row["profile"][-2]["height"])
+        # 500 m is a real solver sample, not a held/extrapolated 450 m value.
+        self.assertAlmostEqual(row["profile"][-1]["height"],1.45)
         bath["elevation"][bath["wetStart"]-1]=None
         with self.assertRaisesRegex(ValueError,"Luka danych"):
             shoreline_reference(spot,bath)
@@ -122,6 +139,9 @@ class SwanPhysics(unittest.TestCase):
         self.assertGreater(abs(row["height"] - calm["hourly"][-1]["height"]), .01,
                            "Changing wind must change the actual SWAN solution, not just a UI rating")
         self.assertTrue(all(0 <= p["qb"] <= 1 for p in row["profile"]))
+        self.assertEqual([p["shoreDistance"] for p in row["profile"]],list(range(0,501,50)))
+        self.assertEqual(row["profile"][0]["kind"],"land-boundary")
+        self.assertEqual(result["grid"]["spacingM"],50)
         self.assertTrue((cache/"reproducibility/test.tar.gz").exists())
         print("SWAN physical check: onshore Hs=", row["height"], "no-wind Hs=", calm["hourly"][-1]["height"])
 

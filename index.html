@@ -249,15 +249,15 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css">
+  <link rel="stylesheet" href="surf.css?v=profile50-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js"></script>
-  <script defer src="surf-model.js"></script>
-  <script defer src="surf-api.js"></script>
+  <script defer src="surf-model.js?v=profile50-v1"></script>
+  <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js"></script>
-  <script defer src="surf-app.js"></script>
+  <script defer src="surf-app.js?v=profile50-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -365,7 +365,7 @@
     <section id="forecastPanel" class="surf-panel" aria-labelledby="surfTitle" hidden>
       <div class="surf-heading">
         <div><p class="eyebrow">WARUNKI PRZY SPOCIE · DO 500 M OD BRZEGU</p><h1 id="surfTitle">Znajdź swoje fale.</h1><p>Wysokość fal, wiatr i najlepsze godziny na sesję w strefie przy plaży.</p></div>
-        <span class="model-pill">Bałtyk Surf 1.1 · prognoza przy brzegu</span>
+        <span class="model-pill">Bałtyk Surf 1.2 · pełny profil 0–500 m</span>
       </div>
       <div class="surf-toolbar">
         <label>Miejscowość / plaża<select id="surfSpot"></select></label>
@@ -383,8 +383,14 @@
       <section class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
       <div id="surfContent" hidden>
         <div class="surf-spot-heading"><div><h2 id="surfSpotTitle"></h2><p id="surfSpotMeta"></p></div><a id="surfMapLink" target="_blank" rel="noopener noreferrer">Położenie plaży ↗</a></div>
+        <section id="surfSimulation" class="surf-box" aria-labelledby="surfSimulationTitle">
+          <div class="surf-table-heading"><h3 id="surfSimulationTitle">Fale od brzegu do 500 m</h3><label class="surf-profile-selector">Godzina przekroju<select id="surfProfileTime" aria-label="Wybierz godzinę przekroju fal" disabled></select></label></div>
+          <p class="surf-small">Pełny przekrój: 0, 50, 100, 150, …, 500 m. Wybierz godzinę, aby zobaczyć, jak zmienia się wysokość fal na całym tym odcinku.</p>
+          <div id="surfSimulationProfile" class="surf-chart"></div>
+          <div id="surfSimulationInfo" role="status" aria-live="polite"></div>
+          <p class="surf-small">Siatka obliczeniowa SWAN ma krok 50 m. Mapa dna ma rozdzielczość około 100 m i jest interpolowana do siatki — nie są to pomiary dna co 50 m. Odległość 0 m to linia brzegu przyjęta w modelu, z granicznym zerem na lądzie. Rzeczywiste położenie linii wody i napływ fali na piasek mogą się różnić.</p>
+        </section>
         <div id="surfNow" class="surf-metrics"></div>
-        <details id="surfSimulation" class="surf-box"><summary id="surfSimulationTitle">Fale na pierwszych 500 m od brzegu — przekrój dla wybranej godziny</summary><div id="surfSimulationInfo" role="status" aria-live="polite"></div><div id="surfSimulationProfile" class="surf-chart"></div><p class="surf-small">To wynik modelu SWAN, nie pomiar z plaży. Położenie brzegu szacujemy z mapy dna EMODnet; rozdzielczość wynosi około 100 m. Wysokość fali liczymy w rozpoznanej płytkiej strefie, maksymalnie 500 m od tego brzegu. Dokładny rozmiar łamiącej się fali zależy także od aktualnych rew, prądów i poziomu wody.</p></details>
         <p class="surf-small"><strong>Wysokość fal (m)</strong> opisuje ich rozmiar od doliny do grzbietu. W prognozie używamy wysokości znaczącej (Hs): w przybliżeniu średniej wysokości jednej trzeciej najwyższych fal. Pojedyncze fale mogą być większe, a przy brzegu ich rozmiar się zmienia — to nie jest dokładna wysokość fali, na której będziesz surfować.</p>
         <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. Wynik 0–100 opisuje potencjał do surfingu, nie bezpieczeństwo.</p>
         <p class="surf-small"><strong>Energia fal (kJ/m²)</strong> oznacza ilość energii na metr kwadratowy powierzchni morza. <strong>Moc fal (kW/m)</strong> opisuje jej przepływ w ciągu sekundy na metr szerokości grzbietu. Wyższa fala niesie więcej energii: przy podwojeniu wysokości energia rośnie około czterokrotnie. To nie jest siła uderzenia fali ani energia jednej konkretnej fali. Większa moc nie musi oznaczać lepszych warunków do surfingu.</p>
@@ -392,7 +398,7 @@
         <div id="surfFlags" class="surf-flags"></div>
         <section class="surf-box"><h3>Po nawianiu: czy nadchodzi wywiewka?</h3><div id="surfSequence" aria-live="polite"></div><p class="surf-small">Analiza poprzednich 24 godzin modelowych, nie pomiarów. Szukamy dłuższego onshore, później słabego offshore lub ciszy oraz utrzymującej się fali. Zmiana wiatru nie gwarantuje wygładzenia fali ani sesji następnego dnia.</p></section>
         <section class="surf-box"><div class="surf-table-heading"><h3>Najlepsze trzygodzinne okna</h3><label><input id="surfCleanupOnly" type="checkbox"> Tylko wywiewka po nawianiu</label></div><p class="surf-small">Tylko godziny dzienne. Ranking dotyczy wybranej plaży; także najlepsze okno może mieć słabe warunki. Filtr wywiewki wymaga potwierdzenia sekwencji przez wszystkie trzy godziny.</p><div id="surfWindows" class="surf-windows"></div></section>
-        <section class="surf-box"><h3>Wysokość fal przy spocie — kolejne dni</h3><div id="surfChart" class="surf-chart"></div><p class="surf-small">Zielona linia: prognozowana wysokość fal przy wybranym spocie, w strefie do 500 m od brzegu. Oś pozioma to dzień i godzina, pionowa — metry wysokości fali. To te same wartości co w tabeli i podsumowaniu. Przerwa w linii oznacza brak danych.</p></section>
+        <details class="surf-box"><summary>Zmiany w kolejnych dniach w punkcie podsumowania</summary><div id="surfChart" class="surf-chart"></div><p class="surf-small">To dodatkowy wykres czasowy dla punktu podsumowania (jego odległość jest podana przy wysokości fali). Pełny przekrój od brzegu do 500 m znajduje się powyżej. Oś pozioma tutaj oznacza dzień i godzinę, a nie odległość. Przerwa w linii oznacza brak danych.</p></details>
         <section class="surf-box">
           <div class="surf-table-heading"><h3>Prognoza godzinowa</h3><label><input id="surfHourly" type="checkbox"> Każda godzina</label></div>
           <p class="surf-small">Wszystkie parametry fal dotyczą punktu przy spocie, maksymalnie 500 m od brzegu. Przedziały co 3 godziny, np. 00:00–03:00; wartości dotyczą ich początku. Kliknij godzinę, aby zobaczyć przekrój pierwszych 500 m. Kolumna „Punkt prognozy” pokazuje odległość od brzegu i głębokość.</p>

@@ -7,6 +7,7 @@ whole Baltic. Actual SWAN transport/source terms evolve spectra over the last
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_right
 import concurrent.futures
 import hashlib
 import io
@@ -31,13 +32,14 @@ import urllib3.util.connection
 urllib3.util.connection.allowed_gai_family = lambda: socket.AF_INET
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "BS-SWAN-1.1-coast500"
+VERSION = "BS-SWAN-1.2-full-profile500"
 ENGINE_URL = "https://swanmodel.sourceforge.io/download/zip/SWAN-41.51-Linux.tar.gz"
 ENGINE_SHA256 = "11ec02bd4106cee1e9267a648a525ec009a5c0e18c5fe57a3a1f685b90b4f894"
 WAVE_MODELS = ["dwd_ewam", "ecmwf_wam"]
 WIND_MODELS = ["icon_seamless", "gfs_seamless", "ecmwf_ifs025"]
 LENGTH = 5000
 DX = 100
+COMPUTE_DX = 50
 DT_MINUTES = 10
 SPINUP_HOURS = 12
 HORIZON_HOURS = 120
@@ -258,6 +260,31 @@ def swan_time(timestamp):
     return datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y%m%d.%H%M%S")
 
 
+def calculation_grid(spot, bath):
+    """Align solver nodes with the estimated coast: 0, 50, ... 500 m.
+
+    Only bathymetry is linearly resampled; wave heights come from SWAN at
+    those nodes. The zero-depth land boundary is not a wet-wave observation.
+    """
+    coast = shoreline_reference(spot, bath)
+    length = LENGTH - coast["distance"]
+    cells = round(length / COMPUTE_DX)
+    if abs(cells * COMPUTE_DX - length) > .001 or length < MAX_SHORE_DISTANCE:
+        raise ValueError("Cannot align the SWAN grid with the coast")
+    anchors = [(coast["distance"], 0.0)] + list(zip(bath["distances"][bath["wetStart"]:], bath["depth"][bath["wetStart"]:]))
+    coordinates = [p[0] for p in anchors]
+    distances, depths = [], []
+    for i in range(cells + 1):
+        d = coast["distance"] + i * COMPUTE_DX
+        j = min(max(1, bisect_right(coordinates, d)), len(anchors) - 1)
+        (left, a), (right, b) = anchors[j - 1], anchors[j]
+        if not finite(a) or not finite(b) or not left <= d <= right:
+            raise ValueError("Cannot interpolate missing bathymetry")
+        depths.append(a + (b - a) * (d - left) / (right - left))
+        distances.append(d)
+    return coast, distances, depths
+
+
 def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=False):
     mh = marine["data"]["hourly"]
     indices = {t: i for i, t in enumerate(mh["time"])}
@@ -277,13 +304,13 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
             raise ValueError("Invalid boundary height/period")
         boundary.append(f"{swan_time(t)} {height:.5f} {max(period, 1):.5f} {local_direction(direction, spot['normal']):.5f} 30")
     (directory / "boundary.tpar").write_text("\n".join(boundary) + "\n")
-    depths = [d if i >= bath["wetStart"] and d is not None else -1 for i, d in enumerate(bath["depth"])]
+    _, _, depths = calculation_grid(spot, bath)
     cells = len(depths) - 1
-    domain_length = cells * DX
+    domain_length = cells * COMPUTE_DX
     (directory / "bottom.dat").write_text(" ".join(map(str, reversed(depths))) + "\n")
     commands = ["PROJECT 'BalticSurf' '0001'", "MODE NONSTATIONARY ONEDIMENSIONAL",
                 "SET depmin=0.05 inrhog=1 NAUTICAL", f"CGRID REGULAR 0 0 0 {domain_length} 0 {cells} 0 CIRCLE 36 0.05 1.0 31",
-                f"INPGRID BOTTOM REGULAR 0 0 0 {cells} 0 {DX} 1", "READINP BOTTOM 1 'bottom.dat' 3 0 FREE",
+                f"INPGRID BOTTOM REGULAR 0 0 0 {cells} 0 {COMPUTE_DX} 1", "READINP BOTTOM 1 'bottom.dat' 3 0 FREE",
                 "BOUND SHAPESPEC JONSWAP 3.3 MEAN DSPR DEGREES", "BOUNDSPEC SIDE W CONSTANT FILE 'boundary.tpar' 1",
                 "INPGRID WIND REGULAR 0 0 0 3 0 2500 1", "GEN3 KOMEN", "BREAKING CONSTANT 1.0 0.73",
                 "FRICTION JONSWAP 0.038", "TRIAD", "PROP BSBT", f"CURVE 'PROFILE' 0 0 {cells} {domain_length} 0",
@@ -318,9 +345,10 @@ def parse_output(path, spot, bath, start, end):
             raise ValueError("Nonfinite SWAN output")
         by_time.setdefault(timestamp, {})[int(round(values[0]))] = values
     result = []
-    coast = shoreline_reference(spot, bath)
+    coast, grid_distances, grid_depths = calculation_grid(spot, bath)
+    domain_length = (len(grid_distances) - 1) * COMPUTE_DX
     for timestamp in range(start, end + 1, 3600):
-        if timestamp not in by_time or len(by_time[timestamp]) != len(bath["depth"]):
+        if timestamp not in by_time or len(by_time[timestamp]) != len(grid_distances):
             raise ValueError("SWAN did not finish the full requested horizon")
         points = sorted(by_time[timestamp].values())
         valid = [p for p in points if 0 < p[1] < 1000 and 0 <= p[2] < 20 and ((p[3] > 0 and p[4] > 0) or p[2] < .001)]
@@ -329,7 +357,8 @@ def parse_output(path, spot, bath, start, end):
         if not near:
             raise ValueError("Brak poprawnego wyniku w strefie do 500 m od rozpoznanego brzegu")
         target = min(near, key=lambda p: (abs(p[1] - 2), -p[0]))
-        breaking = next((p for p in near if p[6] >= .1), None)
+        breaking = next((p for p in valid if .3 <= p[1] <= 4 and
+                         0 < LENGTH - p[0] - coast["distance"] <= MAX_SHORE_DISTANCE and p[6] >= .1), None)
         def record(p):
             distance = LENGTH - p[0]
             lat, lon = offshore(spot, distance)
@@ -343,8 +372,33 @@ def parse_output(path, spot, bath, start, end):
         profile = [{"distance": LENGTH - int(p[0]), "shoreDistance": round(LENGTH - p[0] - coast["distance"], 1),
                     "shoreDistanceMin": round(LENGTH - p[0] - coast["waterDistance"], 1),
                     "shoreDistanceMax": round(LENGTH - p[0] - coast["landDistance"], 1),
-                    "depth": round(p[1], 3), "height": round(p[2], 3), "qb": round(p[6], 4)}
-                   for p in valid if 0 <= LENGTH - p[0] - coast["waterDistance"] and LENGTH - p[0] - coast["landDistance"] <= MAX_SHORE_DISTANCE]
+                    "depth": round(p[1], 3), "height": round(p[2], 3), "qb": round(p[6], 4), "kind": "swan-node"}
+                   for p in valid if 0 < LENGTH - p[0] - coast["distance"] <= MAX_SHORE_DISTANCE]
+        boundary = by_time[timestamp].get(domain_length)
+        if boundary is None or boundary[1] > 0:
+            raise ValueError("Expected a dry land boundary at model shore distance zero")
+        profile.append({"distance": coast["distance"], "shoreDistance": 0,
+                        "shoreDistanceMin": coast["distance"] - coast["waterDistance"],
+                        "shoreDistanceMax": coast["distance"] - coast["landDistance"],
+                        "depth": 0, "height": 0, "qb": 0, "kind": "land-boundary"})
+        for d in range(COMPUTE_DX, MAX_SHORE_DISTANCE + 1, COMPUTE_DX):
+            if any(p["shoreDistance"] == d for p in profile):
+                continue
+            raw = by_time[timestamp].get(domain_length - d)
+            input_depth = grid_depths[d // COMPUTE_DX]
+            # SWAN excludes cells shallower than depmin; preserve this state,
+            # never reinterpret an error/missing wet-cell result as zero waves.
+            if raw is not None and raw[1] <= 0 and 0 <= input_depth <= .05:
+                distance = coast["distance"] + d
+                profile.append({"distance": distance, "shoreDistance": d,
+                                "shoreDistanceMin": distance - coast["waterDistance"],
+                                "shoreDistanceMax": distance - coast["landDistance"],
+                                "depth": round(input_depth, 4), "height": 0, "qb": 0, "kind": "dry-model-node"})
+        profile.sort(key=lambda p: p["shoreDistance"])
+        if [p["shoreDistance"] for p in profile] != list(range(0, MAX_SHORE_DISTANCE + 1, COMPUTE_DX)):
+            missing = [d for d in range(0, MAX_SHORE_DISTANCE + 1, COMPUTE_DX) if d not in [p["shoreDistance"] for p in profile]]
+            details = [p[:4] for p in points if round(LENGTH - p[0] - coast["distance"]) in missing]
+            raise ValueError(f"Incomplete SWAN profile at {swan_time(timestamp)}: missing {missing}, raw x/depth/height/period={details}")
         result.append({"time": timestamp, **record(target), "breaking": record(breaking) if breaking else None, "profile": profile})
     return result
 
@@ -357,7 +411,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
         directory = Path(temporary)
         boundary, used = prepare_run(directory, spot, bath, marine, winds, start, end, calm_test)
         run = subprocess.run([str(executable)], cwd=directory, env={**os.environ, "OMP_NUM_THREADS": "1"},
-                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300, text=True)
+                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600, text=True)
         log = (directory / "PRINT").read_text() if (directory / "PRINT").exists() else ""
         if run.returncode or "** Error" in log or "No continuation" in log or not (directory / "profile.tbl").exists():
             raise ValueError("SWAN failed: " + (run.stderr or log[-1800:]))
@@ -374,12 +428,13 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
                     archive.add(file, arcname=file.name)
     return {"schema": 2, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
             "shoreline": shoreline_reference(spot, bath), "maxShoreDistanceM": MAX_SHORE_DISTANCE,
+            "profileGridM": COMPUTE_DX, "profileReference": "estimated-shoreline",
             "cycle": int(now // 43200) * 43200,
             "spot": {k: spot[k] for k in ["id", "lat", "lon", "normal"]}, "geometryKey": geometry_key(spot),
             "boundaryModel": boundary, "boundaryFetchedAt": marine["fetchedAt"], "windFetchedAt": min(w["fetchedAt"] for w in winds),
             "windModels": WIND_MODELS, "windName": "BS Wind 3", "inputHash": input_hash, "engineArchiveSha256": ENGINE_SHA256,
             "sourceCommit": os.environ.get("GITHUB_SHA"),
-            "grid": {"lengthM": (len(bath["depth"]) - 1) * DX, "offshoreDistanceM": LENGTH, "spacingM": DX, "timeStepMinutes": DT_MINUTES, "directions": 36, "frequencies": 32, "spinupHours": SPINUP_HOURS},
+            "grid": {"lengthM": LENGTH - shoreline_reference(spot, bath)["distance"], "offshoreDistanceM": LENGTH, "spacingM": COMPUTE_DX, "bathymetrySamplingM": DX, "timeStepMinutes": DT_MINUTES, "directions": 36, "frequencies": 32, "spinupHours": SPINUP_HOURS},
             "assumptions": ["1D transect, no harbour shadow/diffraction", "reconstructed JONSWAP boundary from mean period; spreading 30 deg", "water level 0 relative to LAT; no currents or ice", "regional DTM, not current sandbar survey"],
             "bathymetry": bath, "windUsed": used, "history": history, "hourly": hourly}
 
@@ -442,7 +497,7 @@ def main():
     ready = 0
     for s in spots:
         result = results[s["id"]]
-        if result and result.get("schema") == 2 and result.get("geometryKey") == geometry_key(s):
+        if result and result.get("schema") == 2 and result.get("version") == VERSION and result.get("geometryKey") == geometry_key(s):
             document = {**result, "lastAttemptError": errors.get(s["id"])}
             if 0 <= time.time() - result.get("generatedAt", 0) <= 18 * 3600:
                 ready += 1

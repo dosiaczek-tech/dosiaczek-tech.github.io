@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (r.simulation) {
           const button = node("button", interval, "text-button"); button.type = "button";
           button.title = "Pokaż przekrój symulacji SWAN dla tej godziny";
-          button.addEventListener("click", () => { simulationTime = r.time; renderSimulation(r); $("surfSimulation").open = true; $("surfSimulation").scrollIntoView({ behavior: "smooth", block: "start" }); });
+          button.addEventListener("click", () => { simulationTime = r.time; render(); $("surfSimulation").scrollIntoView({ behavior: "smooth", block: "start" }); });
           cell(button);
         } else cell(interval);
         cell(scoreNode(r.score));
@@ -174,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       info.append(node("p", "Brak aktualnego wyniku z potwierdzoną odległością do 500 m od brzegu na tę godzinę. Nie wystawiamy oceny sesji na podstawie dalszego morza.", "surf-small")); return;
     }
     const s = row.simulation;
+    $("surfProfileTime").value = String(row.time);
     const summary = node("p");
     summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy spocie ~${fmt(s.height)} m`), document.createTextNode(` · około ${Math.round(s.shoreDistance)} m od brzegu · głębokość ${fmt(s.depth)} m · czas między falami ${fmt(s.period)} s · moc ${fmt(s.powerKWm, 2)} kW/m.`));
     info.append(summary);
@@ -181,18 +182,32 @@ document.addEventListener("DOMContentLoaded", () => {
       : "Model nie wskazuje wyraźnej strefy załamania w rozpoznanych pierwszych 500 m. Wysokość dotyczy wybranego płytkiego punktu, możliwie bliskiego głębokości 2 m — nie jest pomiarem ściany łamiącej się fali.", "surf-small"));
     info.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
     if (row.simulationWind) info.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 3.`, "surf-small"));
-    const points = (s.profile || []).filter(p => [p.shoreDistance, p.height].every(M.finite) && p.shoreDistance >= 0 && p.shoreDistanceMax <= 500).sort((a, b) => a.shoreDistance - b.shoreDistance);
-    if (points.length < 2) return;
+    const points = s.profile || [];
+    if (points.length !== 11) { plot.append(node("p", "Pełny profil 0–500 m co 50 m wymaga przeliczenia. Nie przedłużamy krótszej krzywej wymyślonymi wartościami.", "surf-small")); return; }
     const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 900 210"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Wysokość fal na pierwszych 500 metrach od brzegu");
+    const width = Math.max(300, Math.min(900, plot.clientWidth || 900));
+    svg.setAttribute("viewBox", `0 0 ${width} 210`); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Pełny przekrój wysokości fal od 0 do 500 metrów od brzegu, co 50 metrów");
     const max = Math.max(.5, ...points.map(p => p.height));
-    const x = distance => 50 + distance / 500 * 830;
-    const add = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); if(text)e.textContent=text;svg.append(e); };
-    for(let i=0;i<4;i++){const y=170-i*50;add("line",{x1:50,x2:880,y1:y,y2:y,stroke:"#dce3db"});add("text",{x:0,y:y+4,fill:"#647776","font-size":12},`${fmt(max*i/3)} m`);}
-    add("polyline",{points:points.map(p=>`${x(p.shoreDistance)},${170-p.height/max*150}`).join(" "),fill:"none",stroke:"#0b7169","stroke-width":3});
-    for(let d=0;d<=500;d+=100)add("text",{x:x(d),y:198,"text-anchor":d===500?"end":"start",fill:"#647776","font-size":12},`${d} m`);
-    add("circle",{cx:x(s.shoreDistance),cy:170-s.height/max*150,r:5,fill:"#18383e"});
-    plot.append(svg, node("p", "Oś pozioma: odległość od oszacowanego brzegu, maksymalnie 500 m. Kropka: ten sam punkt, którego wysokość fal widzisz w podsumowaniu i tabeli.", "surf-small"));
+    const x = distance => 45 + distance / 500 * (width - 60);
+    const y = height => 170 - height / max * 150;
+    const add = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); if(text)e.textContent=text;svg.append(e); return e; };
+    for(let i=0;i<4;i++){const yy=170-i*50;add("line",{x1:45,x2:width-15,y1:yy,y2:yy,stroke:"#dce3db"});add("text",{x:0,y:yy+4,fill:"#647776","font-size":12},`${fmt(max*i/3)} m`);}
+    for(let i=1;i<points.length;i++){
+      const a=points[i-1],b=points[i],dry=a.kind!=="swan-node"||b.kind!=="swan-node";
+      add("line",{x1:x(a.shoreDistance),y1:y(a.height),x2:x(b.shoreDistance),y2:y(b.height),stroke:dry?"#647776":"#0b7169","stroke-width":dry?2:3,"stroke-dasharray":dry?"4 3":"none"});
+    }
+    for(let d=0;d<=500;d+=100)add("text",{x:x(d),y:198,"text-anchor":d===0?"start":d===500?"end":"middle",fill:"#647776","font-size":width<450?10:12},`${d} m`);
+    const values = node("div", undefined, "surf-profile-values");
+    points.forEach(p => {
+      const marker = add("circle",{cx:x(p.shoreDistance),cy:y(p.height),r:p.shoreDistance===s.shoreDistance?5:3,
+        fill:p.kind!=="swan-node"?"#647776":"#0b7169","data-distance":p.shoreDistance});
+      const heightLabel=fmt(p.height,p.height>0&&p.height<.1?2:1);
+      const title=document.createElementNS(ns,"title");title.textContent=p.shoreDistance===0?"0 m — granica lądu w modelu":p.kind==="dry-model-node"?`${p.shoreDistance} m: komórka uznana przez model za suchą / zbyt płytką`:`${p.shoreDistance} m: fala ~${heightLabel} m`;marker.append(title);
+      const value=node("div",undefined,"surf-profile-value");value.dataset.distance=p.shoreDistance;
+      value.append(node("small",`${p.shoreDistance} m od brzegu`),node("strong",p.shoreDistance===0?"brzeg":p.kind==="dry-model-node"?"płytko / sucho":`~${heightLabel} m`));
+      values.append(value);
+    });
+    plot.append(svg, values, node("p", "Cały przekrój: 0, 50, 100, …, 500 m od brzegu przyjętego w modelu. Zielone punkty: wyniki SWAN. Szare: granica lądu albo komórki uznane za suche / zbyt płytkie (warunek modelu, nie pomiar napływu fali). Grubsza kropka zaznacza punkt podsumowania — nie początek wykresu. Położenie rzeczywistej linii wody jest przybliżone.", "surf-small"));
   }
 
   function renderBathymetry(now) {
@@ -213,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!loaded || !active) return;
     rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation);
     $("surfContent").hidden = false;
-    const now = rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000);
+    const now = rows.find(r => r.time === simulationTime && r.simulation) || rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000);
     const stale = loaded.weather?.stale;
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
     const errors = [...loaded.errors, ...[loaded.weather].filter(r => r?.error).map(r => r.error)];
@@ -227,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfMapLink").href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
     $("surfMapLink").textContent = point ? "Punkt prognozy na mapie ↗" : "Położenie spotu ↗";
     const items = [
-      ["Wysokość fal przy spocie", now?.simulation ? `~${fmt(now.height)} m` : "—", now?.simulation ? `Około ${Math.round(now.simulation.shoreDistance)} m od brzegu · głębokość ${fmt(now.simulation.depth)} m` : "Brak danych dla strefy do 500 m"],
+      [now ? `Wysokość fal przy spocie · ${hour(now.time)}` : "Wysokość fal przy spocie", now?.simulation ? `~${fmt(now.height)} m` : "—", now?.simulation ? `Około ${Math.round(now.simulation.shoreDistance)} m od brzegu · głębokość ${fmt(now.simulation.depth)} m` : "Brak danych dla strefy do 500 m"],
       ["Czas między falami przy spocie", now?.simulation ? `${fmt(now.period)} s` : "—", now?.simulation ? `Fale nadchodzą z ${compass(now.direction)}` : "Brak prognozy przy brzegu"],
       ["Wiatr przy plaży", `${fmt(now?.wind?.speed)} m/s`, `Z ${compass(now?.wind?.direction)} · porywy ${fmt(now?.wind?.gust)} m/s`],
       ["Moc fal przy spocie", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", "W tym samym punkcie, do 500 m od brzegu"],
@@ -237,7 +252,10 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfNow").replaceChildren(...items.map(([title, value, desc]) => { const el = node("div", undefined, "surf-metric"); el.append(node("small", title), node("strong", value), node("p", desc)); return el; }));
     $("surfFlags").replaceChildren(...(now?.flags || []).map(f => node("span", f)));
     renderSequence(now);
-    renderSimulation(rows.find(r => r.time === simulationTime) || now || rows[0]);
+    const profileRows = rows.filter(r => r.simulation?.profile.length === 11);
+    $("surfProfileTime").replaceChildren(...profileRows.map(r => { const option=node("option",`${day(r.time)} · ${hour(r.time)}`);option.value=r.time;return option; }));
+    $("surfProfileTime").disabled = !profileRows.length;
+    renderSimulation(rows.find(r => r.time === simulationTime) || now || profileRows[0] || rows[0]);
     const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now() && r.simulation), 3, { cleanupOnly: $("surfCleanupOnly").checked });
     $("surfWindows").replaceChildren(...windows.map(w => {
       const button = node("button", undefined, "surf-window"); button.type = "button";
@@ -326,8 +344,19 @@ document.addEventListener("DOMContentLoaded", () => {
   $("surfRegion").addEventListener("change", () => { populateSpots(); if ($("surfSpot").value) location.hash = `surf/${$("surfSpot").value}`; });
   $("surfRefresh").addEventListener("click", () => { if (currentSpot) loadSpot(currentSpot, true); });
   $("surfHourly").addEventListener("change", renderHours);
+  $("surfProfileTime").addEventListener("change", () => { simulationTime=Number($("surfProfileTime").value);selectedDay=dayKey(simulationTime);render(); });
   $("surfCleanupOnly").addEventListener("change", render);
   window.addEventListener("hashchange", route);
+  if (window.ResizeObserver) {
+    let profileWidth = 0;
+    new ResizeObserver(entries => {
+      const width = Math.round(entries[0].contentRect.width);
+      if (active && width > 0 && width !== profileWidth) {
+        profileWidth = width;
+        renderSimulation(rows.find(r => r.time === simulationTime) || rows.find(r => r.simulation));
+      }
+    }).observe($("surfSimulationProfile"));
+  }
   // Odświeżamy tylko otwartą, widoczną zakładkę. Awaria nie wywołuje pętli zapytań.
   setInterval(() => {
     if (active && currentSpot && document.visibilityState === "visible" && Date.now() - lastAttempt >= 1800000) loadSpot(currentSpot);

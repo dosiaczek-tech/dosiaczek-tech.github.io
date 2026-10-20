@@ -1,7 +1,8 @@
-# BS-SWAN 1.1 — prognoza dla strefy 0–500 m od brzegu
+# BS-SWAN 1.2 — pełny przekrój od brzegu do 500 m
 
-**Główny wykres, podsumowanie, tabela i ocena sesji pokazują wyłącznie falę
-przy spocie, do 500 m od brzegu oszacowanego z DTM.** Parametry na zewnętrznej
+**Główny wykres pokazuje cały przekrój 0–500 m co 50 m**, z wyborem godziny.
+Podsumowanie i ocena sesji dotyczą oznaczonego punktu w tej strefie, a dodatkowy
+wykres czasowy jest schowany w rozwijanej sekcji. Parametry na zewnętrznej
 granicy modelu są danymi wejściowymi i nie zastępują wyniku przy plaży.
 
 ## Co jest liczone
@@ -18,10 +19,11 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
 ### Domena i widmo
 
 - Granica morska: 5 km w kierunku normalnym od punktu spotu.
-- Domena sięga do punktu spotu oraz, dla nowych rastrów, do 1 km dalej w stronę
-  lądu, aby punkty autora mapy leżące na wodzie też miały rozwiązany brzeg.
+- Pobierany raster sięga do 1 km za punkt spotu w stronę lądu, żeby rozpoznać
+  przejście ląd–woda. Domena obliczeniowa kończy się na oszacowanej linii brzegu.
 - Raster EMODnet DTM jest pobierany przez WCS jako GeoTIFF w natywnej rozdzielczości
-  około 1/16 minuty. Próbkowanie co 100 m; to nie pomiar aktualnych rew co 100 m.
+  około 1/16 minuty. Próbkowanie rastra co 100 m i liniowe przeniesienie głębokości
+  na siatkę obliczeniową SWAN co 50 m. Nie tworzy to pomiarów dna ani rew co 50 m.
 - Do obliczeń wchodzi tylko ciągła morska część profilu połączona z granicą.
   Nie ekstrapolujemy brakujących głębokości. Jeśli nie ma rozpoznanej strefy
   płytszej niż 4 m, wynik jest niedostępny zamiast fikcyjnej prognozy surfbreaku.
@@ -75,9 +77,16 @@ były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafnośc
 - Pierwsze od morza miejsce w tej strefie, gdzie SWAN przewiduje `QB >= 0.1`
   (co najmniej 10% fal załamujących się), z wysokością, głębokością i odległością.
   Brak takiego punktu oznacza brak rozpoznanego załamania, nie arbitralnie wyznaczony break.
-- Profil wysokości fali tylko na pierwszych 500 m, wybierany kliknięciem godziny
-  w tabeli. Główny wykres czasowy ma jedną linię wysokości fal w tym samym
-  punkcie co tabela — nie pokazuje dwóch prognoz offshore.
+- Profil ma dokładnie 11 punktów: 0, 50, …, 500 m od przyjętej linii brzegu.
+  Siatka solvera jest wyrównana do tej linii, więc 500 m jest rzeczywistym węzłem
+  SWAN, a nie ekstrapolacją ostatniej wartości z 450 m. Wybór godziny działa
+  bezpośrednio nad wykresem i przez kliknięcie przedziału w tabeli.
+- Punkt 0 m to sucha granica modelu z zerem energii, oznaczona `land-boundary`,
+  **nie pomiar ani rozwiązanie napływu fali na piasek**. Jeśli SWAN wyłącza
+  dalszą komórkę o głębokości do 0,05 m, pokazujemy `dry-model-node` (płytko/sucho),
+  odróżnione od obliczonych mokrych węzłów `swan-node`. Błędnego lub brakującego
+  wyniku w mokrej komórce nie zamieniamy na zero. Szare, przerywane odcinki wykresu
+  odróżniają granicę/suche komórki od zielonej krzywej obliczonych fal.
 - Moc przy brzegu pochodzi z wektora spektralnego transportu energii `TRANSP`
   przy `INRHOG=1` (W/m → kW/m); nie jest tylko wzorem głębokiej wody z okresem średnim.
 - Świeży wynik SWAN zastępuje podstawę oceny sesji; nie jest drugi raz
@@ -104,9 +113,11 @@ lub brak rzędnej nie pozwala potwierdzić odległości i wyłącza publikację 
 Przy kroku 100 m przedział położenia brzegu ma szerokość do 100 m. W JSON
 zapisujemy jego końce, środek, współrzędne oraz dla każdego punktu wyniku:
 `shoreDistance`, `shoreDistanceMin`, `shoreDistanceMax`. **Nawet maksymalna
-odległość względem rozpoznanego przedziału nie może przekraczać 500 m.**
-Ta sama kontrola dotyczy strefy załamania i punktów profilu. Frontend sprawdza
-limit ponownie, niezależnie od backendu.
+odległość głównego punktu podsumowania względem rozpoznanego przedziału nie może
+przekraczać 500 m.** Pełny profil i położenie załamania obejmują nominalne
+0–500 m względem środka przedziału brzegu. Zatem węzeł 500 m ma niepewność
+położenia brzegu (np. przedział 450–550 m), a nie geodezyjną gwarancję położenia.
+Frontend sprawdza odległości i kompletność 11 punktów niezależnie od backendu.
 
 To odległość względem **brzegu szacowanego z mapy dna przy LAT**, nie obietnica
 dokładności geodezyjnej względem bieżącej linii wody. Błąd DTM, aktualny poziom
@@ -115,8 +126,9 @@ jako przybliżone. W przykładzie punktu katalogowego leżącego 750 m w głębi
 wynik 900 m od tego punktu może być 150 m od brzegu — nie odrzucamy ani nie
 zatwierdzamy go wyłącznie na podstawie odległości od pinezki.
 
-Wyniki mają schemat JSON **2** i `maxShoreDistanceM: 500`; frontend nie akceptuje
-starszych pakietów jako prognozy tej strefy. Publikacja również wymaga zgodnej
+Wyniki mają schemat JSON **2**, `maxShoreDistanceM: 500`, a pełny profil jest
+oznaczony `profileGridM: 50` i `profileReference: estimated-shoreline`.
+Niepełny profil nie jest sztucznie przedłużany na wykresie. Publikacja wymaga zgodnej
 wersji pakietu danych, dzięki czemu awaryjne przywrócenie starego artefaktu
 nie podmieni nowych wyników na dawne wartości z innego zakresu przestrzennego.
 Do diagnozy wywiewki udostępniamy dodatkowo 6 godzin historii modelowej z drugiej

@@ -1,6 +1,12 @@
-# Bałtyk Surf 1.1 — prognoza przy spocie, do 500 m od brzegu
+# Bałtyk Surf 1.2 — pełny profil 0–500 m przy spocie
 
-**Aktualna prezentacja:** wszystkie wartości fal, główny wykres i ocena sesji
+Główny wykres jest teraz od razu widocznym **przekrojem od 0 do 500 m co 50 m**,
+z wyborem godziny i liczbowymi wynikami pod wykresem. Wartość w punkcie np.
+150 m jest tylko zaznaczeniem na krzywej. Węzły wodne pochodzą z nowej siatki
+SWAN co 50 m; granica lądu i suche/płytkie komórki są wyraźnie odróżnione.
+Wykres zmian w czasie dla punktu podsumowania jest osobną, rozwijaną sekcją.
+
+**Aktualna prezentacja:** wartości podsumowania, wykres czasowy i ocena sesji
 dotyczą punktu w strefie do 500 m od brzegu oszacowanego z DTM. Wysokość,
 okres, kierunek, moc i energia pochodzą z tego samego wyniku SWAN. Dane offshore
 służą tylko jako warunek wejściowy backendu; przeglądarka nie pobiera ich do
