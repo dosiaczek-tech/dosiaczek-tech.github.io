@@ -102,6 +102,12 @@ co trzy godziny. W publicznych repozytoriach GitHub może wyłączać harmonogra
 po długim okresie bez aktywności; stan widać w Actions oraz w datach na stronie.
 Odświeżenie w przeglądarce tylko pobiera ostatni wynik; nie uruchamia obliczeń.
 
+Jeśli odświeżenie prognoz zawiedzie, publikacja interfejsu może użyć katalogu
+`data/` z ostatniego udanego artefaktu Pages. Zachowuje wszystkie oryginalne
+daty pobrania i obliczeń, więc limity wieku danych w interfejsie nadal działają.
+`data/status.json` oznacza wtedy `lastRefreshFailed`. Stary kod strony nie jest
+przywracany. Brak poprawnego poprzedniego pakietu lub błąd testów zatrzymuje publikację.
+
 ## Odtworzenie lokalnie
 
 Linux amd64, Node.js, Python 3.10+ i biblioteki systemowe libgfortran5/libgomp1:

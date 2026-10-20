@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -51,6 +52,7 @@ jobs:
           SWAN_INTEGRATION=1 python -m unittest discover -s model -p 'test_*.py' -v
       - name: Refresh wind and compute due SWAN forecasts
         id: compute
+        continue-on-error: true
         env:
           FORCE: ${{ inputs.force }}
         run: |
@@ -59,6 +61,29 @@ jobs:
           if [ "$FORCE" = 'true' ]; then args+=(--force); fi
           python -u model/nearshore.py --workers 4 "${args[@]}"
           python model/build_site.py
+      - name: Find last successfully published forecast bundle
+        if: steps.compute.outcome == 'failure'
+        id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/forecast-pages.yml/runs?status=success&branch=master&per_page=1" --jq '.workflow_runs[0].id')
+          test "$run_id" != 'null'
+          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+      - name: Download last published Pages artifact
+        if: steps.compute.outcome == 'failure'
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.previous.outputs.run-id }}
+          name: github-pages
+          path: .previous-pages
+      - name: Publish interface with original forecast timestamps
+        if: steps.compute.outcome == 'failure'
+        run: |
+          python model/reuse_forecast.py .previous-pages/artifact.tar dist/data
+          python model/build_site.py
+          echo '::warning::Forecast refresh failed; interface uses the last published data with unchanged timestamps.'
       - uses: actions/cache/save@v4
         if: always() && steps.compute.outcome == 'success'
         with:
