@@ -19,7 +19,7 @@
     const markers = new Map();
     let currentId = selectedId, currentRegion = region, revision = 0, mapClickId = null;
     let tileError = false;
-    const map = L.map(container, { scrollWheelZoom: false, maxZoom: 19, minZoom: 6, zoomControl: false });
+    const map = L.map(container, { scrollWheelZoom: true, maxZoom: 19, minZoom: 6, zoomControl: false });
     L.control.zoom({ zoomInTitle: "Przybliż mapę", zoomOutTitle: "Oddal mapę" }).addTo(map);
     const tile = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
@@ -28,7 +28,7 @@
     function updateStatus() {
       status.textContent = tileError
         ? "Podkład mapy jest chwilowo niedostępny. Znaczniki i lista spotów nadal działają."
-        : `${visibleSpots().length} spotów na mapie. Kliknij liczbę, aby rozwinąć grupę, a znacznik, aby wybrać prognozę. Przybliżaj przyciskami +/− lub gestem dwóch palców.`;
+        : `${visibleSpots().length} spotów na mapie. Kliknij liczbę, aby rozwinąć grupę, a znacznik, aby wybrać prognozę. Kółko myszy nad mapą przybliża lub oddala, a poza mapą przewija stronę. Możesz też użyć +/− lub gestu dwóch palców.`;
     }
     tile.on("tileerror", () => { tileError = true; updateStatus(); });
     tile.on("tileload", () => { if (tileError) { tileError = false; updateStatus(); } });
