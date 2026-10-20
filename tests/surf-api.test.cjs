@@ -59,6 +59,14 @@ test('weather failure retains wave data without synthesizing wind', async () => 
   assert.equal(result.errors.length, 1);
 });
 
+test('coastal page requests wind only, never an offshore wave forecast', async () => {
+  const h = harness();
+  const result = await h.api.forecasts(spot, false, { coastalOnly: true });
+  assert.equal(result.marine, null);
+  assert.ok(result.weather);
+  assert.equal(h.calls(), 1);
+});
+
 test('rate limit produces a useful error and never invented values', async () => {
   const h = harness(); h.mode('rate-limit');
   const result = await h.api.forecasts(spot);

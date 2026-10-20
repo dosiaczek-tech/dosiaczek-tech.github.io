@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from nearshore import (DX, LENGTH, SPINUP_HOURS, WIND_MODELS, consensus, install_engine,
-                       local_direction, offshore, parse_output, simulate, wind_components)
+                       local_direction, offshore, parse_output, shoreline_reference, simulate, swan_time, wind_components)
 
 
 class ModelUtilities(unittest.TestCase):
@@ -43,7 +43,48 @@ class ModelUtilities(unittest.TestCase):
             path = Path(temp)/"short.tbl"
             path.write_text("20261020.120000 0 10 1 5 6 270 0 2000 0\n")
             with self.assertRaisesRegex(ValueError, "full requested horizon"):
-                parse_output(path, {"normal": 0}, {"wetStart": 0, "depth": [10]*51}, 1792497600, 1792501200)
+                parse_output(path, {"normal": 0, "lat":54.8,"lon":18.4},
+                    {"wetStart": 1, "depth": [None]+[10]*50, "elevation":[1]+[-10]*50, "distances":list(range(0,5100,100))}, 1792497600, 1792501200)
+
+    def test_point_is_within_500_m_even_if_deeper_target_is_farther_away(self):
+        self.check_coastal_selection(0)
+
+    def test_inland_map_pin_does_not_shift_the_distance_reference(self):
+        row = self.check_coastal_selection(900)
+        self.assertGreater(row["distance"], 500)
+        self.assertLessEqual(row["shoreDistanceMax"], 500)
+
+    def test_offshore_barrier_is_not_used_as_the_spots_beach(self):
+        bath={"distances":[-100,0,100,200,300,400],"depth":[None,1,None,None,2,3],
+              "elevation":[1,-1,0,0,-2,-3],"wetStart":4}
+        with self.assertRaisesRegex(ValueError,"za przeszkodą"):
+            shoreline_reference({"lat":54.3,"lon":18.8,"normal":0},bath)
+
+    def check_coastal_selection(self, shore):
+        distances = list(range(-1000, LENGTH+1, DX))
+        depth = [None if d < shore else .5 + (d-shore)*.0018 for d in distances]
+        bath = {"depth":depth,"distances":distances,"wetStart":distances.index(shore),
+                "elevation":[1 if d is None else -d for d in depth]}
+        spot = {"lat":54.35,"lon":18.831,"normal":0}
+        timestamp=1792497600
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"profile.tbl"
+            lines=[]
+            for d, z in zip(distances,depth):
+                # At 800 m from the first wet node the depth is closer to 2 m,
+                # but that attractive-looking wave must not be selected.
+                lines.append(f'{swan_time(timestamp)} {LENGTH-d} {z if z is not None else -99} {1+(d-shore)/1000 if z is not None else -9} 5 6 270 {0.2 if d-shore>=800 else 0} 1000 0')
+            path.write_text('\n'.join(lines))
+            row=parse_output(path,spot,bath,timestamp,timestamp)[0]
+        self.assertEqual(row["distance"], shore+400)
+        self.assertEqual(row["shoreDistance"], 450)
+        self.assertEqual(row["shoreDistanceMax"], 500)
+        self.assertIsNone(row["breaking"])
+        self.assertTrue(all(0 <= p["shoreDistance"] <= p["shoreDistanceMax"] <= 500 for p in row["profile"]))
+        bath["elevation"][bath["wetStart"]-1]=None
+        with self.assertRaisesRegex(ValueError,"Luka danych"):
+            shoreline_reference(spot,bath)
+        return row
 
 
 @unittest.skipUnless(os.environ.get("SWAN_INTEGRATION") == "1", "Set SWAN_INTEGRATION=1 to execute the real solver")
@@ -63,7 +104,9 @@ class SwanPhysics(unittest.TestCase):
             weather[f"wind_gusts_10m_{model}"] = [14]*count
         winds = [{"fetchedAt": now, "data": {"hourly": weather}} for _ in range(3)]
         spot = {"id": "test", "lat": 54.8, "lon": 18.4, "normal": 0}
-        bath = {"wetStart": 0, "depth": [.2 + d*.003 for d in range(0, LENGTH+1, DX)]}
+        depths = [None] + [.2 + d*.003 for d in range(0, LENGTH+1, DX)]
+        bath = {"wetStart": 1, "depth": depths, "distances": list(range(-100,LENGTH+1,DX)),
+                "elevation": [1 if d is None else -d for d in depths]}
         cache = Path(os.environ.get("SWAN_TEST_CACHE", ".forecast-cache"))
         cache.mkdir(parents=True, exist_ok=True)
         executable = install_engine(cache)
@@ -73,6 +116,7 @@ class SwanPhysics(unittest.TestCase):
         row = result["hourly"][-1]
         self.assertTrue(0 < row["height"] < 2)
         self.assertTrue(row["period"] > 0)
+        self.assertLessEqual(row["shoreDistanceMax"], 500)
         self.assertTrue(row["energyPeriod"] > 0)
         self.assertTrue(math.isfinite(row["powerKWm"]) and row["powerKWm"] >= 0)
         self.assertGreater(abs(row["height"] - calm["hourly"][-1]["height"]), .01,

@@ -42,11 +42,11 @@
     }
   }
   async function nearshore(spot, force = false) {
-    const key = `swan-${spotKey(spot)}`, previous = memory.get(key);
+    const key = `swan-coast500-${spotKey(spot)}`, previous = memory.get(key);
     if (previous && !force && Date.now() - previous.loadedAt < 900000) return previous.value;
     try {
       const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?v=${Math.floor(Date.now() / 900000)}`);
-      if (value.schema !== 1 || value.spot?.id !== spot.id) throw new Error("Niezgodny wynik SWAN");
+      if (value.schema !== 2 || value.spot?.id !== spot.id) throw new Error("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
       if (value.status === "ready" && (!M.finite(value.generatedAt) || !Array.isArray(value.hourly) ||
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");
       memory.set(key, { loadedAt: Date.now(), value });
@@ -72,7 +72,7 @@
     pending.set(key, task);
     return task;
   }
-  function forecasts(spot, force = false) {
+  function forecasts(spot, force = false, { coastalOnly = false } = {}) {
     const sea = M.offshore(spot);
     const common = { past_days: 2, forecast_days: 6, timeformat: "unixtime", timezone: "GMT" };
     const marineURL = endpoint("https://marine-api.open-meteo.com/v1/marine", { ...common,
@@ -82,7 +82,7 @@
       latitude: spot.lat, longitude: spot.lon, wind_speed_unit: "ms", cell_selection: "nearest",
       hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day", models: Object.keys(M.WIND_MODELS).join(",") });
     // Nie odrzucamy fal, gdy brakuje wiatru; ocena wtedy pozostaje pusta.
-    return Promise.allSettled([cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force)])
+    return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force)])
       .then(([marine, weather]) => ({ marine: marine.status === "fulfilled" ? marine.value : null,
         weather: weather.status === "fulfilled" ? weather.value : null,
         errors: [marine, weather].filter(r => r.status === "rejected").map(r => r.reason.message) }));

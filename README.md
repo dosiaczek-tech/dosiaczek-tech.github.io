@@ -19,14 +19,18 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
   70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
-- **Bałtyk Surf 1.0 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
+- **Bałtyk Surf 1.1 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
+- Wszystkie prezentowane parametry fal, główny wykres i ranking dotyczą
+  **tego samego punktu w strefie do 500 m od oszacowanego brzegu**. Podajemy
+  odległość, głębokość oraz link do punktu prognozy na mapie. Brak wyniku
+  przybrzeżnego nie jest zastępowany prognozą z dalszego morza.
 - Automatyczny backend GitHub Actions: wiatr co 3 h, nowe obliczenia SWAN
   w cyklach 00/12 UTC. W tabeli wiatr pod komórkami fal i pięć klas kierunku:
   onshore, cross-on, cross, cross-off, offshore.
 - Mapy Windy, godziny polskie, oznaczanie brakujących i nieaktualnych danych.
-- Szacowana **moc fal na morzu (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
+- Szacowana **moc fal przy spocie (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
   tabeli oraz porównaniu modeli, z objaśnieniem jednostek i sposobu obliczania.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
   prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą
@@ -53,7 +57,7 @@ z weryfikacją integralności SRI.
 Prognozy pobierają publiczne dane Open-Meteo i EMODnet bez kluczy API;
 publiczny endpoint Open-Meteo służy do użytku niekomercyjnego. Wyniki SWAN
 generuje backend opisany w `MODEL.md`; bez plików `data/` frontend wyraźnie
-oznacza brak symulacji i udostępnia pomocniczą prognozę regionalną.
+oznacza brak prognozy przy brzegu; nie podstawia danych z dalszego morza.
 Skrypty i arkusz `surf-*` oraz `surf.css` muszą być publikowane obok `index.html`.
 
 Testy obliczeń i pobierania danych: `node --test tests/*.test.cjs`.

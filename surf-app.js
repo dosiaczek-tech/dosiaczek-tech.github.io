@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function link(label, url) { const a = node("a", label); a.href = url; return a; }
   const quality = score => !M.finite(score) ? "Brak oceny" : score >= 70 ? "Obiecujące" : score >= 45 ? "Umiarkowane" : score >= 20 ? "Słabe" : "Bardzo słabe";
-  const scoreNode = score => { const e = node("span", fmt(score, 0), "surf-score"); e.dataset.quality = score >= 70 ? "good" : score < 45 ? "poor" : "fair"; return e; };
-  let currentSpot = null, loaded = null, bath = null, rows = [], selectedDay = null, generation = 0, active = false, mapLayer = null;
+  const scoreNode = score => { const e = node("span", fmt(score, 0), "surf-score"); e.dataset.quality = !M.finite(score) ? "unknown" : score >= 70 ? "good" : score < 45 ? "poor" : "fair"; return e; };
+  let currentSpot = null, loaded = null, rows = [], selectedDay = null, generation = 0, active = false, mapLayer = null;
   let lastAttempt = 0;
   let spotMap = null;
   let simulation = null, simulationTime = null;
@@ -96,8 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("viewBox", "0 0 1000 210"); svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Porównanie wysokości znaczącej fal DWD i ECMWF na pięć dni. Wartości godzinowe poniżej.");
-    const values = rows.flatMap(r => r.members.map(m => m.height)).filter(M.finite);
+    svg.setAttribute("aria-label", "Prognozowana wysokość fal przy spocie, do 500 metrów od brzegu, na pięć dni");
+    const values = rows.map(r => r.simulation?.height).filter(M.finite);
+    if (!values.length) { $("surfChart").replaceChildren(node("p", "Brak potwierdzonej prognozy dla strefy do 500 m od brzegu. Wykres pojawi się po poprawnym przeliczeniu tego spotu.", "surf-small")); return; }
     const max = Math.max(1, Math.ceil(Math.max(0, ...values) * 2) / 2);
     const add = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text) e.textContent = text; svg.append(e); };
     for (let i = 0; i <= 4; i++) {
@@ -105,16 +106,14 @@ document.addEventListener("DOMContentLoaded", () => {
       add("line", { x1: 48, x2: 980, y1: y, y2: y, stroke: "#dce3db" });
       add("text", { x: 2, y: y + 4, fill: "#647776", "font-size": 12 }, `${fmt(max * i / 4)} m`);
     }
-    Object.keys(M.WAVE_MODELS).forEach((model, m) => {
-      let path = "", connected = false;
-      rows.forEach((r, i) => {
-        const h = r.members.find(w => w.model === model)?.height;
-        if (!M.finite(h)) { connected = false; return; }
-        path += `${connected ? "L" : "M"}${48 + i / Math.max(1, rows.length - 1) * 932},${170 - h / max * 152} `;
-        connected = true;
-      });
-      add("path", { d: path, stroke: m ? "#b57b42" : "#0b7169", "stroke-width": 2.5, fill: "none" });
+    let path = "", connected = false;
+    rows.forEach((r, i) => {
+      const h = r.simulation?.height;
+      if (!M.finite(h)) { connected = false; return; }
+      path += `${connected ? "L" : "M"}${48 + i / Math.max(1, rows.length - 1) * 932},${170 - h / max * 152} `;
+      connected = true;
     });
+    add("path", { d: path, stroke: "#0b7169", "stroke-width": 2.5, fill: "none" });
     rows.forEach((r, i) => { if (i % 24 === 0) add("text", { x: 48 + i / Math.max(1, rows.length - 1) * 932, y: 198, fill: "#647776", "font-size": 12 }, `${day(r.time)} ${hour(r.time)}`); });
     $("surfChart").replaceChildren(svg);
   }
@@ -125,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfHours").replaceChildren(...rows.filter(r => dayKey(r.time) === selectedDay)
       .filter((r, i) => everyHour || i === 0 || localHour(r.time) % 3 === 0).map(r => {
         const tr = node("tr"); tr.dataset.night = String(!r.daylight);
-        const waveDirection = r.simulation?.direction ?? r.members.find(m => M.finite(m.direction))?.direction;
+        const waveDirection = r.simulation?.direction;
         const windText = r.wind ? `BS Wind: z ${compass(r.wind.direction)} · ${fmt(r.wind.speed)} m/s · ${M.windRelativeToWave(r.wind, waveDirection) || "kierunek niepewny"}` : "BS Wind: brak danych";
         const cell = (content, withWind = false) => {
           const td = node("td"); td.append(typeof content === "string" ? document.createTextNode(content) : content);
@@ -142,21 +141,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (r.simulation) {
           const button = node("button", interval, "text-button"); button.type = "button";
           button.title = "Pokaż przekrój symulacji SWAN dla tej godziny";
-          button.addEventListener("click", () => { simulationTime = r.time; renderSimulation(r); $("surfSimulation").scrollIntoView({ behavior: "smooth", block: "start" }); });
+          button.addEventListener("click", () => { simulationTime = r.time; renderSimulation(r); $("surfSimulation").open = true; $("surfSimulation").scrollIntoView({ behavior: "smooth", block: "start" }); });
           cell(button);
         } else cell(interval);
         cell(scoreNode(r.score));
-        cell(r.simulation ? `~${fmt(r.simulation.height)} m · SWAN` : "Brak wyniku SWAN", true);
-        const hs = r.members.map(m => m.height).filter(M.finite);
-        cell(hs.length ? `${fmt(Math.min(...hs))}–${fmt(Math.max(...hs))} m` : "—", true);
+        cell(r.simulation ? `~${fmt(r.simulation.height)} m` : "Brak danych przy brzegu", true);
         cell(`${fmt(r.period)} s`, true);
         cell(M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : "—", true);
         cell(M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : "—", true);
-        cell(r.members.filter(m => M.finite(m.direction)).map(m => compass(m.direction)).join(" / ") || "—");
+        cell(compass(r.direction));
         cell(r.wind ? `${compass(r.wind.direction)} · ${fmt(r.wind.speed)} m/s` : "Brak wiatru");
-        cell(r.members.find(m => m.rating)?.rating.windType || "—");
+        cell(M.windRelative(r.wind, currentSpot) || "—");
+        cell(r.simulation ? `~${Math.round(r.simulation.shoreDistance)} m od brzegu · ${fmt(r.simulation.depth)} m głębokości` : "—");
         const sequence = node("span", r.cleanup?.label || "—", "surf-sequence-cell"); sequence.dataset.state = r.cleanup?.state || "unknown";
-        cell(sequence); cell(r.agreement);
+        cell(sequence);
         return tr;
       }));
     $("surfDays").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.day === selectedDay)));
@@ -167,86 +165,83 @@ document.addEventListener("DOMContentLoaded", () => {
     info.replaceChildren(); plot.replaceChildren();
     if (!simulation) { info.append(node("p", "Wczytywanie wyników SWAN…", "surf-small")); return; }
     if (simulation.status !== "ready") {
-      info.append(node("p", "Brak aktualnego wyniku SWAN dla tego spotu. Pozostałe prognozy są oceną regionalną, a nie symulacją przybrzeżną.", "surf-small"));
+      info.append(node("p", "Brak potwierdzonej prognozy w strefie do 500 m od brzegu. Nie zastępujemy jej wartościami z dalszego morza.", "surf-small"));
       if (simulation.error) info.append(node("p", `Powód: ${simulation.error}`, "surf-small"));
       return;
     }
-    info.append(node("p", `Silnik ${simulation.engine} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)} · granica: ${M.WAVE_MODELS[simulation.boundaryModel] || simulation.boundaryModel}.`, "surf-small"));
+    info.append(node("p", `Prognoza ${simulation.engine} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)}.`, "surf-small"));
     if (!row?.simulation) {
-      info.append(node("p", "Brak wyniku na tę godzinę albo symulacja ma ponad 18 godzin. Nie używamy jej do oceny sesji.", "surf-small")); return;
+      info.append(node("p", "Brak aktualnego wyniku z potwierdzoną odległością do 500 m od brzegu na tę godzinę. Nie wystawiamy oceny sesji na podstawie dalszego morza.", "surf-small")); return;
     }
     const s = row.simulation;
     const summary = node("p");
-    summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy plaży ~${fmt(s.height)} m`), document.createTextNode(` · czas między falami ${fmt(s.period)} s · głębokość punktu ${fmt(s.depth)} m · moc przy brzegu ${fmt(s.powerKWm, 2)} kW/m.`));
+    summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy spocie ~${fmt(s.height)} m`), document.createTextNode(` · około ${Math.round(s.shoreDistance)} m od brzegu · głębokość ${fmt(s.depth)} m · czas między falami ${fmt(s.period)} s · moc ${fmt(s.powerKWm, 2)} kW/m.`));
     info.append(summary);
-    info.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.distance)} m od punktu spotu. Kryterium: co najmniej 10% fal załamujących się.`
-      : "Model nie wskazuje załamania co najmniej 10% fal w rozpoznanej płytkiej części profilu. Podana wysokość dotyczy punktu możliwie bliskiego głębokości 2 m, nie wysokości ściany fali.", "surf-small"));
+    info.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
+      : "Model nie wskazuje wyraźnej strefy załamania w rozpoznanych pierwszych 500 m. Wysokość dotyczy wybranego płytkiego punktu, możliwie bliskiego głębokości 2 m — nie jest pomiarem ściany łamiącej się fali.", "surf-small"));
+    info.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
     if (row.simulationWind) info.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 3.`, "surf-small"));
-    const points = (s.profile || []).filter(p => [p.distance, p.height].every(M.finite)).sort((a, b) => a.distance - b.distance);
+    const points = (s.profile || []).filter(p => [p.shoreDistance, p.height].every(M.finite) && p.shoreDistance >= 0 && p.shoreDistanceMax <= 500).sort((a, b) => a.shoreDistance - b.shoreDistance);
     if (points.length < 2) return;
     const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 900 210"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Obliczona przez SWAN wysokość fal od plaży w stronę morza");
-    const max = Math.max(.5, ...points.map(p => p.height)), minDistance = Math.min(0, ...points.map(p => p.distance));
-    const x = distance => 50 + (distance - minDistance) / (5000 - minDistance) * 830;
+    svg.setAttribute("viewBox", "0 0 900 210"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Wysokość fal na pierwszych 500 metrach od brzegu");
+    const max = Math.max(.5, ...points.map(p => p.height));
+    const x = distance => 50 + distance / 500 * 830;
     const add = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); if(text)e.textContent=text;svg.append(e); };
     for(let i=0;i<4;i++){const y=170-i*50;add("line",{x1:50,x2:880,y1:y,y2:y,stroke:"#dce3db"});add("text",{x:0,y:y+4,fill:"#647776","font-size":12},`${fmt(max*i/3)} m`);}
-    add("polyline",{points:points.map(p=>`${x(p.distance)},${170-p.height/max*150}`).join(" "),fill:"none",stroke:"#0b7169","stroke-width":3});
-    for(let d=0;d<=5000;d+=1000)add("text",{x:x(d),y:198,"text-anchor":d===5000?"end":"start",fill:"#647776","font-size":12},`${d} m`);
-    add("circle",{cx:x(s.distance),cy:170-s.height/max*150,r:5,fill:"#18383e"});
-    plot.append(svg, node("p", "Odległość od punktu spotu w stronę morza (wartości ujemne: w stronę lądu). Kropka: punkt prognozy przybrzeżnej. Kliknij przedział godzin w tabeli, aby obejrzeć inny termin.", "surf-small"));
+    add("polyline",{points:points.map(p=>`${x(p.shoreDistance)},${170-p.height/max*150}`).join(" "),fill:"none",stroke:"#0b7169","stroke-width":3});
+    for(let d=0;d<=500;d+=100)add("text",{x:x(d),y:198,"text-anchor":d===500?"end":"start",fill:"#647776","font-size":12},`${d} m`);
+    add("circle",{cx:x(s.shoreDistance),cy:170-s.height/max*150,r:5,fill:"#18383e"});
+    plot.append(svg, node("p", "Oś pozioma: odległość od oszacowanego brzegu, maksymalnie 500 m. Kropka: ten sam punkt, którego wysokość fal widzisz w podsumowaniu i tabeli.", "surf-small"));
   }
 
   function renderBathymetry(now) {
     const el = $("surfBathymetry"); el.replaceChildren();
-    if (!bath) { el.append(node("p", "Pobieranie sześciu próbek profilu dna z EMODnet…", "surf-small")); return; }
-    const valid = bath.samples.filter(s => M.finite(s.depth));
+    if (!now?.simulation) { el.append(node("p", "Brak aktualnego profilu dla strefy do 500 m od brzegu.", "surf-small")); return; }
+    const valid = now.simulation.profile.filter(p => M.finite(p.depth)).sort((a, b) => a.shoreDistance - b.shoreDistance);
     const profile = node("div", undefined, "bath-profile");
     const max = Math.max(1, ...valid.map(p => p.depth));
-    bath.samples.forEach(p => {
-      const col = node("div", undefined, "bath-point"); col.append(node("span", `${p.distance} m`));
+    valid.forEach(p => {
+      const col = node("div", undefined, "bath-point"); col.append(node("span", `~${Math.round(p.shoreDistance)} m`));
       const bar = node("i"); bar.style.height = `${M.finite(p.depth) ? p.depth / max * 65 : 2}px`; col.append(bar, node("span", `${fmt(p.depth)} m`)); profile.append(col);
     });
-    el.append(profile, node("p", "Odległość od punktu spotu → głębokość. Profil biegnie w kierunku normalnym do brzegu; punkt z mapy może leżeć już na wodzie.", "surf-small"));
-    const local = now?.members.find(m => m.rating?.local && !m.rating.local.blocked)?.rating.local;
-    if (now?.simulation) el.append(node("p", `SWAN: fala ~${fmt(now.simulation.height)} m w punkcie o głębokości ${fmt(now.simulation.depth)} m. Powyżej jest sześć poglądowych próbek WMS; solver korzysta z pełnego rastra WCS. To wysokość znacząca, nie dokładna wysokość ściany fali.`, "surf-small"));
-    else if (local) el.append(node("p", `Pomocnicze przybliżenie liniowe (nie SWAN): ${fmt(now.nearHeight)} m. ${local.breaking ? "Próg załamania" : "Ostatni punkt profilu"}: około ${Math.round(local.distance)} m od punktu spotu, głębokość ${fmt(local.depth)} m.`, "surf-small"));
-    else el.append(node("p", `${valid.length}/6 poprawnych próbek. ${bath.complete ? "Transformacja niedostępna dla bieżącego kierunku lub danych fal." : "Niepełny profil albo punkt na lądzie: nie stosujemy korekty dna do oceny."}`, "surf-small"));
-    el.append(node("p", `${currentSpot.geometry} Dane pobrano ${day(bath.fetchedAt / 1000)}.`, "surf-small"));
+    el.append(profile, node("p", "Odległość od oszacowanego brzegu → głębokość. Wyłącznie morska strefa do 500 m przy wybranym spocie.", "surf-small"));
+    el.append(node("p", `Wybrany punkt prognozy: około ${Math.round(now.simulation.shoreDistance)} m od brzegu, głębokość ${fmt(now.simulation.depth)} m. Dno pochodzi z rastra EMODnet, nie z bieżącego pomiaru rew.`, "surf-small"));
   }
 
   function render() {
-    if (!loaded?.marine || !active) return;
-    rows = M.applySimulation(M.buildForecast(currentSpot, loaded.marine.data, loaded.weather?.data, bath).slice(0, 120), simulation, currentSpot);
+    if (!loaded || !active) return;
+    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation);
     $("surfContent").hidden = false;
     const now = rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000);
-    const stale = loaded.marine.stale || loaded.weather?.stale;
-    const stamps = [loaded.marine, loaded.weather].filter(Boolean).map(r => r.fetchedAt);
-    const errors = [...loaded.errors, ...[loaded.marine, loaded.weather].filter(r => r?.error).map(r => r.error)];
+    const stale = loaded.weather?.stale;
+    const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
+    const errors = [...loaded.errors, ...[loaded.weather].filter(r => r?.error).map(r => r.error)];
     $("surfStatus").dataset.state = stale ? "stale" : errors.length ? "error" : "ready";
-    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ")}. Wiatr: ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 3, aktualizacja serwerowa co 3 h" : "BS Wind 3, pobranie bezpośrednie"}. ${rows.length} godzin dostępnych. ${errors.join(" ")}`;
+    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 3, aktualizacja serwerowa co 3 h" : "BS Wind 3, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu. ${errors.join(" ")}`;
     $("surfSpotTitle").textContent = `${currentSpot.town} — ${currentSpot.name}`;
-    $("surfSpotMeta").textContent = `${currentSpot.lat.toFixed(3)}°N, ${currentSpot.lon.toFixed(3)}°E · ekspozycja ${compass(currentSpot.normal)} · punkt fal 5 km w morze od punktu spotu · godziny polskie`;
-    $("surfMapLink").href = `https://www.openstreetmap.org/?mlat=${currentSpot.lat}&mlon=${currentSpot.lon}#map=14/${currentSpot.lat}/${currentSpot.lon}`;
+    const point = now?.simulation || rows.find(r => r.simulation)?.simulation;
+    $("surfSpotMeta").textContent = point ? `Punkt prognozy: około ${Math.round(point.shoreDistance)} m od brzegu · głębokość ${fmt(point.depth)} m · strefa do 500 m · godziny polskie`
+      : "Prognoza dotyczy wyłącznie strefy do 500 m od brzegu. Brak potwierdzonego wyniku dla tego miejsca.";
+    const lat = point?.lat ?? currentSpot.lat, lon = point?.lon ?? currentSpot.lon;
+    $("surfMapLink").href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+    $("surfMapLink").textContent = point ? "Punkt prognozy na mapie ↗" : "Położenie spotu ↗";
     const items = [
-      [now ? `Potencjał · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 0)} / 100`, `${quality(now?.score)} · ${now?.simulation ? "SWAN + aktualny BS Wind 3" : "ocena regionalna"}`],
-      ["Wysokość fal na morzu", `${fmt(now?.height)} m`, `Czas między falami: średnio ${fmt(now?.period)} s`],
+      ["Wysokość fal przy spocie", now?.simulation ? `~${fmt(now.height)} m` : "—", now?.simulation ? `Około ${Math.round(now.simulation.shoreDistance)} m od brzegu · głębokość ${fmt(now.simulation.depth)} m` : "Brak danych dla strefy do 500 m"],
+      ["Czas między falami przy spocie", now?.simulation ? `${fmt(now.period)} s` : "—", now?.simulation ? `Fale nadchodzą z ${compass(now.direction)}` : "Brak prognozy przy brzegu"],
       ["Wiatr przy plaży", `${fmt(now?.wind?.speed)} m/s`, `Z ${compass(now?.wind?.direction)} · porywy ${fmt(now?.wind?.gust)} m/s`],
-      ["Fala przy plaży — SWAN", now?.simulation ? `~${fmt(now.simulation.height)} m` : "—", now?.simulation ? `Na głębokości ${fmt(now.simulation.depth)} m · okres ${fmt(now.simulation.period)} s` : "Brak aktualnej symulacji dla tej godziny"],
-      ["Moc fal na morzu — szacunek", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", M.finite(now?.powerKWm)
-        ? `${now.powerModels}/2 modeli · ${M.finite(now.powerDepth) ? `uwzględniona głębokość ${fmt(now.powerDepth)} m` : "przybliżenie głębokiej wody"}` : "Potrzebna wysokość fal i czas między nimi"],
-      ["Energia fal na morzu", M.finite(now?.energyKJm2) ? `~${fmt(now.energyKJm2, 2)} kJ/m²` : "—", M.finite(now?.energyKJm2)
-        ? `Na m² powierzchni morza · ${now.energyModels}/2 modeli` : "Brak prognozy wysokości fal"]
+      ["Moc fal przy spocie", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", "W tym samym punkcie, do 500 m od brzegu"],
+      ["Energia fal przy spocie", M.finite(now?.energyKJm2) ? `~${fmt(now.energyKJm2, 2)} kJ/m²` : "—", "Na m² powierzchni wody w punkcie prognozy"],
+      [now ? `Pomocnicza ocena · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 0)} / 100`, `${quality(now?.score)} · ${now?.simulation ? "fale przy spocie + wiatr" : "brak prognozy przy brzegu"}`]
     ];
     $("surfNow").replaceChildren(...items.map(([title, value, desc]) => { const el = node("div", undefined, "surf-metric"); el.append(node("small", title), node("strong", value), node("p", desc)); return el; }));
     $("surfFlags").replaceChildren(...(now?.flags || []).map(f => node("span", f)));
     renderSequence(now);
     renderSimulation(rows.find(r => r.time === simulationTime) || now || rows[0]);
-    const hasSimulation = rows.some(r => r.simulation);
-    const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now() && (!hasSimulation || r.simulation)), 3, { cleanupOnly: $("surfCleanupOnly").checked });
+    const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now() && r.simulation), 3, { cleanupOnly: $("surfCleanupOnly").checked });
     $("surfWindows").replaceChildren(...windows.map(w => {
       const button = node("button", undefined, "surf-window"); button.type = "button";
-      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${w.score}/100 · ${quality(w.score)}`), node("small", `Wysokość fal na morzu ~${fmt(w.height)} m · pokaż dzień →`));
-      button.append(node("small", w.simulationHours === 3 ? `Przy plaży ~${fmt(w.nearHeight)} m · symulacja SWAN` : "Ocena regionalna — brak symulacji SWAN"));
+      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${w.score}/100 · ${quality(w.score)}`), node("small", `Fale przy spocie ~${fmt(w.height)} m · strefa do 500 m · pokaż dzień →`));
       if (w.cleanupHours) button.append(node("small", `Wywiewka / ucichanie po nawianiu: ${w.cleanupHours}/3 h`));
       button.addEventListener("click", () => { selectedDay = dayKey(w.start); renderHours(); $("surfDays").scrollIntoView({ behavior: "smooth", block: "center" }); }); return button;
     }));
@@ -258,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHours();
     $("surfModels").replaceChildren();
     const modelRow = (name, text) => { const el = node("div", undefined, "surf-model-row"); el.append(node("b", name), node("span", text)); $("surfModels").append(el); };
-    for (const m of now?.members || []) modelRow(M.WAVE_MODELS[m.model], `${fmt(m.height)} m · ${fmt(m.period)} s · z ${compass(m.direction)} · moc ~${fmt(m.energetics.powerKWm, 2)} kW/m · energia ~${fmt(m.energetics.energyKJm2, 2)} kJ/m² · ${fmt(m.rating?.score, 0)}/100`);
+    modelRow("Fale przy spocie", now?.simulation ? `SWAN · ~${fmt(now.height)} m · ~${Math.round(now.simulation.shoreDistance)} m od brzegu` : "Brak potwierdzonej prognozy do 500 m");
     for (const m of now?.wind?.members || []) modelRow(M.WIND_MODELS[m.model], `${fmt(m.speed)} m/s · z ${compass(m.direction)}`);
     if (!now) modelRow("Bieżąca godzina", "Brak danych");
     renderBathymetry(now);
@@ -276,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadSpot(spot, force = false) {
     const token = ++generation;
     lastAttempt = Date.now();
-    currentSpot = spot; loaded = null; bath = null; rows = []; selectedDay = null; simulation = null; simulationTime = null;
+    currentSpot = spot; loaded = null; rows = []; selectedDay = null; simulation = null; simulationTime = null;
     if ($("surfRegion").value !== "all" && $("surfRegion").value !== spot.region) { $("surfRegion").value = "all"; populateSpots(); }
     $("surfSpot").value = spot.id;
     $("surfTab").href = `#surf/${spot.id}`;
@@ -295,12 +290,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSpotNotes();
     setMap();
     SurfAPI.nearshore(spot, force).then(result => { if (token === generation && active) { simulation = result; render(); } });
-    SurfAPI.bathymetry(spot).then(result => { if (token === generation && active) { bath = result; render(); } }).catch(() => { /* Forecast remains usable without the profile. */ });
     try {
-      const result = await SurfAPI.forecasts(spot, force);
+      const result = await SurfAPI.forecasts(spot, force, { coastalOnly: true });
       if (token !== generation || !active) return;
       loaded = result;
-      if (!result.marine) throw new Error(result.errors.join(" ") || "Prognoza fal jest chwilowo niedostępna.");
+      if (!result.weather && simulation?.status !== "ready") throw new Error(result.errors.join(" ") || "Prognoza jest chwilowo niedostępna.");
       render();
     } catch (error) {
       if (token !== generation || !active) return;

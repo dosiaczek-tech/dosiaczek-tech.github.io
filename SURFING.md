@@ -1,4 +1,11 @@
-# Bałtyk Surf 1.0 — model, źródła i kierunek rozwoju
+# Bałtyk Surf 1.1 — prognoza przy spocie, do 500 m od brzegu
+
+**Aktualna prezentacja:** wszystkie wartości fal, główny wykres i ocena sesji
+dotyczą punktu w strefie do 500 m od brzegu oszacowanego z DTM. Wysokość,
+okres, kierunek, moc i energia pochodzą z tego samego wyniku SWAN. Dane offshore
+służą tylko jako warunek wejściowy backendu; przeglądarka nie pobiera ich do
+głównego widoku ani nie używa jako zastępstwa przy braku prognozy przy brzegu.
+Zasady wyznaczania brzegu i granicy 500 m: [MODEL.md](MODEL.md).
 
 **Aktualny silnik przybrzeżny: SWAN 41.51AB, niestacjonarny przekrój 1D.**
 Konfiguracja, harmonogram, wejścia i sposób odtworzenia: [MODEL.md](MODEL.md).
@@ -13,7 +20,8 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
   Rejestr w `surf-spots.js`: współrzędne, normalna brzegu, region i jawne ID kamer.
 - Pięć kolejnych dób, wartości godzinowe, porównanie modeli, trzy najlepsze
   niepokrywające się okna dzienne po trzy godziny dla wybranej plaży.
-- Fale: **DWD EWAM + ECMWF WAM**. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
+- Fale przy spocie: **SWAN, strefa 0–500 m**. Dane wejściowe backendu:
+  DWD EWAM / ECMWF WAM. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
 - Raster dna **EMODnet WCS**, niestacjonarny model SWAN z rzeczywistym wymuszeniem
   wiatrowym w trzech punktach przekroju, transportem widma, tarciem i załamywaniem.
 - Osadzana mapa **Windy** (fale / wiatr), uruchamiana przyciskiem; link do Windy
@@ -174,7 +182,7 @@ Piaszczyste rewy przemieszczają się znacznie szybciej niż aktualizuje się DT
 To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
 
 - Wysokość: rosnąca użyteczność do 0,4 m, optimum 0,4–1,6 m, spadek do zera
-  przy 3,5 m. Jeśli jest profil, używamy Hs po transformacji; inaczej Hs na morzu.
+  przy 3,5 m. Używamy Hs z wyniku SWAN w punkcie do 500 m od brzegu.
 - Okres: liniowe skalowanie `(T - 2) / 5`, ograniczone do 0–1.
 - Ekspozycja: `sqrt(max(0,cos(θ)))`, gdzie θ to kąt nadejścia względem normalnej.
   Fala pod kątem ≥85° jest poza przyjętym sektorem — ocena 0. To uproszczona
@@ -185,10 +193,10 @@ To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
   kierunku fali. Słaby offshore jest korzystniejszy, silny jest karany.
 - `score = 100 × ekspozycja × użyteczność_wysokości ×
   (0,55 × jakość_okresu + 0,45 × jakość_wiatru)`.
-- Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs na morzu ≥3 m ograniczają ocenę do 25.
-- Końcowa ocena to mediana wyników modeli fal, z tym samym konsensusem wiatru.
-  Nie uśredniamy Hs/okresów/kierunków przed transformacją — zachowujemy spójne
-  trójki parametrów każdego modelu.
+- Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 25.
+- Końcowa ocena widoczna na stronie wykorzystuje spójny zestaw wysokości,
+  okresu i kierunku z przybrzeżnego SWAN oraz aktualny konsensus wiatru.
+  Brak przybrzeżnego wyniku oznacza brak oceny, nie zastępczą średnią offshore.
 
 „Modele zbliżone” nie oznacza wysokiej trafności. Duża niepewność jest sygnalizowana
 m.in. po 72 h, przy rozrzucie Hs >0,6 m, wiatru >4 m/s, ocen >25 pkt lub
@@ -213,10 +221,10 @@ Detektor `detectCleanup` analizuje ostatnie 24 h przed daną godziną:
 3. Słaby offshore lub bardziej odbrzegowy cross-off (sektor ±45° wokół kierunku od lądu, prędkość ≤7 m/s, znane
    porywy <12 m/s) albo cisza / słaby wiatr <1,5 m/s rozpoczynają zmianę fazy.
    Pierwsza godzina jest „świeżą zmianą”; dwie kolejne mogą utworzyć okno.
-4. **Oba modele fal** muszą nadal pokazywać Hs ≥0,4 m i ≥35% swojego maksimum
+4. **Przybrzeżny SWAN** musi nadal pokazywać Hs ≥0,4 m i ≥35% swojego maksimum
    z fazy nawiania, okres ≥4 s i kierunek w sektorze ekspozycji plaży.
-   Wcześniejsze maksimum musi wynosić ≥0,6 m. Parametry sprawdzamy osobno
-   dla każdego modelu. Brak / sprzeczność jednego z nich oznacza niepewność.
+   Wcześniejsze maksimum musi wynosić ≥0,6 m. Brak historii SWAN w tej strefie
+   nie jest uzupełniany wartościami offshore i nie pozwala potwierdzić wywiewki.
 5. Silny offshore albo porywy nie otrzymują etykiety dobrego okna. Hs ≥3 m
    nadal oznacza trudne warunki, także po zmianie kierunku wiatru.
 
@@ -229,7 +237,12 @@ umożliwia filtr „Tylko wywiewka po nawianiu” i rozstrzyga remis ocen okien.
 Filtr wymaga trzech kolejnych dziennych godzin ze zgodnie potwierdzoną sekwencją.
 Bez filtra ranking nadal uwzględnia dobre okna bez lokalnego nawiania.
 
-### 6. Energia i moc fal na morzu
+### 6. Energia i moc fal — obliczenia pomocnicze i wynik przy spocie
+
+Na stronie energia jest obliczana z wysokości przy spocie, a moc pochodzi
+z transportu widma SWAN w tym samym punkcie do 500 m od brzegu. Poniższe
+wzory dla danych regionalnych pozostają pomocniczymi funkcjami i testami;
+nie są prezentowane zamiast przybrzeżnego wyniku.
 
 Funkcja `waveEnergy` oblicza niezależnie dla każdej prognozy fal:
 
@@ -268,7 +281,8 @@ uwzględnia wysokość i okres fal. Jednostki i objaśnienia są widoczne na str
 - GitHub Pages udostępnia statyczny frontend i JSON z backendu GitHub Actions.
   Harmonogram backendu jest opisany w `MODEL.md`. Przeglądarka pobiera dane wybranego spotu;
   zmiana plaży nie pobiera całego wybrzeża. Żadnych kluczy w kodzie.
-- `surf-api.js`: timeout 18 s, deduplikacja równoległych zapytań, pamięć RAM
+- `surf-api.js`: główny widok pobiera pakiet SWAN oraz wiatr, bez zapytania
+  do Marine API dla odległego punktu. Timeout 18 s, deduplikacja równoległych zapytań, pamięć RAM
   i localStorage. Prognozy: TTL 30 min; przy awarii jawnie oznaczony cache do 6 h,
   starsze dane odrzucane. Przycisk odświeżenia ma minimalny odstęp 60 s.
 - Widoczna zakładka próbuje aktualizacji co 30 min; ukryta nie odpytuje API.

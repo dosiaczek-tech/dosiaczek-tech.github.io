@@ -31,7 +31,7 @@ import urllib3.util.connection
 urllib3.util.connection.allowed_gai_family = lambda: socket.AF_INET
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "BS-SWAN-1.0"
+VERSION = "BS-SWAN-1.1-coast500"
 ENGINE_URL = "https://swanmodel.sourceforge.io/download/zip/SWAN-41.51-Linux.tar.gz"
 ENGINE_SHA256 = "11ec02bd4106cee1e9267a648a525ec009a5c0e18c5fe57a3a1f685b90b4f894"
 WAVE_MODELS = ["dwd_ewam", "ecmwf_wam"]
@@ -41,6 +41,7 @@ DX = 100
 DT_MINUTES = 10
 SPINUP_HOURS = 12
 HORIZON_HOURS = 120
+MAX_SHORE_DISTANCE = 500
 
 
 def finite(value):
@@ -112,9 +113,10 @@ def geometry_key(spot):
 
 
 def bathymetry(spot, cache):
-    path = cache / "bathymetry" / (geometry_key(spot) + ".json")
+    path = cache / "bathymetry" / (geometry_key(spot) + "-shore-v2.json")
     old = load(path)
     if old and 0 <= time.time() - old["fetchedAt"] < 30 * 86400:
+        old["shoreline"] = shoreline_reference(spot, old)
         return old
     # Raster native spacing ~1/16 arc minute. No invented fine-resolution reefs.
     distances = list(range(-1000, LENGTH + 1, DX))
@@ -138,13 +140,14 @@ def bathymetry(spot, cache):
         scale, tie = image.tag_v2[33550], image.tag_v2[33922]
         sx, sy = scale[:2]
         x0, y0 = tie[3] - tie[0] * sx, tie[4] + tie[1] * sy
-    depth = []
+    depth, elevation = [], []
     for lat, lon in points:
         col, row = math.floor((lon - x0) / sx), math.floor((y0 - lat) / sy)
         if not (0 <= col < image.width and 0 <= row < image.height):
             raise ValueError("Transect outside raster")
         z = image.getpixel((col, row))
-        depth.append(round(-z, 4) if finite(z) and -1000 < z < -.05 else None)
+        elevation.append(round(z, 4) if finite(z) and abs(z) < 1000 else None)
+        depth.append(round(-z, 4) if finite(z) and -1000 < z < 0 else None)
     if depth[-1] is None:
         raise ValueError("Offshore boundary has no valid marine depth")
     # Work only on the contiguous wet branch connected to the sea. Unknown
@@ -159,10 +162,35 @@ def bathymetry(spot, cache):
         raise ValueError("No resolved nearshore zone shallower than 4 m")
     result = {"fetchedAt": int(time.time()), "source": "EMODnet DTM mean WCS", "datum": "LAT",
               "sha256": hashlib.sha256(response.content).hexdigest(), "rasterDegrees": [sx, sy],
-              "distances": distances, "depth": depth, "wetStart": wet_start,
+              "distances": distances, "depth": depth, "elevation": elevation, "wetStart": wet_start,
               "quality": "regional raster; dry/unknown inner cells excluded"}
+    result["shoreline"] = shoreline_reference(spot, result)
     dump(path, result)
     return result
+
+
+def shoreline_reference(spot, bath):
+    """Bracket the coast between a known nonnegative cell and the wet sea branch.
+
+    All published points obey the 500 m limit even relative to the landward
+    edge of this bracket. The DTM's real-world coastal uncertainty is retained.
+    """
+    start = bath["wetStart"]
+    distances, elevation = bath.get("distances", []), bath.get("elevation", [])
+    if start < 1 or len(distances) != len(bath["depth"]) or len(elevation) != len(distances):
+        raise ValueError("Brak rozpoznanej linii brzegu; nie można potwierdzić strefy 0–500 m")
+    if not finite(elevation[start - 1]) or elevation[start - 1] < 0:
+        raise ValueError("Luka danych przy brzegu; nie można potwierdzić odległości 500 m")
+    land, water = distances[start - 1], distances[start]
+    if not 0 < water - land <= DX:
+        raise ValueError("Nieprawidłowy przedział położenia brzegu")
+    if 0 in distances and finite(bath["depth"][distances.index(0)]) and land >= 0:
+        raise ValueError("Punkt spotu jest na wodzie za przeszkodą lub luką DTM; nie utożsamiamy brzegu przeszkody z plażą")
+    center = (land + water) / 2
+    lat, lon = offshore(spot, center)
+    return {"method": "EMODnet land-water bracket", "landDistance": land, "waterDistance": water,
+            "distance": center, "uncertaintyM": (water - land) / 2, "lat": lat, "lon": lon,
+            "note": "Brzeg szacowany z DTM względem LAT, nie bieżący pomiar geodezyjny"}
 
 
 def bulk_forecast(points, marine=False):
@@ -290,24 +318,33 @@ def parse_output(path, spot, bath, start, end):
             raise ValueError("Nonfinite SWAN output")
         by_time.setdefault(timestamp, {})[int(round(values[0]))] = values
     result = []
-    wet_edge = LENGTH - (len(bath["depth"]) - 1) * DX + bath["wetStart"] * DX
+    coast = shoreline_reference(spot, bath)
     for timestamp in range(start, end + 1, 3600):
         if timestamp not in by_time or len(by_time[timestamp]) != len(bath["depth"]):
             raise ValueError("SWAN did not finish the full requested horizon")
         points = sorted(by_time[timestamp].values())
         valid = [p for p in points if 0 < p[1] < 1000 and 0 <= p[2] < 20 and ((p[3] > 0 and p[4] > 0) or p[2] < .001)]
-        near = [p for p in valid if .3 <= p[1] <= 4 and LENGTH - p[0] <= wet_edge + 1000]
+        near = [p for p in valid if .3 <= p[1] <= 4 and
+                0 <= LENGTH - p[0] - coast["waterDistance"] and LENGTH - p[0] - coast["landDistance"] <= MAX_SHORE_DISTANCE]
         if not near:
-            raise ValueError("No valid nearshore output")
+            raise ValueError("Brak poprawnego wyniku w strefie do 500 m od rozpoznanego brzegu")
         target = min(near, key=lambda p: (abs(p[1] - 2), -p[0]))
         breaking = next((p for p in near if p[6] >= .1), None)
         def record(p):
+            distance = LENGTH - p[0]
+            lat, lon = offshore(spot, distance)
             return {"height": round(p[2], 3), "period": round(p[3], 3) if p[3] > 0 else None, "energyPeriod": round(p[4], 3) if p[4] > 0 else None,
                     "direction": round((p[5] - 270 + spot["normal"]) % 360, 1) if p[5] >= 0 else None, "depth": round(p[1], 3),
-                    "distance": round(LENGTH - p[0]), "breakingFraction": round(p[6], 4),
+                    "distance": round(distance), "shoreDistance": round(distance - coast["distance"], 1),
+                    "shoreDistanceMin": round(distance - coast["waterDistance"], 1),
+                    "shoreDistanceMax": round(distance - coast["landDistance"], 1), "lat": lat, "lon": lon,
+                    "breakingFraction": round(p[6], 4), "energyKJm2": round(1025 * 9.81 * p[2] ** 2 / 16000, 4),
                     "powerKWm": round(math.hypot(p[7], p[8]) / 1000, 4)}
-        profile = [{"distance": LENGTH - int(p[0]), "depth": round(p[1], 3), "height": round(p[2], 3), "qb": round(p[6], 4)}
-                   for p in valid if p[0] % 200 == 0 or p is target]
+        profile = [{"distance": LENGTH - int(p[0]), "shoreDistance": round(LENGTH - p[0] - coast["distance"], 1),
+                    "shoreDistanceMin": round(LENGTH - p[0] - coast["waterDistance"], 1),
+                    "shoreDistanceMax": round(LENGTH - p[0] - coast["landDistance"], 1),
+                    "depth": round(p[1], 3), "height": round(p[2], 3), "qb": round(p[6], 4)}
+                   for p in valid if 0 <= LENGTH - p[0] - coast["waterDistance"] and LENGTH - p[0] - coast["landDistance"] <= MAX_SHORE_DISTANCE]
         result.append({"time": timestamp, **record(target), "breaking": record(breaking) if breaking else None, "profile": profile})
     return result
 
@@ -325,6 +362,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
         if run.returncode or "** Error" in log or "No continuation" in log or not (directory / "profile.tbl").exists():
             raise ValueError("SWAN failed: " + (run.stderr or log[-1800:]))
         hourly = parse_output(directory / "profile.tbl", spot, bath, forecast_start, end)
+        history = parse_output(directory / "profile.tbl", spot, bath, start + 6 * 3600, forecast_start - 3600)
         input_hash = hashlib.sha256((directory / "INPUT").read_bytes() + (directory / "boundary.tpar").read_bytes() +
                                    (directory / "bottom.dat").read_bytes() + b"".join(p.read_bytes() for p in sorted(directory.glob("wind*.dat")))).hexdigest()
         archive_dir = cache / "reproducibility"
@@ -334,7 +372,8 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
             for file in directory.iterdir():
                 if file.is_file():
                     archive.add(file, arcname=file.name)
-    return {"schema": 1, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
+    return {"schema": 2, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
+            "shoreline": shoreline_reference(spot, bath), "maxShoreDistanceM": MAX_SHORE_DISTANCE,
             "cycle": int(now // 43200) * 43200,
             "spot": {k: spot[k] for k in ["id", "lat", "lon", "normal"]}, "geometryKey": geometry_key(spot),
             "boundaryModel": boundary, "boundaryFetchedAt": marine["fetchedAt"], "windFetchedAt": min(w["fetchedAt"] for w in winds),
@@ -342,7 +381,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
             "sourceCommit": os.environ.get("GITHUB_SHA"),
             "grid": {"lengthM": (len(bath["depth"]) - 1) * DX, "offshoreDistanceM": LENGTH, "spacingM": DX, "timeStepMinutes": DT_MINUTES, "directions": 36, "frequencies": 32, "spinupHours": SPINUP_HOURS},
             "assumptions": ["1D transect, no harbour shadow/diffraction", "reconstructed JONSWAP boundary from mean period; spreading 30 deg", "water level 0 relative to LAT; no currents or ice", "regional DTM, not current sandbar survey"],
-            "bathymetry": bath, "windUsed": used, "hourly": hourly}
+            "bathymetry": bath, "windUsed": used, "history": history, "hourly": hourly}
 
 
 def main():
@@ -403,12 +442,12 @@ def main():
     ready = 0
     for s in spots:
         result = results[s["id"]]
-        if result and result.get("geometryKey") == geometry_key(s):
+        if result and result.get("schema") == 2 and result.get("geometryKey") == geometry_key(s):
             document = {**result, "lastAttemptError": errors.get(s["id"])}
             if 0 <= time.time() - result.get("generatedAt", 0) <= 18 * 3600:
                 ready += 1
         else:
-            document = {"schema": 1, "status": "unavailable", "spot": {"id": s["id"]}, "error": errors.get(s["id"], "No simulation")}
+            document = {"schema": 2, "status": "unavailable", "spot": {"id": s["id"]}, "error": errors.get(s["id"], "Brak potwierdzonej prognozy w strefie 0–500 m")}
         dump(args.output / "nearshore" / f'{s["id"]}.json', document)
     dump(args.output / "status.json", {"generatedAt": int(time.time()), "engine": "SWAN 41.51AB", "version": VERSION,
         "spots": len(spots), "available": ready, "newRuns": len(needed), "errors": errors,

@@ -3,7 +3,7 @@
  */
 (function (root) {
   "use strict";
-  const VERSION = "Bałtyk Surf 1.0 / SWAN";
+  const VERSION = "Bałtyk Surf 1.1 / strefa 0–500 m";
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
@@ -242,24 +242,44 @@
     return selected;
   }
   function applySimulation(rows, document, spot, now = Date.now()) {
-    const valid = document?.status === "ready" && document.schema === 1 && document.spot?.id === spot.id &&
+    const coast = document?.shoreline;
+    const valid = document?.status === "ready" && document.schema === 2 && document.maxShoreDistanceM === 500 && document.spot?.id === spot.id &&
       ["lat", "lon", "normal"].every(k => document.spot[k] === spot[k]) && finite(document.generatedAt) &&
+      [coast?.landDistance, coast?.waterDistance, coast?.distance].every(finite) && coast.waterDistance > coast.landDistance &&
+      coast.waterDistance - coast.landDistance <= 100 && coast.distance >= coast.landDistance && coast.distance <= coast.waterDistance &&
       now / 1000 >= document.generatedAt - 300 && now / 1000 - document.generatedAt <= 18 * 3600;
-    const byTime = new Map((valid && Array.isArray(document.hourly) ? document.hourly : []).map(r => [r.time, r]));
+    const byTime = new Map((valid && Array.isArray(document.hourly) ? [...(Array.isArray(document.history) ? document.history : []), ...document.hourly] : []).map(r => [r.time, r]));
     const usedWind = new Map((valid && Array.isArray(document.windUsed) ? document.windUsed : []).map(r => [r.time, r]));
+    const inZone = point => point && [point.distance, point.shoreDistance, point.shoreDistanceMin, point.shoreDistanceMax].every(finite) &&
+      point.shoreDistanceMin >= 0 && point.shoreDistance >= point.shoreDistanceMin && point.shoreDistance <= point.shoreDistanceMax &&
+      point.shoreDistanceMax <= 500 && Math.abs(point.shoreDistanceMin - (point.distance - coast.waterDistance)) < .1 &&
+      Math.abs(point.shoreDistanceMax - (point.distance - coast.landDistance)) < .1;
     return rows.map(row => {
       const result = byTime.get(row.time);
-      if (!result || ![result.height, result.depth, result.powerKWm].every(finite) || result.height < 0 || result.depth <= 0 ||
+      if (!result || !inZone(result) || ![result.height, result.depth, result.powerKWm, result.lat, result.lon].every(finite) || result.height < 0 || result.depth <= 0 ||
           result.powerKWm < 0 || (result.height > .001 && (!finite(result.period) || result.period <= 0 || !finite(result.direction))))
-        return { ...row, simulation: null, scoreSource: "regional" };
+        return { ...row, simulation: null, scoreSource: "unavailable", score: null, height: null, period: null, direction: null,
+          powerKWm: null, energyKJm2: null, nearHeight: null, flags: ["Brak potwierdzonej prognozy w strefie 0–500 m od brzegu"] };
+      const local = { ...result, profile: (result.profile || []).filter(inZone), breaking: inZone(result.breaking) ? result.breaking : null };
       const rating = result.height <= .001 ? { score: 0, flags: ["SWAN: praktycznie brak fali przy brzegu"] } :
         rate({ height: result.height, period: result.period, direction: result.direction }, row.wind, spot, null,
           { ...result, basis: "SWAN", blocked: false });
-      return { ...row, regionalScore: row.score, score: rating?.score ?? null, scoreSource: "swan",
-        simulation: result, simulationWind: usedWind.get(row.time) || null,
+      return { ...row, score: rating?.score ?? null, scoreSource: "swan", height: result.height, nearHeight: result.height,
+        period: result.period, direction: result.direction, powerKWm: result.powerKWm,
+        energyKJm2: waveEnergy({ height: result.height }).energyKJm2,
+        simulation: local, simulationWind: usedWind.get(row.time) || null,
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows, applySimulation };
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now()) {
+    const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
+      ...(Array.isArray(simulation?.hourly) ? simulation.hourly : []).map(r => r.time)])].filter(finite).sort((a, b) => a - b);
+    const base = buildForecast(spot, { hourly: { time: times } }, weather, null, now - 48 * 3600000);
+    const series = applySimulation(base, simulation, spot, now).map(row => ({ ...row,
+      members: [{ model: "bs-swan-coast500", height: row.height, period: row.period, direction: row.direction }] }));
+    return series.map((row, index) => ({ ...row, cleanup: detectCleanup(series, index, spot) }))
+      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000).slice(0, 120);
+  }
+  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

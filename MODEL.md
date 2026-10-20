@@ -1,4 +1,8 @@
-# BS-SWAN 1.0 — działająca symulacja przybrzeżna
+# BS-SWAN 1.1 — prognoza dla strefy 0–500 m od brzegu
+
+**Główny wykres, podsumowanie, tabela i ocena sesji pokazują wyłącznie falę
+przy spocie, do 500 m od brzegu oszacowanego z DTM.** Parametry na zewnętrznej
+granicy modelu są danymi wejściowymi i nie zastępują wyniku przy plaży.
 
 ## Co jest liczone
 
@@ -65,24 +69,58 @@ były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafnośc
 ## Wyniki dla surferów
 
 - Wysokość znacząca, okres średni, okres energetyczny, kierunek i moc w morskim
-  punkcie możliwie bliskim głębokości 2 m, w rozpoznanej przybrzeżnej części profilu.
+  punkcie możliwie bliskim głębokości 2 m, **wyłącznie w pierwszych 500 m od
+  rozpoznanego brzegu**. Gdy punkt bliższy głębokości 2 m leży dalej, wybierany
+  jest poprawny płytszy punkt wewnątrz limitu, a nie punkt poza nim.
 - Pierwsze od morza miejsce w tej strefie, gdzie SWAN przewiduje `QB >= 0.1`
   (co najmniej 10% fal załamujących się), z wysokością, głębokością i odległością.
   Brak takiego punktu oznacza brak rozpoznanego załamania, nie arbitralnie wyznaczony break.
-- Profil wysokości fali w drodze do plaży, wybierany kliknięciem godziny w tabeli.
+- Profil wysokości fali tylko na pierwszych 500 m, wybierany kliknięciem godziny
+  w tabeli. Główny wykres czasowy ma jedną linię wysokości fal w tym samym
+  punkcie co tabela — nie pokazuje dwóch prognoz offshore.
 - Moc przy brzegu pochodzi z wektora spektralnego transportu energii `TRANSP`
   przy `INRHOG=1` (W/m → kW/m); nie jest tylko wzorem głębokiej wody z okresem średnim.
 - Świeży wynik SWAN zastępuje podstawę oceny sesji; nie jest drugi raz
   transformowany prostym wzorem shoalingu. Najnowszy wiatr może już pochodzić
   z późniejszego pobrania niż wiatr użyty w symulacji — obie daty są widoczne.
-- Przy dostępnych wynikach ranking wybiera okna z SWAN. Przy braku symulacji
-  zostaje wyraźnie opisana ocena regionalna. Starsze niż 18 h wyniki nie są
+- Ranking wybiera tylko okna z poprawnym wynikiem SWAN w strefie 0–500 m.
+  Przy braku symulacji nie wystawiamy oceny ani nie podstawiamy wysokości
+  z dalszego morza. Starsze niż 18 h wyniki nie są
   używane do oceny, nawet jeśli ich horyzont nadal obejmuje dany termin.
 
 Wiatr ma pięć klas: onshore, cross-on, cross, cross-off i offshore. Pod komórkami
-fal odnosimy go do kierunku nadchodzącej fali SWAN (zastępczo pierwszej dostępnej
-prognozy regionalnej); osobna kolumna odnosi wiatr do normalnej plaży. Dlatego
+fal odnosimy go do kierunku nadchodzącej fali SWAN przy spocie;
+osobna kolumna odnosi wiatr do normalnej plaży. Dlatego
 te dwie informacje mogą się różnić przy ukośnie nadchodzących falach.
+
+### Jak wyznaczamy brzeg i egzekwujemy limit 500 m
+
+Punkt z katalogu nie jest automatycznie linią brzegu: może leżeć na wydmie,
+na lądzie lub na wodzie. Na przekroju EMODnet identyfikujemy ciągłą część morską
+połączoną z granicą modelu. Brzeg modelowy jest pomiędzy ostatnią komórką
+o nieujemnej rzędnej a pierwszą ujemną komórką morską. Brak takiego przecięcia
+lub brak rzędnej nie pozwala potwierdzić odległości i wyłącza publikację wyniku.
+
+Przy kroku 100 m przedział położenia brzegu ma szerokość do 100 m. W JSON
+zapisujemy jego końce, środek, współrzędne oraz dla każdego punktu wyniku:
+`shoreDistance`, `shoreDistanceMin`, `shoreDistanceMax`. **Nawet maksymalna
+odległość względem rozpoznanego przedziału nie może przekraczać 500 m.**
+Ta sama kontrola dotyczy strefy załamania i punktów profilu. Frontend sprawdza
+limit ponownie, niezależnie od backendu.
+
+To odległość względem **brzegu szacowanego z mapy dna przy LAT**, nie obietnica
+dokładności geodezyjnej względem bieżącej linii wody. Błąd DTM, aktualny poziom
+morza i zmiany plaży pozostają ograniczeniem. Na stronie odległości są oznaczone
+jako przybliżone. W przykładzie punktu katalogowego leżącego 750 m w głębi lądu
+wynik 900 m od tego punktu może być 150 m od brzegu — nie odrzucamy ani nie
+zatwierdzamy go wyłącznie na podstawie odległości od pinezki.
+
+Wyniki mają schemat JSON **2** i `maxShoreDistanceM: 500`; frontend nie akceptuje
+starszych pakietów jako prognozy tej strefy. Publikacja również wymaga zgodnej
+wersji pakietu danych, dzięki czemu awaryjne przywrócenie starego artefaktu
+nie podmieni nowych wyników na dawne wartości z innego zakresu przestrzennego.
+Do diagnozy wywiewki udostępniamy dodatkowo 6 godzin historii modelowej z drugiej
+połowy rozbiegu; wykres prognozy pokazuje dopiero bieżącą godzinę i przyszłość.
 
 ## Backend i publikacja
 
