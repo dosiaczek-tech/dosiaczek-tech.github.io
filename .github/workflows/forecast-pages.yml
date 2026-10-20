@@ -54,6 +54,7 @@ jobs:
         env:
           FORCE: ${{ inputs.force }}
         run: |
+          python -c "import socket; print('Forecast API IPv4:', sorted({x[4][0] for x in socket.getaddrinfo('api.open-meteo.com', 443, socket.AF_INET)}))"
           args=()
           if [ "$FORCE" = 'true' ]; then args+=(--force); fi
           python -u model/nearshore.py --workers 4 "${args[@]}"

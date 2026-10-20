@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import statistics
 import subprocess
+import socket
 import tarfile
 import tempfile
 import time
@@ -23,6 +24,11 @@ from datetime import datetime, timezone
 
 from PIL import Image
 import requests
+import urllib3.util.connection
+
+# Hosted runners can advertise IPv6 even when the provider route is unusable.
+# Keep TLS verification and hostname checks; only select the IPv4 transport.
+urllib3.util.connection.allowed_gai_family = lambda: socket.AF_INET
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = "BS-SWAN-1.0"
@@ -64,7 +70,8 @@ def request(url, params=None):
                 continue
             response.raise_for_status()
             return response
-        except requests.RequestException:
+        except requests.RequestException as error:
+            print(f"Network retry {attempt + 1}/4 for {url}: {type(error).__name__}", flush=True)
             if attempt == 3:
                 raise
             time.sleep(3 * (attempt + 1))
