@@ -11,6 +11,14 @@
 .surf-toolbar label { display: grid; gap: 5px; flex: 1; font-size: 11px; color: var(--muted); min-width: 0; }
 .surf-toolbar select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
 .surf-toolbar button { flex: none; min-height: 42px; }
+.surf-search-control { position: relative; flex: 1; min-width: 0; }
+.surf-search-control label { margin-bottom: 5px; }
+.surf-search-control input { width: 100%; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 13px; }
+.surf-suggestions { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 1500; max-height: min(320px, 45vh); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 10px; background: white; box-shadow: var(--shadow); }
+.surf-suggestion { display: block; width: 100%; padding: 10px 12px; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: white; font-size: 12px; line-height: 1.5; }
+.surf-suggestion[aria-selected="true"], .surf-suggestion:hover { background: var(--mint); color: var(--sea-dark); }
+@media (max-width: 920px) { .surf-search-control { flex-basis: 40%; } }
+@media (max-width: 640px) { .surf-search-control { flex-basis: 100%; } .surf-search-control input { font-size: 16px; } }
 .surf-status { padding: 10px 0; color: var(--muted); font-size: 12px; min-height: 36px; }
 .surf-status[data-state="error"], .surf-status[data-state="stale"] { color: #905523; }
 .surf-spot-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
@@ -84,6 +92,10 @@
 .surf-spot-marker.is-selected > span { width: 23px; height: 23px; box-shadow: 0 0 0 3px var(--ink), 0 1px 6px #18383e80; }
 .surf-map-cluster { display: grid; place-items: center; border-radius: 50%; background: #d6e8de; border: 2px solid white; color: var(--sea-dark); box-shadow: 0 1px 6px #18383e50; font: 700 14px / 1 system-ui, sans-serif; }
 .surf-map-cluster.is-selected { box-shadow: 0 0 0 3px var(--ink); }
+.surf-cluster-copy { position: relative; text-align: center; }
+.surf-cluster-label { position: absolute; top: 32px; left: 50%; transform: translateX(-50%); max-width: 115px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 5px; border-radius: 5px; background: #fffffff0; color: var(--ink); font: 600 10px / 1.3 system-ui, sans-serif; box-shadow: 0 1px 3px #18383e30; }
+.surf-cluster-label.is-above { top: auto; bottom: 32px; }
+.surf-map-label { width: max-content; max-width: 145px; padding: 4px 6px; white-space: normal; text-align: center; border-color: #d0dbd5; border-radius: 6px; color: var(--ink); font: 550 10px / 1.3 system-ui, sans-serif; cursor: pointer; }
 .surf-map-popup { font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 12px; line-height: 1.5; }
 .surf-map-popup strong { display: block; color: var(--ink); }
 .surf-map-popup p { margin: 8px 0; color: var(--muted); }

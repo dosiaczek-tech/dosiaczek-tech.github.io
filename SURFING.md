@@ -297,10 +297,19 @@ uwzględnia wysokość i okres fal. Jednostki i objaśnienia są widoczne na str
   spotu zmienia klucz pamięci. Profil nie wymaga pobierania co zmianę prognozy.
 - Odpowiedź po zmianie spotu nie nadpisuje nowego wyboru; osobny licznik generacji.
 - `surf-app.js`: nawigacja, stany braku danych, tabela, wykres, mapy i kamera ↔ spot.
-  Formularz działa w kolejności region → plaża → „Pokaż prognozę”; zmiana list
-  nie przełącza samoczynnie wyświetlanej prognozy. Mapa spotów nadal wybiera punkt
+  Formularz działa w kolejności wyszukiwarka → plaża → „Pokaż prognozę”; wybór
+  podpowiedzi nie przełącza samoczynnie wyświetlanej prognozy. Mapa spotów wybiera punkt
   bezpośrednio. Windy startuje na warstwie fal i zachowuje działający iframe przy
   odświeżaniu tej samej lokalizacji oraz przełączaniu zakładek strony.
+- `surf-search.js`: lokalne wyszukiwanie w katalogu (bez wysyłania wpisywanego
+  tekstu do geokodera), normalizacja polskich znaków, dopasowanie słów oraz
+  odległość edycyjna z przestawieniami liter. Najlepsza wiarygodna podpowiedź
+  ustawia listę, ale prognozę otwiera przycisk. Przy słabym dopasowaniu trzeba
+  świadomie wybrać jedną z podobnych nazw; nie tworzymy nieistniejących spotów.
+  Lista używa grup miejscowości: pozycja grupy to długość geograficzna jej
+  najbardziej zachodniego spotu. W każdej grupie spoty także idą z zachodu na wschód.
+  Dzięki temu wszystkie pozycje Kołobrzegu są razem, także gdy zakresy długości
+  geograficznych różnych miejscowości częściowo się pokrywają.
 - `surf-map.js`: interaktywna mapa wyboru z Leaflet 1.9.4 i MarkerCluster 1.5.3
   (wersje CDN przypięte, kontrola integralności SRI). Podkład © OpenStreetMap
   contributors, ODbL, standardowe kafle OSM. Mapa inicjalizuje się dopiero

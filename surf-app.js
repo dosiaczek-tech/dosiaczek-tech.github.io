@@ -25,24 +25,75 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastAttempt = 0;
   let spotMap = null;
   let simulation = null, simulationTime = null;
+  let searchResults = [], searchIndex = -1, searchEditing = false, acceptedSearchId = null;
 
   function populateSpots() {
-    const region = $("surfRegion").value;
-    const pending = $("surfSpot").value;
-    const options = spots.filter(s => region === "all" || region === s.region);
-    $("surfSpot").replaceChildren(...options.map(s => { const o = node("option", `${s.town} — ${s.name}`); o.value = s.id; return o; }));
-    if (options.some(s => s.id === pending)) $("surfSpot").value = pending;
-    else if (options.some(s => s.id === currentSpot?.id)) $("surfSpot").value = currentSpot.id;
-    if (spotMap) spotMap.setRegion(region);
+    $("surfSpot").replaceChildren(...SurfSearch.groupWestToEast(spots).map(group => {
+      const el = document.createElement("optgroup"); el.label = group.town;
+      el.append(...group.spots.map(s => { const option = node("option", `${s.town} — ${s.name}`); option.value = s.id; return option; }));
+      return el;
+    }));
+  }
+  function closeSuggestions() {
+    $("surfSuggestions").hidden = true;
+    $("surfSpotSearch").setAttribute("aria-expanded", "false");
+    $("surfSpotSearch").removeAttribute("aria-activedescendant");
+  }
+  function clearSpotSearch() {
+    $("surfSpotSearch").value = "";
+    searchResults = []; searchIndex = -1; searchEditing = false; acceptedSearchId = null;
+    $("surfSuggestions").replaceChildren(); closeSuggestions();
+  }
+  function highlightSuggestion() {
+    $("surfSuggestions").querySelectorAll('[role="option"]').forEach((el, i) => el.setAttribute("aria-selected", String(i === searchIndex)));
+    const el = $("surfSuggestions").children[searchIndex];
+    if (el && !$("surfSuggestions").hidden) {
+      $("surfSpotSearch").setAttribute("aria-activedescendant", el.id);
+      el.scrollIntoView({ block: "nearest" });
+    }
+  }
+  function acceptSuggestion(index, focus = true) {
+    const result = searchResults[index];
+    if (!result) return;
+    const s = result.spot;
+    $("surfSpot").value = s.id;
+    $("surfSpotSearch").value = `${s.town} — ${s.name}`;
+    searchEditing = false; acceptedSearchId = s.id;
+    searchResults = []; searchIndex = -1;
+    closeSuggestions(); updateChoice();
+    if (focus) $("surfSpotSearch").focus({ preventScroll: true });
+  }
+  function updateSearch() {
+    const query = $("surfSpotSearch").value;
+    searchEditing = Boolean(query.trim()); acceptedSearchId = null;
+    searchResults = SurfSearch.search(spots, query);
+    searchIndex = searchResults.length ? 0 : -1;
+    $("surfSuggestions").replaceChildren(...searchResults.map((result, i) => {
+      const s = result.spot, option = node("button", `${s.town} — ${s.name}`, "surf-suggestion");
+      option.type = "button"; option.id = `surfSuggestion-${i}`; option.dataset.spot = s.id;
+      option.setAttribute("role", "option"); option.setAttribute("aria-selected", String(i === 0)); option.tabIndex = -1;
+      option.addEventListener("click", () => acceptSuggestion(i));
+      return option;
+    }));
+    $("surfSuggestions").hidden = !searchResults.length;
+    $("surfSpotSearch").setAttribute("aria-expanded", String(searchResults.length > 0));
+    if (searchResults.length) $("surfSpotSearch").setAttribute("aria-activedescendant", "surfSuggestion-0");
+    else $("surfSpotSearch").removeAttribute("aria-activedescendant");
+    if (searchResults[0]?.strong) $("surfSpot").value = searchResults[0].spot.id;
+    if (!searchEditing && currentSpot) $("surfSpot").value = currentSpot.id;
+    updateChoice();
   }
   function updateChoice() {
     const choice = byId.get($("surfSpot").value);
     const pending = choice && choice.id !== currentSpot?.id;
-    $("surfChoiceHint").hidden = !pending;
-    $("surfChoiceHint").textContent = pending ? `Wybrano: ${choice.town} — ${choice.name}. Kliknij „Pokaż prognozę”, aby otworzyć ten spot.` : "";
-    $("surfShowForecast").disabled = !choice || (loading && !pending);
+    const uncertain = searchEditing && !searchResults[0]?.strong;
+    $("surfChoiceHint").hidden = !pending && !searchEditing;
+    $("surfChoiceHint").textContent = uncertain
+      ? searchResults.length ? "Brak pewnego dopasowania. Pokazuję najbardziej podobne nazwy — wybierz podpowiedź lub spot z listy." : "Wpisz co najmniej dwa znaki albo wybierz spot z listy."
+      : searchEditing ? `Najlepsze dopasowanie: ${choice.town} — ${choice.name}. Możesz wybrać inną podpowiedź lub kliknąć „Pokaż prognozę”.`
+      : pending ? `Wybrano: ${choice.town} — ${choice.name}. Kliknij „Pokaż prognozę”, aby otworzyć ten spot.` : "";
+    $("surfShowForecast").disabled = !choice || uncertain || (loading && !pending);
   }
-  $("surfRegion").value = "all";
   populateSpots();
 
   function cameraForecastLink(id) {
@@ -293,7 +344,8 @@ document.addEventListener("DOMContentLoaded", () => {
     lastAttempt = Date.now();
     currentSpot = spot; loaded = null; rows = []; selectedDay = null; simulation = null; simulationTime = null;
     loading = true;
-    if ($("surfRegion").value !== "all" && $("surfRegion").value !== spot.region) { $("surfRegion").value = "all"; populateSpots(); }
+    if (acceptedSearchId !== spot.id) clearSpotSearch();
+    else closeSuggestions();
     $("surfSpot").value = spot.id;
     $("surfTab").href = `#surf/${spot.id}`;
     $("surfContent").hidden = true;
@@ -302,8 +354,8 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
     document.title = `${spot.town} — prognoza surfingu | Nad morzem`;
     if (!spotMap && window.SurfSpotMap) {
-      spotMap = SurfSpotMap.create({ spots, region: $("surfRegion").value, selectedId: spot.id,
-        onSelect: id => { location.hash = `surf/${id}`; } });
+      spotMap = SurfSpotMap.create({ spots, region: "all", selectedId: spot.id,
+        onSelect: id => { clearSpotSearch(); $("surfSpot").value = id; updateChoice(); location.hash = `surf/${id}`; } });
     } else if (spotMap) {
       spotMap.resize();
       spotMap.select(spot.id);
@@ -342,10 +394,29 @@ document.addEventListener("DOMContentLoaded", () => {
       if (cameras.has(location.hash.slice(1))) cameraForecastLink(location.hash.slice(1));
     }
   }
-  $("surfSpot").addEventListener("change", updateChoice);
-  $("surfRegion").addEventListener("change", () => { populateSpots(); updateChoice(); });
+  $("surfSpot").addEventListener("change", () => { clearSpotSearch(); updateChoice(); });
+  $("surfSpotSearch").addEventListener("input", updateSearch);
+  $("surfSpotSearch").addEventListener("keydown", event => {
+    if (event.key === "Escape") { event.preventDefault(); closeSuggestions(); return; }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!searchResults.length) { updateSearch(); return; }
+      $("surfSuggestions").hidden = false; $("surfSpotSearch").setAttribute("aria-expanded", "true");
+      searchIndex = (searchIndex + (event.key === "ArrowDown" ? 1 : -1) + searchResults.length) % searchResults.length;
+      highlightSuggestion();
+    } else if (event.key === "Enter" && !$("surfSuggestions").hidden && searchIndex >= 0) {
+      event.preventDefault(); acceptSuggestion(searchIndex);
+    }
+  });
+  $("surfSearchControl").addEventListener("focusout", event => {
+    if (!$("surfSearchControl").contains(event.relatedTarget)) closeSuggestions();
+  });
   $("surfChooser").addEventListener("submit", event => {
     event.preventDefault();
+    if (searchEditing) {
+      if (!searchResults[0]?.strong) { updateSearch(); $("surfSpotSearch").focus(); return; }
+      acceptSuggestion(searchIndex >= 0 ? searchIndex : 0, false);
+    }
     const choice = byId.get($("surfSpot").value);
     if (!choice) return;
     if (location.hash !== `#surf/${choice.id}`) location.hash = `surf/${choice.id}`;
@@ -368,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // Odświeżamy tylko otwartą, widoczną zakładkę. Awaria nie wywołuje pętli zapytań.
   setInterval(() => {
-    if (active && currentSpot && $("surfSpot").value === currentSpot.id && document.visibilityState === "visible" && Date.now() - lastAttempt >= 1800000) loadSpot(currentSpot);
+    if (active && currentSpot && !searchEditing && $("surfSpot").value === currentSpot.id && document.visibilityState === "visible" && Date.now() - lastAttempt >= 1800000) loadSpot(currentSpot);
   }, 60000);
 
   const covered = CAMERAS.filter(c => cameraSpot.has(c.id));

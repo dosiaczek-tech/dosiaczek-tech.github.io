@@ -19,8 +19,11 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
   70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
-- Wybór regionu po lewej (domyślnie całe wybrzeże), filtrowana lista plaż
-  po prawej i przycisk „Pokaż prognozę”. Kliknięcie znacznika mapy otwiera spot od razu.
+- Wyszukiwarka miejscowości i spotów po lewej, lista plaż po prawej i przycisk
+  „Pokaż prognozę”. Wyszukiwanie toleruje literówki, przestawione litery i brak
+  polskich znaków. Podpowiedzi działają też z klawiatury.
+- Lista grupuje spoty miejscowościami od zachodu do wschodu; wewnątrz grupy
+  również obowiązuje kolejność geograficzna. Kliknięcie znacznika mapy otwiera spot od razu.
 - **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
@@ -40,8 +43,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   z objaśnieniem jednostek. Tabela godzinowa pokazuje energię, bez kolumn mocy
   i sekwencji wiatru; opis sekwencji jest w osobnej sekcji.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
-  prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą
-  i filtrem regionu. Kolory odróżniają spoty z kamerą od pozostałych.
+  prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą.
+  Znaczniki mają stałe nazwy; grupy pokazują miejscowość, a po przybliżeniu
+  widać nazwy poszczególnych spotów. Kolory odróżniają spoty z kamerą od pozostałych.
 - Historia onshore → offshore / cisza z potwierdzeniem utrzymania fal:
   opis fazy i filtr „Tylko wywiewka po nawianiu”.
 - Sobieszewo oraz 30 opisów spotów z mapy WestCoast (3 scalone z istniejącymi,

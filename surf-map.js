@@ -17,6 +17,7 @@
     const L = root.L;
     const byId = new Map(spots.map(s => [s.id, s]));
     const markers = new Map();
+    const labelOrder = new Map([...spots].sort((a, b) => a.lon - b.lon || b.lat - a.lat).map((s, i) => [s.id, i]));
     let currentId = selectedId, currentRegion = region, revision = 0, mapClickId = null;
     let tileError = false;
     const map = L.map(container, { scrollWheelZoom: true, maxZoom: 19, minZoom: 6, zoomControl: false });
@@ -28,17 +29,29 @@
     function updateStatus() {
       status.textContent = tileError
         ? "Podkład mapy jest chwilowo niedostępny. Znaczniki i lista spotów nadal działają."
-        : `${visibleSpots().length} spotów na mapie. Kliknij liczbę, aby rozwinąć grupę, a znacznik, aby wybrać prognozę. Kółko myszy nad mapą przybliża lub oddala, a poza mapą przewija stronę. Możesz też użyć +/− lub gestu dwóch palców.`;
+        : `${visibleSpots().length} spotów na mapie. Nazwy są widoczne przy znacznikach. Przybliż grupę z liczbą, aby zobaczyć poszczególne spoty. Kółko myszy nad mapą przybliża lub oddala, a poza mapą przewija stronę.`;
     }
     tile.on("tileerror", () => { tileError = true; updateStatus(); });
     tile.on("tileload", () => { if (tileError) { tileError = false; updateStatus(); } });
     const cluster = L.markerClusterGroup({
-      maxClusterRadius: 42, showCoverageOnHover: false, spiderfyOnMaxZoom: true,
+      maxClusterRadius: 55, showCoverageOnHover: false, spiderfyOnMaxZoom: true, spiderfyDistanceMultiplier: 1.5,
       animate: !root.matchMedia("(prefers-reduced-motion: reduce)").matches,
       iconCreateFunction(group) {
-        const containsSelected = group.getAllChildMarkers().some(m => m.options.spotId === currentId);
+        const children = group.getAllChildMarkers();
+        const containsSelected = children.some(m => m.options.spotId === currentId);
+        const townStats = new Map();
+        children.forEach(m => { const s = byId.get(m.options.spotId), stat = townStats.get(s.town) || { count: 0, lon: s.lon }; stat.count++; stat.lon = Math.min(stat.lon, s.lon); townStats.set(s.town, stat); });
+        const towns = [...townStats.keys()].sort((a, b) => townStats.get(b).count - townStats.get(a).count || townStats.get(a).lon - townStats.get(b).lon);
+        const town = containsSelected ? byId.get(currentId).town : towns[0];
+        const content = document.createElement("div"); content.className = "surf-cluster-copy";
+        const count = document.createElement("span"); count.textContent = group.getChildCount();
+        count.setAttribute("aria-label", `Grupa ${group.getChildCount()} spotów: ${towns.join(", ")}`);
+        const above = Math.floor(map.project(group.getLatLng(), map.getZoom()).x / 70) % 2 === 0;
+        const label = document.createElement("span"); label.className = `surf-cluster-label${above ? " is-above" : ""}`;
+        label.textContent = town + (towns.length > 1 ? ` +${towns.length - 1}` : ""); label.title = towns.join(", ");
+        content.append(count, label);
         return L.divIcon({ className: `surf-map-cluster${containsSelected ? " is-selected" : ""}`,
-          html: `<span aria-label="Grupa ${group.getChildCount()} spotów${containsSelected ? ", zawiera wybrany spot" : ""}">${group.getChildCount()}</span>`,
+          html: content,
           iconSize: [40, 40], iconAnchor: [20, 20] });
       }
     });
@@ -69,6 +82,11 @@
       });
       content.append(title, description, action);
       const marker = L.marker([s.lat, s.lon], { icon: markerIcon(s), title: `${s.town} — ${s.name}`, keyboard: true, spotId: s.id });
+      const label = document.createElement("span"); label.textContent = `${s.town} · ${s.name}`; label.dataset.spotLabel = s.id;
+      const above = labelOrder.get(s.id) % 2 === 0;
+      marker.bindTooltip(label, { permanent: true, interactive: true, direction: above ? "top" : "bottom",
+        offset: [0, above ? -10 : 10], opacity: 1, className: "surf-map-label" });
+      marker.getTooltip().on("click", () => { mapClickId = s.id; marker.openPopup(); onSelect(s.id); });
       marker.bindPopup(content, { maxWidth: 280, autoPan: true });
       marker.on("click", () => { mapClickId = s.id; onSelect(s.id); });
       marker.on("add", () => {
