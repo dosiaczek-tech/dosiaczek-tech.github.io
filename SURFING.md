@@ -204,9 +204,12 @@ To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
 - Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 2.
 - Wynik jest zaokrąglany do liczby całkowitej. Okno trzygodzinne zawierające
   choć jedną godzinę z falą poniżej 1 m także ma limit 1/10.
-- Mapa topograficzna przy wietrze pokazuje ruch powietrza dla wybranej godziny:
-  strzałka biegnie przeciwnie do meteorologicznego kierunku „skąd”. Podkład
-  OpenTopoMap (OSM/SRTM), awaryjnie OSM, nie oblicza lokalnej osłony terenu.
+- Mapa satelitarna przy wietrze ma kołową skalę 0–360° zakotwiczoną na brzegu
+  modelu (awaryjnie punkcie spotu). Biała strzałka na obwodzie wskazuje ruch
+  powietrza ku środkowi, żółty wycinek wskazuje meteorologiczny kierunek „skąd”.
+  Wskaźnik odpowiada wybranej godzinie; znika przy ciszy lub braku kierunku.
+  Podkład Esri World Imagery, awaryjnie OSM, nie jest bieżącym obrazem fal
+  ani obliczeniem lokalnej osłony terenu. Północ pozostaje u góry mapy.
 - Końcowa ocena widoczna na stronie wykorzystuje spójny zestaw wysokości,
   okresu i kierunku z przybrzeżnego SWAN oraz aktualny konsensus wiatru.
   Brak przybrzeżnego wyniku oznacza brak oceny, nie zastępczą średnią offshore.

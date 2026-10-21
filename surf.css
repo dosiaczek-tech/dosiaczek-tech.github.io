@@ -111,7 +111,13 @@
 @media (max-width: 640px) { #surfSpotMap { height: 310px; } .surf-spot-map-box .surf-map-actions { flex-wrap: wrap; } }
 @media (max-width: 640px) { .section-nav { width: 100%; } .section-nav a { flex: 1; padding: 10px; font-size: 12px; text-align: center; } .section-nav span { display: none; } .surf-heading { padding-top: 28px; } .surf-toolbar { padding: 15px; gap: 10px; } .surf-toolbar label { flex-basis: 100%; } .surf-toolbar select { font-size: 16px; } .surf-toolbar button { width: 100%; } .surf-box { padding: 16px; } .surf-metrics { gap: 10px; } .surf-metric { padding: 14px; } .surf-metric strong { font-size: 25px; } .surf-windows { grid-template-columns: 1fr; } .surf-spot-heading { display: block; } .surf-spot-heading h2 { font-size: 26px; } #windyFrame { height: 350px; } .surf-chart svg { height: 170px; } }
 .surf-wind-inset { margin: 1rem 0; }
-#surfWindMap { height: 320px; width: 100%; border-radius: 12px; background: #e3ece8; z-index: 0; }
-.surf-wind-north { background: white; padding: 5px 8px; border-radius: 4px; color: #18383e; }
-.surf-wind-label { font-size: 11px; }
-@media (max-width: 600px) { #surfWindMap { height: 280px; } }
+#surfWindMap { height: 420px; width: 100%; max-width: 680px; border-radius: 12px; background: #263b38; z-index: 0; }
+.surf-wind-compass { pointer-events: none; }
+.surf-wind-dial { width: 280px; height: 280px; overflow: visible; }
+.surf-wind-disc { fill: #071b20; fill-opacity: .18; stroke: white; stroke-width: 1.8; }
+.surf-wind-grid { fill: none; stroke: white; stroke-opacity: .25; stroke-width: .8; stroke-dasharray: 3 4; }
+.surf-wind-degree { fill: white; font: 700 14px system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: #102528; stroke-width: 2px; stroke-opacity: .6; }
+.surf-wind-sector { fill: #f2c45d; fill-opacity: .95; }
+.surf-wind-arrowhead { fill: white; filter: drop-shadow(0 1px 2px #102528); }
+.surf-wind-origin { fill: #344640; stroke: white; stroke-width: 2; }
+@media (max-width: 600px) { #surfWindMap { height: 360px; } }
