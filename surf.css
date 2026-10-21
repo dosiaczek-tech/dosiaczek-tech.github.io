@@ -139,3 +139,21 @@
 #surfWaveDescription { color: #17647a; }
 @media (prefers-reduced-motion: reduce) { .surf-wave-crests { animation: none; } }
 @media (max-width: 600px) { #surfWindMap { height: 360px; } }
+/* Start page: saved five-spot comparison. */
+.surf-comparison { margin: 24px 0 36px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: #ffffffd9; }
+.compare-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.compare-heading h1 { margin: 0; font: 400 clamp(30px, 4vw, 48px) / 1.15 Georgia, serif; }
+.compare-heading p { color: var(--muted); font-size: 14px; }
+.compare-selectors, .compare-ranking { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.compare-selector { min-width: 0; border-top: 3px solid var(--spot-color); padding-top: 8px; font-size: 11px; }
+.compare-selector select { display: block; width: 100%; margin-top: 6px; padding: 10px 5px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font: inherit; }
+.compare-chart { overflow-x: auto; }
+.compare-chart svg { display: block; width: 100%; min-width: 620px; }
+.compare-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 12px; }
+.compare-legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 50%; background: var(--spot-color); }
+.compare-card { display: block; text-decoration: none; }
+.compare-card strong { font-size: 26px; }
+#compareDays [aria-pressed="true"] { background: var(--sea-dark); color: white; }
+#compareRankingTitle { font-size: 20px; }
+@media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .surf-comparison { padding: 16px; } .compare-heading { display: block; } .compare-selector select { font-size: 16px; } .compare-ranking { grid-template-columns: 1fr; } }

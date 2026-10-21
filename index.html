@@ -249,7 +249,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=session-colors-v1">
+  <link rel="stylesheet" href="surf.css?v=compare-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
@@ -260,6 +260,7 @@
   <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js?v=spot-search-v1"></script>
   <script defer src="surf-app.js?v=session-colors-v1"></script>
+  <script defer src="surf-compare.js?v=compare-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -289,6 +290,23 @@
   </header>
 
   <main class="shell">
+    <section class="surf-comparison" aria-labelledby="compareTitle">
+      <p class="eyebrow">TWÓJ PLAN NA FALE</p>
+      <div class="compare-heading"><div><h1 id="compareTitle">Gdzie warto jechać?</h1>
+        <p>Pięć spotów. Pięć dni. Znajdź najlepsze okno na swoją sesję.</p></div>
+        <button id="compareRefresh" type="button" class="filter">Odśwież porównanie</button></div>
+      <p id="compareStorage" class="surf-small">Na początek losujemy pięć spotów. Możesz je zmienić — zapamiętamy Twój wybór w tej przeglądarce.</p>
+      <div id="compareSelectors" class="compare-selectors"></div>
+      <p id="compareStatus" class="surf-small" role="status">Przygotowuję porównanie…</p>
+      <div id="compareContent" aria-busy="true">
+        <div id="compareChart" class="compare-chart"></div>
+        <div id="compareLegend" class="compare-legend" aria-label="Kolory spotów"></div>
+        <p class="surf-small">Wynik dnia to najlepsze pełne trzygodzinne okno dzienne (0–10). Zielone tło oznacza dobre warunki, pomarańczowe słabsze, czerwone najgorsze. Przerwa w linii oznacza brak oceny.</p>
+        <div id="compareDays" class="surf-days" aria-label="Wybierz dzień porównania"></div>
+        <h2 id="compareRankingTitle">Ranking spotów</h2>
+        <div id="compareRanking" class="compare-ranking"></div>
+      </div>
+    </section>
     <nav class="section-nav" aria-label="Sekcje strony">
       <a id="camerasTab" href="#kamery" aria-current="page">Kamery na żywo</a>
       <a id="surfTab" href="#surf/wladyslawowo">Prognozy surfingowe <span>Bałtyk Surf</span></a>
