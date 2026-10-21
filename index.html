@@ -255,12 +255,12 @@
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=session-score-v2"></script>
+  <script defer src="surf-model.js?v=history12-v1"></script>
   <script defer src="surf-wind-map.js?v=wave-motion-v3"></script>
   <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js?v=spot-search-v1"></script>
   <script defer src="surf-app.js?v=session-colors-v1"></script>
-  <script defer src="surf-compare.js?v=compare-v2"></script>
+  <script defer src="surf-compare.js?v=history12-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -293,7 +293,7 @@
     <section class="surf-comparison" aria-labelledby="compareTitle">
       <p class="eyebrow">TWÓJ PLAN NA FALE</p>
       <div class="compare-heading"><div><h1 id="compareTitle">Gdzie warto jechać?</h1>
-        <p>Pięć spotów. Pięć dni. Znajdź najlepsze okno na swoją sesję.</p></div>
+        <p>Pięć spotów. Sześć dni. Znajdź najlepsze okno na swoją sesję.</p></div>
         <button id="compareRefresh" type="button" class="filter">Odśwież porównanie</button></div>
       <p id="compareStorage" class="surf-small">Na początek losujemy pięć spotów. Możesz je zmienić — zapamiętamy Twój wybór w tej przeglądarce.</p>
       <div id="compareSelectors" class="compare-selectors"></div>
@@ -301,7 +301,7 @@
       <div id="compareContent" aria-busy="true">
         <div id="compareChart" class="compare-chart"></div>
         <div id="compareLegend" class="compare-legend" aria-label="Kolory spotów"></div>
-        <p class="surf-small">Wynik dnia to najlepsze pełne trzygodzinne okno dzienne (0–10). Zielone tło oznacza dobre warunki, pomarańczowe słabsze, czerwone najgorsze. Przerwa w linii oznacza brak oceny.</p>
+        <p class="surf-small">Wynik dnia to najlepsze pełne trzygodzinne okno dzienne (0–10). Zielone tło oznacza dobre warunki, pomarańczowe słabsze, czerwone najgorsze. Puste kółko oznacza wcześniejsze okno z ostatnich 12 godzin — historię prognozy, nie pomiar. Przerwa w linii oznacza brak oceny. Zakres danych zależy od ostatniego obliczenia SWAN.</p>
         <div id="compareDays" class="surf-days" aria-label="Wybierz dzień porównania"></div>
         <h2 id="compareRankingTitle">Ranking spotów</h2>
         <div id="compareRanking" class="compare-ranking"></div>

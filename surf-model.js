@@ -342,7 +342,7 @@
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  function buildCoastalForecast(spot, weather, simulation, now = Date.now()) {
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 0 } = {}) {
     const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
       ...(Array.isArray(simulation?.hourly) ? simulation.hourly : []).map(r => r.time)])].filter(finite).sort((a, b) => a - b);
     const base = buildForecast(spot, { hourly: { time: times } }, weather, null, now - 48 * 3600000);
@@ -366,7 +366,7 @@
         score: rating?.score ?? row.score,
         flags: rating ? [...rating.flags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })
-      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000).slice(0, 120);
+      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - clamp(historyHours, 0, 12) * 3600000).slice(0, 132);
   }
   const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;

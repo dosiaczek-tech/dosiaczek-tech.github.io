@@ -89,4 +89,7 @@ test('coastal recommendation uses past stability and keeps confidence separate f
   assert.equal(changedFuture[0].score,stable[0].score);
   assert.equal(M.bestWindows(stable)[0].confidence,'średnia');
   assert.equal(M.bestWindows(missing)[0].confidence,'niska');
+  const withHistory=M.buildCoastalForecast(spot,{hourly},input,time*1000,{historyHours:12});
+  assert.equal(withHistory[0].time,time-7200);
+  assert.equal(stable[0].time,time);
 });
