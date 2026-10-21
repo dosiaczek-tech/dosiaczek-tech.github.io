@@ -183,12 +183,12 @@ dyfrakcji, prądów, odbić, lodu, osłony falochronów i półwyspów ani zmian
 morza. LAT nie jest aktualnym poziomem wody; w sztormie to istotne ograniczenie.
 Piaszczyste rewy przemieszczają się znacznie szybciej niż aktualizuje się DTM.
 
-### 4. Wynik surfingowy 0–100
+### 4. Wynik surfingowy 0–10
 
 To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
 
-- Wysokość: rosnąca użyteczność do 0,4 m, optimum 0,4–1,6 m, spadek do zera
-  przy 3,5 m. Używamy Hs z wyniku SWAN w punkcie do 500 m od brzegu.
+- Wysokość: `clamp((Hs − 0,5) / 1,5, 0, 1)`; fale poniżej 1 m mają
+  maksymalnie 1/10. Używamy Hs z wyniku SWAN w punkcie do 500 m od brzegu.
 - Okres: liniowe skalowanie `(T - 2) / 5`, ograniczone do 0–1.
 - Ekspozycja: `sqrt(max(0,cos(θ)))`, gdzie θ to kąt nadejścia względem normalnej.
   Fala pod kątem ≥85° jest poza przyjętym sektorem — ocena 0. To uproszczona
@@ -197,15 +197,22 @@ To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
   do 67,5°: cross-on, do 112,5°: cross, poniżej 157,5°: cross-off,
   pozostałe: offshore. Pod komórkami pokazujemy osobno taką relację względem
   kierunku fali. Słaby offshore jest korzystniejszy, silny jest karany.
-- `score = 100 × ekspozycja × użyteczność_wysokości ×
-  (0,55 × jakość_okresu + 0,45 × jakość_wiatru)`.
-- Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 25.
+- `score = 10 × ekspozycja × (0,7 × jakość_wysokości + 0,3 × jakość_okresu)
+  × (0,15 + 0,85 × jakość_wiatru) × min(moc / 2 kW/m, 1)`.
+  Moc jest ogranicznikiem małych fal, nie niezależnym potwierdzeniem ich wysokości.
+- Moc poniżej 0,5 kW/m ogranicza ocenę do 1; okres poniżej 3,5 s do 3.
+- Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 2.
+- Wynik jest zaokrąglany do liczby całkowitej. Okno trzygodzinne zawierające
+  choć jedną godzinę z falą poniżej 1 m także ma limit 1/10.
+- Mapa topograficzna przy wietrze pokazuje ruch powietrza dla wybranej godziny:
+  strzałka biegnie przeciwnie do meteorologicznego kierunku „skąd”. Podkład
+  OpenTopoMap (OSM/SRTM), awaryjnie OSM, nie oblicza lokalnej osłony terenu.
 - Końcowa ocena widoczna na stronie wykorzystuje spójny zestaw wysokości,
   okresu i kierunku z przybrzeżnego SWAN oraz aktualny konsensus wiatru.
   Brak przybrzeżnego wyniku oznacza brak oceny, nie zastępczą średnią offshore.
 
 „Modele zbliżone” nie oznacza wysokiej trafności. Duża niepewność jest sygnalizowana
-m.in. po 72 h, przy rozrzucie Hs >0,6 m, wiatru >4 m/s, ocen >25 pkt lub
+m.in. po 72 h, przy rozrzucie Hs >0,6 m, wiatru >4 m/s, ocen >2,5 pkt lub
 rozbieżnych kierunkach wiatru. Brak drugiego modelu jest oznaczany oddzielnie.
 To rozrzut deterministycznych prognoz, **nie przedział ufności**. ECMWF jest
 w obu grupach, a modele mają wspólne źródła i błędy; nie są niezależnymi głosami.

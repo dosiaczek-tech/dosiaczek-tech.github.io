@@ -11,7 +11,7 @@ function sequence({ buildStart = 12, buildEnd = 20, turn = 20, finalHeight = 1, 
     time: epoch + i * 3600,
     wind: i >= buildStart && i < buildEnd ? wind(8, 0) : i >= turn ? wind(offshore, 180) : wind(3, 90),
     members: Object.keys(M.WAVE_MODELS).map(model => ({ model, height: i >= turn ? finalHeight : 1.5, period, direction })),
-    score: 65, height: 1, daylight: true
+    score: 6, height: 1, daylight: true
   }));
 }
 
@@ -77,7 +77,7 @@ test('window filter requires three consecutive daylight cleanup hours without ad
   const rows = sequence().map((r, i, all) => ({ ...r, cleanup: M.detectCleanup(all, i, sobieszewo) }));
   const windows = M.bestWindows(rows, 3, { cleanupOnly: true });
   assert.ok(windows.length > 0);
-  assert.ok(windows.every(w => w.cleanupHours === 3 && w.start >= rows[21].time && w.score === 65));
+  assert.ok(windows.every(w => w.cleanupHours === 3 && w.start >= rows[21].time && w.score === 6));
   assert.deepEqual(M.bestWindows(rows.map(r => ({ ...r, daylight: false })), 3, { cleanupOnly: true }), []);
 });
 

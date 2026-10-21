@@ -166,21 +166,38 @@
     const local = localOverride || transform(wave, spot, bathymetry);
     const height = local ? local.height : wave.height;
     const exposure = incidence >= 85 ? 0 : Math.sqrt(Math.max(0, Math.cos(radians(incidence))));
-    const heightQuality = height < 0.4 ? height / 0.4 : height <= 1.6 ? 1 : clamp(1 - (height - 1.6) / 1.9, 0, 1);
+    const heightQuality = clamp((height - .5) / 1.5, 0, 1);
     const periodQuality = clamp((wave.period - 2) / 5, 0, 1);
     const type = windRelative(wind, spot);
     const windQuality = wind.speed < 1.5 ? 1 : type === "offshore" ? clamp(1 - Math.max(0, wind.speed - 4) / 9, 0, 1)
       : type === "cross-off" ? clamp(1 - Math.max(0, wind.speed - 3) / 10, 0, 1)
       : type === "onshore" ? clamp(1 - wind.speed / 10, 0, 1) : type === "cross-on" ? clamp(1 - wind.speed / 11.5, 0, 1) : clamp(1 - wind.speed / 13, 0, 1);
-    let score = 100 * exposure * heightQuality * (0.55 * periodQuality + 0.45 * windQuality);
+    const power = finite(local?.powerKWm) && local.powerKWm >= 0 ? local.powerKWm
+      : waveEnergy({ height, period: wave.period }, finite(local?.depth) && local.depth > 0 ? local.depth : null).powerKWm;
+    const powerQuality = finite(power) ? clamp(power / 2, 0, 1) : 0;
+    // Configured preference: at least 1 m. Good offshore wind can preserve
+    // wave quality, but cannot create a good session score from tiny waves.
+    let score = 10 * exposure * (.7 * heightQuality + .3 * periodQuality) * (.15 + .85 * windQuality) * powerQuality;
+    if (height < 1) score = Math.min(score, 1);
+    if (wave.period < 3.5) score = Math.min(score, 3);
+    if (finite(power) && power < .5) score = Math.min(score, 1);
     const strong = wind.speed >= 12 || (finite(wind.gust) && wind.gust >= 17) || wave.height >= 3;
-    if (strong) score = Math.min(score, 25);
+    if (strong) score = Math.min(score, 2);
     const flags = [];
+    if (height < 1) flags.push("Fala poniżej 1 m — według ustawionego progu maksymalnie 1/10");
+    if (finite(power) && power < .5) flags.push("Mały dopływ energii fal — moc poniżej 0,5 kW/m");
     if (strong) flags.push("Silny wiatr lub wysokie fale — trudne warunki");
     if (incidence >= 85) flags.push("Fala spoza sektora ekspozycji");
     if (wave.period < 4) flags.push("Krótka, wiatrowa fala");
     if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
-    return { score: Math.round(score), height, local, windType: type, flags };
+    return { score: Math.round(clamp(score, 0, 10)), height, local, windType: type, powerKWm: power, flags };
+  }
+
+  function scoreLabel(score, height = null) {
+    if (!finite(score)) return "Brak oceny";
+    if (finite(height) && height < 1) return height < .05 ? "Praktycznie bez fal" : "Za mało fali (<1 m)";
+    if (finite(height) && height >= 3 && score <= 2) return "Trudne warunki";
+    return score >= 8 ? "Bardzo dobre" : score >= 6 ? "Dobre" : score >= 4 ? "Do rozważenia" : score >= 2 ? "Słabe" : "Bardzo słabe";
   }
 
   function buildForecast(spot, marine, weather, bathymetry, now = Date.now()) {
@@ -207,7 +224,7 @@
       const spread = heights.length > 1 ? Math.max(...heights) - Math.min(...heights) : null;
       const age = (time * 1000 - now) / 3600000;
       const agreement = scores.length < 2 || !wind || wind.count < 2 ? "Ograniczona liczba modeli"
-        : age > 72 || spread > 0.6 || wind.spread > 4 || wind.agreement < 0.7 || Math.max(...scores) - Math.min(...scores) > 25
+        : age > 72 || spread > 0.6 || wind.spread > 4 || wind.agreement < 0.7 || Math.max(...scores) - Math.min(...scores) > 2.5
           ? "Duża niepewność" : "Modele zbliżone";
       const daylight = Object.keys(WIND_MODELS).map(m => value(wh, "is_day", m, wi)).find(finite);
       return { time, members, wind, score: median(scores), height: median(heights),
@@ -229,8 +246,12 @@
       const window = rows.slice(i, i + 3);
       const cleanupHours = window.filter(r => r.cleanup?.state === "clean").length;
       if (window.every((r, n) => r.daylight && finite(r.score) && r.time === window[0].time + n * 3600) && (!cleanupOnly || cleanupHours === 3)) {
+        const heights = window.map(r => r.height).filter(finite);
+        const minHeight = heights.length ? Math.min(...heights) : null;
+        const maxHeight = heights.length ? Math.max(...heights) : null;
+        const averageScore = window.reduce((s, r) => s + r.score, 0) / 3;
         candidates.push({ start: window[0].time, end: window[2].time + 3600,
-          score: Math.round(window.reduce((s, r) => s + r.score, 0) / 3), height: median(window.map(r => r.height)), cleanupHours,
+          score: Math.round(Math.min(averageScore, finite(minHeight) && minHeight < 1 ? 1 : 10)), height: median(heights), minHeight, maxHeight, cleanupHours,
           nearHeight: median(window.map(r => r.simulation?.height)), simulationHours: window.filter(r => r.simulation).length });
       }
     }
@@ -299,6 +320,6 @@
     return series.map((row, index) => ({ ...row, cleanup: detectCleanup(series, index, spot) }))
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000).slice(0, 120);
   }
-  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, buildForecast, bestWindows, applySimulation, buildCoastalForecast };
+  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

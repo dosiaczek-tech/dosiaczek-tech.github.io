@@ -25,7 +25,7 @@ test('fresh SWAN result replaces the session rating without re-transforming its 
   assert.equal(row.height,.8);
   assert.equal(row.period,5);
   assert.equal(row.powerKWm,1.2);
-  assert.ok(row.score>20);
+  assert.ok(row.score >= 0 && row.score <= 1);
   assert.deepEqual(row.simulationWind,document.windUsed[0]);
 });
 test('expired, wrong-spot and invalid SWAN data never masquerade as a current simulation',()=>{

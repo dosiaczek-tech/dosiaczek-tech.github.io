@@ -249,16 +249,17 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=spot-search-v1">
+  <link rel="stylesheet" href="surf.css?v=wind-score-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=profile50-v1"></script>
+  <script defer src="surf-model.js?v=wind-score-v1"></script>
+  <script defer src="surf-wind-map.js?v=wind-score-v1"></script>
   <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js?v=spot-search-v1"></script>
-  <script defer src="surf-app.js?v=spot-search-v1"></script>
+  <script defer src="surf-app.js?v=wind-score-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -397,8 +398,16 @@
           <p class="surf-small">Siatka obliczeniowa SWAN ma krok 50 m. Mapa dna ma rozdzielczość około 100 m i jest interpolowana do siatki — nie są to pomiary dna co 50 m. Odległość 0 m to linia brzegu przyjęta w modelu, z granicznym zerem na lądzie. Rzeczywiste położenie linii wody i napływ fali na piasek mogą się różnić.</p>
         </section>
         <div id="surfNow" class="surf-metrics"></div>
+        <section class="surf-wind-inset" aria-labelledby="surfWindTitle">
+          <h3 id="surfWindTitle">Wiatr i ukształtowanie brzegu</h3>
+          <p id="surfWindDescription" aria-live="polite"></p>
+          <div id="surfWindMap" aria-label="Mapa topograficzna brzegu i kierunek ruchu powietrza"></div>
+          <button id="surfWindCenter" type="button" class="text-button">Wycentruj brzeg</button>
+          <p id="surfWindMapStatus" class="surf-small" role="status"></p>
+          <p class="surf-small">Niebieska strzałka pokazuje dokąd wieje; kierunek liczbowy oznacza skąd. Północ jest u góry. Linia przerywana: przybliżona orientacja ląd–morze. Topografia jest podkładem orientacyjnym — nie oblicza osłony wiatru przez teren.</p>
+        </section>
         <p class="surf-small"><strong>Wysokość fal (m)</strong> opisuje ich rozmiar od doliny do grzbietu. W prognozie używamy wysokości znaczącej (Hs): w przybliżeniu średniej wysokości jednej trzeciej najwyższych fal. Pojedyncze fale mogą być większe, a przy brzegu ich rozmiar się zmienia — to nie jest dokładna wysokość fali, na której będziesz surfować.</p>
-        <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. Wynik 0–100 opisuje potencjał do surfingu, nie bezpieczeństwo.</p>
+        <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. Wynik 0–10 opisuje potencjał do surfingu, nie bezpieczeństwo. Fale poniżej 1 m otrzymują maksymalnie 1/10; sam korzystny wiatr nie wystarczy.</p>
         <p class="surf-small"><strong>Energia fal (kJ/m²)</strong> oznacza ilość energii na metr kwadratowy powierzchni morza. <strong>Moc fal (kW/m)</strong> opisuje jej przepływ w ciągu sekundy na metr szerokości grzbietu. Wyższa fala niesie więcej energii: przy podwojeniu wysokości energia rośnie około czterokrotnie. To nie jest siła uderzenia fali ani energia jednej konkretnej fali. Większa moc nie musi oznaczać lepszych warunków do surfingu.</p>
         <p class="surf-small">Wysokość, czas między falami, kierunek, moc i energia dotyczą tego samego punktu przy spocie — do 500 m od oszacowanego brzegu. Moc pochodzi z obliczonego widma fal SWAN. Jeśli brakuje poprawnej prognozy przy brzegu, wyświetlamy brak danych, a nie wartości z dalszego morza.</p>
         <div id="surfFlags" class="surf-flags"></div>
