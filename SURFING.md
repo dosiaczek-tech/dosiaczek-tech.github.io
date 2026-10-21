@@ -208,6 +208,10 @@ To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
   modelu (awaryjnie punkcie spotu). Biała strzałka na obwodzie wskazuje ruch
   powietrza ku środkowi, żółty wycinek wskazuje meteorologiczny kierunek „skąd”.
   Wskaźnik odpowiada wybranej godzinie; znika przy ciszy lub braku kierunku.
+  Niebieskie animowane grzbiety pokazują osobno kierunek propagacji fal SWAN
+  (przeciwny do kierunku „skąd”), prostopadle do grzbietów. Ich tempo i rozstaw
+  są schematyczne. Brak kierunku lub praktycznie zerowa fala wyłącza animację;
+  preferencja ograniczonego ruchu pozostawia nieruchome grzbiety i opis liczbowy.
   Podkład Esri World Imagery, awaryjnie OSM, nie jest bieżącym obrazem fal
   ani obliczeniem lokalnej osłony terenu. Północ pozostaje u góry mapy.
 - Końcowa ocena widoczna na stronie wykorzystuje spójny zestaw wysokości,

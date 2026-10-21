@@ -37,7 +37,7 @@
     });
     osm.on("tileerror", () => { status.textContent = "Nie udało się pobrać podkładu. Strzałka i orientacja brzegu pozostają widoczne."; });
     document.getElementById("surfWindCenter").addEventListener("click", fit);
-    function update(spot, wind, shoreline) {
+    function update(spot, wind, shoreline, wave) {
       const g = geometry(spot, wind, shoreline);
       const key = `${spot.id}:${g.coast.lat}:${g.coast.lon}`;
       currentGeometry = g;
@@ -52,15 +52,29 @@
         <path class="surf-wind-sector" d="M140 140L131 108A33 33 0 0 1 149 108Z"/>
         <path class="surf-wind-arrowhead" d="M136 32H144V46H151L140 59L129 46H136Z"/>
       </g>` : "";
+      const hasWaves = wave && M.finite(wave.direction) && M.finite(wave.height) && wave.height > .001;
+      const waveDirection = hasWaves ? (wave.direction + 360) % 360 : null;
+      // Crests are perpendicular to propagation. With north as the source,
+      // they move down (south); rotating by FROM preserves this convention.
+      const crests = Array.from({ length: 12 }, (_, i) => {
+        const y = -16 + i * 24;
+        return `<path d="M65 ${y}Q83 ${y - 5} 102 ${y}T140 ${y}T178 ${y}T215 ${y}"/>`;
+      }).join("");
+      const waves = hasWaves ? `<g class="surf-wave-bearing" transform="rotate(${waveDirection} 140 140)">
+        <g clip-path="url(#surfWaveClip)"><g class="surf-wave-crests">${crests}</g></g>
+      </g>` : "";
       const html = `<svg viewBox="0 0 280 280" aria-hidden="true" class="surf-wind-dial">
+        <defs><clipPath id="surfWaveClip"><circle cx="140" cy="140" r="86"/></clipPath></defs>
         <circle cx="140" cy="140" r="95" class="surf-wind-disc"/>
-        <g class="surf-wind-grid">${rings}${spokes}</g>${labels}${indicator}
+        <g class="surf-wind-grid">${rings}${spokes}</g>${waves}${labels}${indicator}
         <circle cx="140" cy="140" r="4" class="surf-wind-origin"/>
       </svg>`;
       L.marker(latlng(g.coast), { interactive: false, keyboard: false,
         icon: L.divIcon({ className: "surf-wind-compass", html, iconSize: [280, 280], iconAnchor: [140, 140] }) }).addTo(overlay);
       container.dataset.windFrom = g.arrow ? String(g.arrow.fromDirection) : "";
       container.dataset.windTo = g.arrow ? String(g.arrow.toDirection) : "";
+      container.dataset.waveFrom = hasWaves ? String(waveDirection) : "";
+      container.dataset.waveTo = hasWaves ? String((waveDirection + 180) % 360) : "";
       if (key !== currentKey) { currentKey = key; map.invalidateSize({ pan: false }); fit(); }
     }
     if (root.ResizeObserver) new ResizeObserver(() => { if (container.clientWidth) map.invalidateSize({ pan: false }); }).observe(container);

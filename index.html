@@ -249,17 +249,17 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=wind-dial-v2">
+  <link rel="stylesheet" href="surf.css?v=wave-motion-v3">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
   <script defer src="surf-model.js?v=wind-score-v1"></script>
-  <script defer src="surf-wind-map.js?v=wind-dial-v2"></script>
+  <script defer src="surf-wind-map.js?v=wave-motion-v3"></script>
   <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js?v=spot-search-v1"></script>
-  <script defer src="surf-app.js?v=wind-score-v1"></script>
+  <script defer src="surf-app.js?v=wave-motion-v3"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -399,10 +399,12 @@
         </section>
         <div id="surfNow" class="surf-metrics"></div>
         <section class="surf-wind-inset" aria-labelledby="surfWindTitle">
-          <h3 id="surfWindTitle">Wiatr i ukształtowanie brzegu</h3>
+          <h3 id="surfWindTitle">Wiatr i fale przy brzegu</h3>
           <p id="surfWindDescription" aria-live="polite"></p>
-          <div id="surfWindMap" aria-label="Mapa satelitarna brzegu z kołową skalą kierunku wiatru" aria-describedby="surfWindDescription"></div>
+          <p id="surfWaveDescription" aria-live="polite"></p>
+          <div id="surfWindMap" aria-label="Mapa satelitarna z kierunkiem wiatru i ruchem fal" aria-describedby="surfWindDescription surfWaveDescription"></div>
           <button id="surfWindCenter" type="button" class="text-button">Wycentruj brzeg</button>
+          <p class="surf-small">Niebieskie ruchome linie to grzbiety fal — przemieszczają się w kierunku ich propagacji. Ruch jest schematyczny: jego tempo i odstępy linii nie odwzorowują prędkości ani długości fal. Pokazujemy średni kierunek fal z prognozy SWAN dla wybranej godziny.</p>
           <p id="surfWindMapStatus" class="surf-small" role="status"></p>
           <p class="surf-small">Biała strzałka na obwodzie wieje w stronę środka; żółty wycinek wskazuje, skąd nadchodzi wiatr. 0° = północ, 90° = wschód, 180° = południe, 270° = zachód. Środek koła to brzeg przyjęty w modelu, a przy braku jego współrzędnych — punkt spotu. Zdjęcie satelitarne jest podkładem orientacyjnym, nie bieżącym obrazem fal.</p>
         </section>

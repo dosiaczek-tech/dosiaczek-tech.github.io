@@ -120,4 +120,8 @@
 .surf-wind-sector { fill: #f2c45d; fill-opacity: .95; }
 .surf-wind-arrowhead { fill: white; filter: drop-shadow(0 1px 2px #102528); }
 .surf-wind-origin { fill: #344640; stroke: white; stroke-width: 2; }
+.surf-wave-crests { fill: none; stroke: #78dfff; stroke-width: 2; opacity: .8; animation: surf-wave-drift 3s linear infinite; filter: drop-shadow(0 1px 1px #153e54); }
+@keyframes surf-wave-drift { from { transform: translateY(0); } to { transform: translateY(24px); } }
+#surfWaveDescription { color: #17647a; }
+@media (prefers-reduced-motion: reduce) { .surf-wave-crests { animation: none; } }
 @media (max-width: 600px) { #surfWindMap { height: 360px; } }

@@ -307,6 +307,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSequence(now);
     if (!windMap && window.SurfWindMap) windMap = SurfWindMap.create();
     windMap?.update(currentSpot, now?.wind, simulation?.shoreline, now?.simulation);
+    const wave = now?.simulation;
+    $("surfWaveDescription").textContent = wave && M.finite(wave.direction) && M.finite(wave.height)
+      ? wave.height <= .001 ? "Fale: praktycznie brak fali — bez animacji."
+        : `Fale z ${compass(wave.direction)} → ku ${compass((wave.direction + 180) % 360)} · ~${fmt(wave.height)} m · okres ${fmt(wave.period)} s.`
+      : "Fale: brak kierunku z prognozy przy brzegu — bez animacji.";
     const wind = now?.wind;
     $("surfWindDescription").textContent = `${now ? `${day(now.time)} ${hour(now.time)} · ` : ""}${M.finite(wind?.direction) && M.finite(wind?.speed) && wind.speed >= .5 ? `Wiatr z ${compass(wind.direction)} → ku ${compass((wind.direction + 180) % 360)}, ${fmt(wind.speed)} m/s · ${M.windRelative(wind, currentSpot)}.` : M.finite(wind?.speed) && wind.speed < .5 ? "Cisza — bez strzałki kierunku." : "Brak pewnego kierunku wiatru — bez strzałki."}`;
     const profileRows = rows.filter(r => r.simulation?.profile.length === 11);
