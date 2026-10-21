@@ -34,7 +34,21 @@
       return [key, window ? { ...window, historical: !upcoming, archived: values.some(r => r.time >= window.start && r.time < window.end && r.archived) } : null];
     }));
   }
-  const api = { choose, daily, dayKey, retainHistory };
+  function bestSpots(entries, model, now = Date.now(), random = Math.random) {
+    const today = dayKey(now / 1000);
+    const lastDay = dayKey(Date.parse(`${today}T12:00:00Z`) / 1000 + 5 * 86400);
+    const ranked = entries.map(({ id, rows }) => {
+      const scores = [...daily(rows, model, now)].filter(([day, w]) => day > today && day <= lastDay && w && !w.historical).map(([, w]) => w.score);
+      return { id, score: scores.length ? Math.max(...scores) : null };
+    }).filter(r => Number.isFinite(r.score));
+    // Shuffle before the stable score sort: ties are random without dropping better spots.
+    for (let i = ranked.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [ranked[i], ranked[j]] = [ranked[j], ranked[i]];
+    }
+    return ranked.sort((a, b) => b.score - a.score).slice(0, 5).map(r => r.id);
+  }
+  const api = { choose, daily, dayKey, retainHistory, bestSpots };
   if (typeof module !== "undefined") module.exports = api;
   else root.SurfCompare = api;
   if (typeof document === "undefined") return;
@@ -44,8 +58,8 @@
     const storageKey = "nad-morzem:compare-spots-v1";
     const colors = ["#126a96", "#903ca3", "#a44b12", "#087a6a", "#4d50b0"];
     const cache = new Map();
-    let saved, selectedDay, generation = 0;
-    try { saved = JSON.parse(localStorage.getItem(storageKey)); } catch { /* First visit or storage unavailable. */ }
+    let saved, selectedDay, generation = 0, autoGeneration = 0, manual = false;
+    try { saved = JSON.parse(localStorage.getItem(storageKey)); manual = localStorage.getItem(`${storageKey}:manual`) === "true"; } catch { /* First visit or storage unavailable. */ }
     let ids = choose(catalog, saved);
     const el = (tag, text, cls) => {
       const item = document.createElement(tag);
@@ -58,7 +72,7 @@
     const label = spot => `${spot.town} — ${spot.name}`;
     const tone = score => !M.finite(score) ? "unknown" : score >= 9 ? "excellent" : score >= 8 ? "great" : score >= 6.5 ? "good" : score >= 5 ? "fair" : score >= 3 ? "weak" : score >= 1.5 ? "poor" : "bad";
     function save() {
-      try { localStorage.setItem(storageKey, JSON.stringify(ids)); }
+      try { localStorage.setItem(storageKey, JSON.stringify(ids)); localStorage.setItem(`${storageKey}:manual`, String(manual)); }
       catch { $("compareStorage").textContent = "Przeglądarka nie pozwala zapisać wyboru — pozostanie dostępny tylko na tej stronie."; }
     }
     function selectors() {
@@ -71,14 +85,19 @@
           option.selected = spot.id === id; option.disabled = spot.id !== id && ids.includes(spot.id);
           select.append(option);
         }
-        select.addEventListener("change", () => { ids[index] = select.value; save(); selectors(); load(); });
+        select.addEventListener("change", () => {
+          manual = true; ++autoGeneration; ids[index] = select.value; save(); selectors();
+          $("compareBest").disabled = false;
+          $("compareStorage").textContent = "Twój zapisany zestaw. Kliknij „Wybierz najlepsze”, aby wrócić do automatycznego wyboru.";
+          load();
+        });
         field.append(select); return field;
       }));
     }
-    async function fetchSpot(id, force = false) {
+    async function fetchSpot(id, force = false, publishedOnly = false) {
       if (!cache.has(id)) {
         const spot = catalog.find(s => s.id === id);
-        cache.set(id, Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true }), root.SurfAPI.nearshore(spot, force)])
+        cache.set(id, Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly }), root.SurfAPI.nearshore(spot, force)])
           .then(([forecast, simulation]) => M.buildCoastalForecast(spot, forecast.weather?.data, simulation, Date.now(), { historyHours: 12 }))
           .catch(() => [])
           .then(rows => {
@@ -181,7 +200,40 @@
         card.append(el("small", "Zobacz szczegółową prognozę →")); return card;
       }));
     }
-    save(); selectors(); load();
-    $("compareRefresh").addEventListener("click", () => load(true));
+    async function selectBest(force = false) {
+      const token = ++autoGeneration;
+      ++generation;
+      manual = false; save();
+      $("compareBest").disabled = true;
+      $("compareRefresh").disabled = true;
+      $("compareContent").setAttribute("aria-busy", "true");
+      for (const id of ["compareChart", "compareLegend", "compareDays", "compareRanking"]) $(id).replaceChildren();
+      let next = 0, completed = 0;
+      const entries = [];
+      // Only published files, four spots at a time; no mass requests to the weather provider.
+      await Promise.all(Array.from({ length: 4 }, async () => {
+        while (next < catalog.length && token === autoGeneration) {
+          const spot = catalog[next++];
+          if (force) cache.delete(spot.id);
+          const rows = await fetchSpot(spot.id, force, true);
+          entries.push({ id: spot.id, rows }); completed++;
+          if (token === autoGeneration) $("compareStatus").textContent = `Szukam najlepszych sesji od jutra: ${completed}/${catalog.length} spotów…`;
+        }
+      }));
+      if (token !== autoGeneration) return;
+      $("compareBest").disabled = false;
+      ids = bestSpots(entries, M);
+      save(); selectors();
+      $("compareStorage").textContent = ids.length
+        ? `Wybór automatyczny: ${ids.length} najlepszych spotów według najwyższej oceny okna od jutra do końca wykresu. Remisy losujemy. Ręczna zmiana zapamięta Twój zestaw.`
+        : "Brak aktualnych ocen na następne dni — nie wybieramy losowych spotów jako najlepszych. Spróbuj odświeżyć lub wybierz własny zestaw.";
+      if (!ids.length) { ids = choose(catalog, saved); selectors(); }
+      await load();
+    }
+    selectors();
+    if (manual) { $("compareStorage").textContent = "Twój zapisany zestaw. Kliknij „Wybierz najlepsze”, aby wrócić do automatycznego wyboru."; load(); }
+    else selectBest();
+    $("compareBest").addEventListener("click", () => selectBest(true));
+    $("compareRefresh").addEventListener("click", () => manual ? load(true) : selectBest(true));
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

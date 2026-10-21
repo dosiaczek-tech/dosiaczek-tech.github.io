@@ -25,7 +25,7 @@
     } finally { clearTimeout(timer); }
   }
   function endpoint(base, params) { return `${base}?${new URLSearchParams(params)}`; }
-  async function scheduledWeather(spot, fallbackURL, force) {
+  async function scheduledWeather(spot, fallbackURL, force, publishedOnly = false) {
     const key = `scheduled-wind-${spotKey(spot)}`, previous = memory.get(key);
     if (previous && !force && Date.now() - previous.loadedAt < 1800000) return previous.value;
     try {
@@ -36,7 +36,8 @@
       const value = { ...data, stale: Boolean(data.reusedInputs) };
       memory.set(key, { loadedAt: Date.now(), value });
       return value;
-    } catch {
+    } catch (error) {
+      if (publishedOnly) throw error;
       const result = await cached(`weather-${spotKey(spot)}`, fallbackURL, force);
       return { ...result, sourceType: "direct", source: "BS Wind 3 — bezpośrednie dane Open-Meteo" };
     }
@@ -72,7 +73,7 @@
     pending.set(key, task);
     return task;
   }
-  function forecasts(spot, force = false, { coastalOnly = false } = {}) {
+  function forecasts(spot, force = false, { coastalOnly = false, publishedOnly = false } = {}) {
     const sea = M.offshore(spot);
     const common = { past_days: 2, forecast_days: 6, timeformat: "unixtime", timezone: "GMT" };
     const marineURL = endpoint("https://marine-api.open-meteo.com/v1/marine", { ...common,
@@ -82,7 +83,7 @@
       latitude: spot.lat, longitude: spot.lon, wind_speed_unit: "ms", cell_selection: "nearest",
       hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day", models: Object.keys(M.WIND_MODELS).join(",") });
     // Nie odrzucamy fal, gdy brakuje wiatru; ocena wtedy pozostaje pusta.
-    return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force)])
+    return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force, publishedOnly)])
       .then(([marine, weather]) => ({ marine: marine.status === "fulfilled" ? marine.value : null,
         weather: weather.status === "fulfilled" ? weather.value : null,
         errors: [marine, weather].filter(r => r.status === "rejected").map(r => r.reason.message) }));

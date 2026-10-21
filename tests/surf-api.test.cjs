@@ -67,6 +67,14 @@ test('coastal page requests wind only, never an offshore wave forecast', async (
   assert.equal(h.calls(), 1);
 });
 
+test('automatic ranking uses only published files even when a bundle is missing', async () => {
+  const h = harness();
+  const result = await h.api.forecasts(spot, false, { coastalOnly: true, publishedOnly: true });
+  assert.equal(result.weather, null);
+  assert.equal(h.calls(), 0);
+  assert.equal(result.errors.length, 1);
+});
+
 test('rate limit produces a useful error and never invented values', async () => {
   const h = harness(); h.mode('rate-limit');
   const result = await h.api.forecasts(spot);

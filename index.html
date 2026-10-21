@@ -257,10 +257,10 @@
   <script defer src="surf-search.js?v=spot-search-v1"></script>
   <script defer src="surf-model.js?v=history12-v1"></script>
   <script defer src="surf-wind-map.js?v=wave-motion-v3"></script>
-  <script defer src="surf-api.js?v=profile50-v1"></script>
+  <script defer src="surf-api.js?v=best-spots-v1"></script>
   <script defer src="surf-map.js?v=spot-search-v1"></script>
   <script defer src="surf-app.js?v=session-colors-v1"></script>
-  <script defer src="surf-compare.js?v=history12-v1"></script>
+  <script defer src="surf-compare.js?v=best-spots-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -294,8 +294,9 @@
       <p class="eyebrow">TWÓJ PLAN NA FALE</p>
       <div class="compare-heading"><div><h1 id="compareTitle">Gdzie warto jechać?</h1>
         <p>Pięć spotów. Sześć dni. Znajdź najlepsze okno na swoją sesję.</p></div>
-        <button id="compareRefresh" type="button" class="filter">Odśwież porównanie</button></div>
-      <p id="compareStorage" class="surf-small">Na początek losujemy pięć spotów. Możesz je zmienić — zapamiętamy Twój wybór w tej przeglądarce.</p>
+        <div><button id="compareBest" type="button" class="filter">Wybierz najlepsze</button>
+        <button id="compareRefresh" type="button" class="filter">Odśwież porównanie</button></div></div>
+      <p id="compareStorage" class="surf-small">Wybieramy pięć najlepszych spotów na następne dni. Przy równych ocenach losujemy. Możesz też ustawić własny zestaw.</p>
       <div id="compareSelectors" class="compare-selectors"></div>
       <p id="compareStatus" class="surf-small" role="status">Przygotowuję porównanie…</p>
       <div id="compareContent" aria-busy="true">

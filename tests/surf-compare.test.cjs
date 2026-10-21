@@ -3,6 +3,23 @@ const assert = require('node:assert/strict');
 const C = require('../surf-compare.js');
 const M = require('../surf-model.js');
 
+test('automatic selection keeps the highest future scores and randomizes only ties', () => {
+  const now = Date.parse('2026-10-21T08:00:00Z');
+  const entry = (id, score, day = 1) => ({id, rows: [0, 1, 2].map(h => ({
+    time: now / 1000 + day * 86400 + h * 3600, score, daylight: true, height: 1, simulation: {}
+  }))});
+  const entries = [entry('best', 9), entry('second', 8), ...Array.from({length: 8}, (_, i) => entry(`tie${i}`, 7)),
+    entry('poor', 2), entry('today', 10, 0), entry('outside', 10, 6), {id: 'missing', rows: []}];
+  const a = C.bestSpots(entries, M, now, () => .5);
+  const b = C.bestSpots(entries, M, now, () => .99);
+  assert.equal(a.length, 5);
+  assert.deepEqual(a.slice(0, 2), ['best', 'second']);
+  assert.ok(a.slice(2).every(id => id.startsWith('tie')));
+  assert.notDeepEqual(a, b);
+  assert.deepEqual(C.bestSpots([{id: 'missing', rows: []}], M, now), []);
+  assert.deepEqual(C.bestSpots([entry('only', 0)], M, now), ['only']);
+});
+
 test('first visit picks five unique spots and saved choices survive subsequent visits', () => {
   const catalog = Array.from({length: 10}, (_, i) => ({id: `spot-${i}`}));
   const first = C.choose(catalog, null, () => .5);
