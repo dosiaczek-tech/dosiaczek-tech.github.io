@@ -143,7 +143,9 @@
         const card = el("a", undefined, "surf-window compare-card"); card.href = `#surf/${d.spot.id}`;
         card.addEventListener("click", () => setTimeout(() => $("forecastPanel").scrollIntoView({ behavior: "smooth", block: "start" }), 0));
         card.dataset.quality = tone(d.window?.score);
-        card.append(el("span", `${i + 1}. ${label(d.spot)}`));
+        const name = el("span", `${i + 1}. ${label(d.spot)}`, "compare-spot-link");
+        name.style.setProperty("--spot-color", d.color);
+        card.append(name);
         if (d.window) {
           card.append(el("strong", `${d.window.score.toLocaleString("pl-PL", { minimumFractionDigits: 1 })}/10`), el("span", M.scoreLabel(d.window.score)),
             el("small", `${hour(d.window.start)}–${hour(d.window.end)} · pewność: ${d.window.confidence}`));

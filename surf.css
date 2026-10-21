@@ -153,6 +153,8 @@
 .compare-legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 50%; background: var(--spot-color); }
 .compare-card { display: block; text-decoration: none; }
 .compare-card strong { font-size: 26px; }
+.compare-card .compare-spot-link { color: var(--spot-color); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.compare-card:hover .compare-spot-link, .compare-card:focus-visible .compare-spot-link { text-decoration-thickness: 2px; }
 #compareDays [aria-pressed="true"] { background: var(--sea-dark); color: white; }
 #compareRankingTitle { font-size: 20px; }
 @media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
