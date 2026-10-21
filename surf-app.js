@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let lastAttempt = 0;
   let spotMap = null, windMap = null;
   let simulation = null, simulationTime = null;
+  let sessionRequest = null, chosenSession = null, sessionScroll = false;
   let searchResults = [], searchIndex = -1, searchEditing = false, acceptedSearchId = null;
 
   function populateSpots() {
@@ -176,11 +177,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderHours() {
-    const everyHour = $("surfHourly").checked;
+    const everyHour = $("surfHourly").checked || Boolean(chosenSession && selectedDay === dayKey(chosenSession.start));
     const localHour = time => Number(date(time, { hour: "2-digit", hourCycle: "h23" }));
     $("surfHours").replaceChildren(...rows.filter(r => dayKey(r.time) === selectedDay)
       .filter((r, i) => everyHour || i === 0 || localHour(r.time) % 3 === 0).map(r => {
         const tr = node("tr"); tr.dataset.night = String(!r.daylight);
+        if (chosenSession && r.time >= chosenSession.start && r.time < chosenSession.end) {
+          tr.dataset.session = "true"; tr.setAttribute("aria-label", "Godzina wybranej sesji");
+        }
         const waveDirection = r.simulation?.direction;
         const windText = r.wind ? `BS Wind: z ${compass(r.wind.direction)} · ${fmt(r.wind.speed)} m/s · ${M.windRelativeToWave(r.wind, waveDirection) || "kierunek niepewny"}` : "BS Wind: brak danych";
         const cell = (content, withWind = false) => {
@@ -279,11 +283,38 @@ document.addEventListener("DOMContentLoaded", () => {
     el.append(node("p", `Wybrany punkt prognozy: około ${Math.round(now.simulation.shoreDistance)} m od brzegu, głębokość ${fmt(now.simulation.depth)} m. Dno pochodzi z rastra EMODnet, nie z bieżącego pomiaru rew.`, "surf-small"));
   }
 
+  function renderSession() {
+    const box = $("surfSession"); box.hidden = !sessionRequest?.day; box.replaceChildren();
+    if (box.hidden) return;
+    box.dataset.quality = scoreTone(chosenSession?.score);
+    const dateLabel = day(Date.parse(`${sessionRequest.day}T12:00:00Z`) / 1000);
+    box.append(node("h3", `${currentSpot.town} — ${currentSpot.name} · ${dateLabel}`));
+    if (!chosenSession) {
+      box.append(node("strong", simulation === null ? "Wczytuję wybraną sesję…" : "Brak pełnych danych dla wybranej sesji"),
+        node("p", sessionRequest.start !== null ? `Wybrane okno: ${hour(sessionRequest.start)}–${hour(sessionRequest.start + 10800)}. Nie zastępujemy go inną godziną.` : "Dla tego dnia nie ma pełnego przyszłego okna dziennego."));
+    } else {
+      const w = chosenSession, first = w.rows[0];
+      box.append(node("strong", `${fmt(w.score)} / 10 · ${w.historical ? "Historia prognozy" : quality(w.score)}`),
+        node("p", `${hour(w.start)}–${hour(w.end)} · pewność: ${w.confidence}`),
+        node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => r.period)))} s · wiatr ${fmt(M.median(w.rows.map(r => r.wind?.speed)))} m/s`),
+        node("p", `Wiatr na początku sesji: ${M.windRelative(first.wind, currentSpot) || "brak kierunku"}. Mapa i parametry poniżej pokazują wybraną godzinę.`));
+      for (const flag of w.flags.filter(f => f.startsWith("Na "))) box.append(node("p", flag));
+      if (w.historical) box.append(node("p", "Wcześniejsze okno — wynik modelowy, nie pomiar ani rekomendacja wyjazdu teraz."));
+      const button = node("button", "Zobacz trzy godziny sesji ↓", "filter"); button.type = "button";
+      button.addEventListener("click", () => { selectedDay = dayKey(w.start); $("surfHourly").checked = true; renderHours(); $("surfDays").scrollIntoView({ behavior: "smooth", block: "start" }); });
+      box.append(button);
+    }
+    if (sessionScroll && simulation !== null) { sessionScroll = false; box.scrollIntoView({ behavior: "smooth", block: "start" }); box.focus({ preventScroll: true }); }
+  }
+
   function render() {
     if (!loaded || !active) return;
-    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation);
+    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation, Date.now(), { historyHours: sessionRequest?.day ? 12 : 0 });
+    chosenSession = SurfSession.resolve(rows, sessionRequest, M);
+    if (chosenSession && simulationTime === null) simulationTime = chosenSession.start;
     $("surfContent").hidden = false;
-    const now = rows.find(r => r.time === simulationTime && r.simulation) || rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000);
+    renderSession();
+    const now = rows.find(r => r.time === simulationTime && r.simulation) || (!sessionRequest?.day ? rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000) : null);
     const stale = loaded.weather?.stale;
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
     const errors = [...loaded.errors, ...[loaded.weather].filter(r => r?.error).map(r => r.error)];
@@ -321,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const profileRows = rows.filter(r => r.simulation?.profile.length === 11);
     $("surfProfileTime").replaceChildren(...profileRows.map(r => { const option=node("option",`${day(r.time)} · ${hour(r.time)}`);option.value=r.time;return option; }));
     $("surfProfileTime").disabled = !profileRows.length;
-    renderSimulation(rows.find(r => r.time === simulationTime) || now || profileRows[0] || rows[0]);
+    renderSimulation(sessionRequest?.day ? now : rows.find(r => r.time === simulationTime) || now || profileRows[0] || rows[0]);
     const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now() && r.simulation), 3, { cleanupOnly: $("surfCleanupOnly").checked });
     $("surfWindows").replaceChildren(...windows.map(w => {
       const button = node("button", undefined, "surf-window"); button.type = "button";
@@ -334,8 +365,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!windows.length) $("surfWindows").append(node("p", $("surfCleanupOnly").checked ? "Brak pełnych trzygodzinnych okien wywiewki z utrzymującą się falą. Odznacz filtr, aby zobaczyć pozostałe okna surfingowe." : "Brak kompletnych dziennych okien z falami i wiatrem. Spróbuj odświeżyć prognozę.", "surf-small"));
     renderChart();
     const days = [...new Set(rows.map(r => dayKey(r.time)))];
-    if (!days.includes(selectedDay)) selectedDay = days[0];
-    $("surfDays").replaceChildren(...days.map(d => { const b = node("button", day(rows.find(r => dayKey(r.time) === d).time), "filter"); b.type = "button"; b.dataset.day = d; b.addEventListener("click", () => { selectedDay = d; renderHours(); }); return b; }));
+    if (sessionRequest?.day && !days.includes(sessionRequest.day)) days.push(sessionRequest.day);
+    days.sort();
+    if (!days.includes(selectedDay)) selectedDay = sessionRequest?.day || days[0];
+    $("surfDays").replaceChildren(...days.map(d => { const b = node("button", day(Date.parse(`${d}T12:00:00Z`) / 1000), "filter"); b.type = "button"; b.dataset.day = d; b.addEventListener("click", () => { selectedDay = d; renderHours(); }); return b; }));
     renderHours();
     $("surfModels").replaceChildren();
     const modelRow = (name, text) => { const el = node("div", undefined, "surf-model-row"); el.append(node("b", name), node("span", text)); $("surfModels").append(el); };
@@ -357,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadSpot(spot, force = false) {
     const token = ++generation;
     lastAttempt = Date.now();
-    currentSpot = spot; loaded = null; rows = []; selectedDay = null; simulation = null; simulationTime = null;
+    currentSpot = spot; loaded = null; rows = []; selectedDay = sessionRequest?.day || null; simulation = null; simulationTime = null; chosenSession = null;
     loading = true;
     if (acceptedSearchId !== spot.id) clearSpotSearch();
     else closeSuggestions();
@@ -401,9 +434,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (changed) window.dispatchEvent(new CustomEvent("surf:tab", { detail: { tab: next ? "surf" : "cameras" } }));
     if (next) {
-      const spot = byId.get(location.hash.slice(6));
+      sessionRequest = SurfSession.parse(location.hash);
+      sessionScroll = Boolean(sessionRequest.day);
+      const spot = byId.get(sessionRequest.spotId);
       if (!spot) { location.replace("#surf/wladyslawowo"); return; }
       if (spot.id !== currentSpot?.id || changed) loadSpot(spot);
+      else { selectedDay = sessionRequest.day; simulationTime = null; render(); }
     } else {
       ++generation;
       if (cameras.has(location.hash.slice(1))) cameraForecastLink(location.hash.slice(1));

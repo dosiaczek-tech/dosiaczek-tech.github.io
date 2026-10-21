@@ -186,8 +186,15 @@
       const sorted = data.map(d => ({ ...d, window: d.days.get(selectedDay) })).sort((a, b) =>
         Number(Boolean(b.window && !b.window.historical)) - Number(Boolean(a.window && !a.window.historical)) || (b.window?.score ?? -1) - (a.window?.score ?? -1));
       $("compareRanking").replaceChildren(...sorted.map((d, i) => {
-        const card = el("a", undefined, "surf-window compare-card"); card.href = `#surf/${d.spot.id}`;
-        card.addEventListener("click", () => setTimeout(() => $("forecastPanel").scrollIntoView({ behavior: "smooth", block: "start" }), 0));
+        const card = el("a", undefined, "surf-window compare-card");
+        const params = new URLSearchParams({ day: selectedDay });
+        if (d.window) params.set("start", d.window.start);
+        card.href = `#surf/${d.spot.id}?${params}`;
+        card.addEventListener("click", event => {
+          if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && location.hash === card.hash) {
+            event.preventDefault(); window.dispatchEvent(new Event("hashchange"));
+          }
+        });
         card.dataset.quality = tone(d.window?.score);
         const name = el("span", `${i + 1}. ${label(d.spot)}`, "compare-spot-link");
         name.style.setProperty("--spot-color", d.color);

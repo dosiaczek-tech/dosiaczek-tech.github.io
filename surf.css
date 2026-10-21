@@ -159,3 +159,9 @@
 #compareRankingTitle { font-size: 20px; }
 @media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .surf-comparison { padding: 16px; } .compare-heading { display: block; } .compare-selector select { font-size: 16px; } .compare-ranking { grid-template-columns: 1fr; } }
+.surf-session { margin: 18px 0; scroll-margin-top: 20px; }
+.surf-session h3 { margin: 0 0 8px; font-size: 18px; }
+.surf-session strong { font-size: clamp(20px, 3vw, 28px); }
+.surf-session p { font-size: 13px; margin: 8px 0; }
+.surf-session .filter { margin-top: 8px; }
+.surf-table tr[data-session="true"] { background: #e7f1f7; box-shadow: inset 4px 0 #126a96; }
