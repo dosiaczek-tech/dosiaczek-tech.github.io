@@ -185,25 +185,44 @@ Piaszczyste rewy przemieszczają się znacznie szybciej niż aktualizuje się DT
 
 ### 4. Wynik surfingowy 0–10
 
-To jawna heurystyka dla rekreacyjnego surfingu, nie model nauczony na danych.
+To jawna heurystyka dla średniozaawansowanego surfera na desce do bałtyckich fal,
+nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
 
-- Wysokość: `clamp((Hs − 0,5) / 1,5, 0, 1)`; fale poniżej 1 m mają
-  maksymalnie 1/10. Używamy Hs z wyniku SWAN w punkcie do 500 m od brzegu.
-- Okres: liniowe skalowanie `(T - 2) / 5`, ograniczone do 0–1.
-- Ekspozycja: `sqrt(max(0,cos(θ)))`, gdzie θ to kąt nadejścia względem normalnej.
+- Wysokość Hs z SWAN w punkcie do 500 m: interpolacja punktów
+  `0,2→0; 0,4→0,25; 0,6→0,55; 0,8→0,8; 1–1,5→1; 1,8→0,85;
+  2,2→0,65; 3→0,2; 4→0`. Większa fala nie zawsze lepiej pasuje do profilu.
+- Średni okres z SWAN (nie okres szczytowy): interpolacja
+  `3 s→0,1; 4→0,35; 5→0,6; 6→0,8; ≥7→1`.
+- Ekspozycja: θ to kąt nadejścia względem lokalnej normalnej.
   Fala pod kątem ≥85° jest poza przyjętym sektorem — ocena 0. To uproszczona
   ekspozycja, nie numeryczny fetch ani model cienia falowego.
 - Wiatr: cisza / słaby <1,5 m/s; kąt od normalnej 0–22,5°: onshore,
   do 67,5°: cross-on, do 112,5°: cross, poniżej 157,5°: cross-off,
   pozostałe: offshore. Pod komórkami pokazujemy osobno taką relację względem
   kierunku fali. Słaby offshore jest korzystniejszy, silny jest karany.
-- `score = 10 × ekspozycja × (0,7 × jakość_wysokości + 0,3 × jakość_okresu)
-  × (0,15 + 0,85 × jakość_wiatru) × min(moc / 2 kW/m, 1)`.
-  Moc jest ogranicznikiem małych fal, nie niezależnym potwierdzeniem ich wysokości.
-- Moc poniżej 0,5 kW/m ogranicza ocenę do 1; okres poniżej 3,5 s do 3.
+- `potencjał = jakość_wysokości × (0,55 + 0,45 × jakość_okresu)`.
+- `score = 10 × potencjał × (0,45 + 0,35 × jakość_wiatru + 0,20 × uporządkowanie)`.
+  Energia i moc nie są ponownie punktowane. Nie ma limitu dla fal poniżej 1 m.
+- Wiatr jest interpolowany po kącie (0/45/90/135/180°) i prędkości.
+  Przy ≤2 m/s jakość wynosi 0,95; przy 5 m/s odpowiednio
+  `0,35/0,45/0,60/0,85/1`; przy 8: `0,1/0,2/0,3/0,55/0,65`;
+  przy 12: `0/0,05/0,1/0,2/0,25`; przy ≥17: 0.
+  Porywy przekraczające średnią o ponad 3 m/s stopniowo obniżają ten składnik.
+- Uporządkowanie to proxy ze stabilności wysokości, okresu i kierunku w trzech
+  kolejnych godzinach kończących się ocenianą godziną: `0,3 + 0,4 × stabilność`.
+  Potwierdzona wywiewka dodaje 0,25 tylko tutaj; nawianie lub świeża zmiana
+  odejmują 0,2. Brak historii daje neutralne 0,5 i niższą pewność.
+- Okres poniżej 3,5 s ogranicza ocenę do 3.
 - Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 2.
-- Wynik jest zaokrąglany do liczby całkowitej. Okno trzygodzinne zawierające
-  choć jedną godzinę z falą poniżej 1 m także ma limit 1/10.
+- Wynik ma jedno miejsce po przecinku. Pełne dzienne okna trzygodzinne:
+  `0,7 × średnia ocen + 0,3 × najniższa ocena`. Brak danych nie oznacza zera.
+- Rekomendacje: <3 odpuść specjalny wyjazd; 3–4,9 tylko blisko;
+  5–6,4 rozważ sesję; 6,5–7,9 warto jechać; 8–8,9 bardzo dobre; ≥9 wyjątkowe.
+- Pewność jest oddzielna od wyniku: uwzględnia historię, zgodność i liczbę modeli
+  wiatru, horyzont >72 h, wiek danych >12 h, zastępczy wiatr oraz reprezentatywność
+  punktu (głębokość poza 1–4 m lub odległość >300 m). Przy tych ograniczeniach
+  jest niska, w pozostałych przypadkach średnia. Pojedyncza symulacja fal
+  i przybliżone dno nie uzasadniają etykiety wysokiej pewności.
 - Mapa satelitarna przy wietrze ma kołową skalę 0–360° zakotwiczoną na brzegu
   modelu (awaryjnie punkcie spotu). Biała strzałka na obwodzie wskazuje ruch
   powietrza ku środkowi, żółty wycinek wskazuje meteorologiczny kierunek „skąd”.

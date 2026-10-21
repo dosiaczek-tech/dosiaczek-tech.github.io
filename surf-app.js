@@ -20,7 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function link(label, url) { const a = node("a", label); a.href = url; return a; }
   const quality = M.scoreLabel;
-  const scoreNode = score => { const e = node("span", `${fmt(score, 0)}/10`, "surf-score"); e.dataset.quality = !M.finite(score) ? "unknown" : score >= 6 ? "good" : score < 4 ? "poor" : "fair"; return e; };
+  const scoreTone = score => !M.finite(score) ? "unknown" : score >= 9 ? "excellent" : score >= 8 ? "great"
+    : score >= 6.5 ? "good" : score >= 5 ? "fair" : score >= 3 ? "weak" : score >= 1.5 ? "poor" : "bad";
+  const scoreNode = score => { const e = node("span", `${fmt(score, 1)}/10`, "surf-score"); e.title = quality(score); e.dataset.quality = scoreTone(score); return e; };
   let currentSpot = null, loaded = null, rows = [], selectedDay = null, generation = 0, active = false, loading = false;
   let lastAttempt = 0;
   let spotMap = null, windMap = null;
@@ -300,10 +302,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ["Wiatr przy plaży", `${fmt(now?.wind?.speed)} m/s`, `Z ${compass(now?.wind?.direction)} · porywy ${fmt(now?.wind?.gust)} m/s`],
       ["Moc fal przy spocie", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", "W tym samym punkcie, do 500 m od brzegu"],
       ["Energia fal przy spocie", M.finite(now?.energyKJm2) ? `~${fmt(now.energyKJm2, 2)} kJ/m²` : "—", "Na m² powierzchni wody w punkcie prognozy"],
-       [now ? `Pomocnicza ocena · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 0)} / 10`, `${quality(now?.score, now?.height)} · ${now?.simulation ? "fale przy spocie + wiatr" : "brak prognozy przy brzegu"}`]
+        [now ? `Czy warto jechać? · ${hour(now.time)}` : "Teraz — brak danych", `${fmt(now?.score, 1)} / 10`, `${quality(now?.score)} · profil: średniozaawansowany, rekreacyjny surfing`]
     ];
     $("surfNow").replaceChildren(...items.map(([title, value, desc]) => { const el = node("div", undefined, "surf-metric"); el.append(node("small", title), node("strong", value), node("p", desc)); return el; }));
+    $("surfNow").lastElementChild.dataset.quality = scoreTone(now?.score);
     $("surfFlags").replaceChildren(...(now?.flags || []).map(f => node("span", f)));
+    if (now?.confidence && M.finite(now.score)) $("surfFlags").append(node("span", `Pewność: ${now.confidence.level} — ${now.confidence.reasons.join("; ")}`));
     renderSequence(now);
     if (!windMap && window.SurfWindMap) windMap = SurfWindMap.create();
     windMap?.update(currentSpot, now?.wind, simulation?.shoreline, now?.simulation);
@@ -321,7 +325,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const windows = M.bestWindows(rows.filter(r => r.time * 1000 >= Date.now() && r.simulation), 3, { cleanupOnly: $("surfCleanupOnly").checked });
     $("surfWindows").replaceChildren(...windows.map(w => {
       const button = node("button", undefined, "surf-window"); button.type = "button";
-      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${w.score}/10 · ${quality(w.score, w.minHeight)}`), node("small", `Fale przy spocie ~${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · strefa do 500 m · pokaż dzień →`));
+      button.dataset.quality = scoreTone(w.score);
+      button.append(node("span", `${day(w.start)} · ${hour(w.start)}–${hour(w.end)}`), node("strong", `${fmt(w.score, 1)}/10 · ${quality(w.score)}`), node("small", `Fale przy spocie ~${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · pewność: ${w.confidence} · pokaż dzień →`));
+      button.append(node("small", w.flags.filter(f => f.startsWith("Na ")).join(" · ")));
       if (w.cleanupHours) button.append(node("small", `Wywiewka / ucichanie po nawianiu: ${w.cleanupHours}/3 h`));
       button.addEventListener("click", () => { selectedDay = dayKey(w.start); renderHours(); $("surfDays").scrollIntoView({ behavior: "smooth", block: "center" }); }); return button;
     }));

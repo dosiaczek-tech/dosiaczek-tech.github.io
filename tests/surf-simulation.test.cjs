@@ -25,7 +25,7 @@ test('fresh SWAN result replaces the session rating without re-transforming its 
   assert.equal(row.height,.8);
   assert.equal(row.period,5);
   assert.equal(row.powerKWm,1.2);
-  assert.ok(row.score >= 0 && row.score <= 1);
+  assert.ok(row.score > 1 && row.score <= 10);
   assert.deepEqual(row.simulationWind,document.windUsed[0]);
 });
 test('expired, wrong-spot and invalid SWAN data never masquerade as a current simulation',()=>{
@@ -62,4 +62,31 @@ test('nearshore zero waves stay zero and missing wind does not produce a confide
   assert.equal(calm.score,0);
   const missing=M.applySimulation([{...rows[0],wind:null}],document,spot,time*1000)[0];
   assert.equal(missing.score,null);assert.equal(missing.simulation.height,.8);
+});
+
+test('coastal recommendation uses past stability and keeps confidence separate from score',()=>{
+  const times=[time-7200,time-3600,time,time+3600,time+7200];
+  const hourly={time:times};
+  for(const model of Object.keys(M.WIND_MODELS)) {
+    hourly[`wind_speed_10m_${model}`]=times.map(()=>3);
+    hourly[`wind_direction_10m_${model}`]=times.map(()=>180);
+    hourly[`is_day_${model}`]=times.map(()=>1);
+  }
+  const input={...document,history:times.slice(0,2).map(t=>({...result,time:t})),
+    hourly:times.slice(2).map(t=>({...result,time:t}))};
+  const forecast=doc=>M.buildCoastalForecast(spot,{hourly},doc,time*1000);
+  const stable=forecast(input);
+  assert.equal(stable[0].confidence.level,'średnia');
+  assert.ok(stable[0].components.order>.5);
+  const missing=forecast({...input,history:[]});
+  assert.equal(missing[0].components.order,.5);
+  assert.equal(missing[0].confidence.level,'niska');
+  assert.ok(stable[0].score>missing[0].score);
+  const older=forecast({...input,generatedAt:time-13*3600});
+  assert.equal(older[0].score,stable[0].score);
+  assert.equal(older[0].confidence.level,'niska');
+  const changedFuture=forecast({...input,hourly:input.hourly.map((r,i)=>i?{...r,height:2,direction:70}:r)});
+  assert.equal(changedFuture[0].score,stable[0].score);
+  assert.equal(M.bestWindows(stable)[0].confidence,'średnia');
+  assert.equal(M.bestWindows(missing)[0].confidence,'niska');
 });

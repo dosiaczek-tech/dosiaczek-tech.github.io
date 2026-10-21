@@ -68,8 +68,22 @@
 .surf-cell-wind { display: block; max-width: 175px; margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.5; white-space: normal; }
 .surf-table tr[data-night="true"] { opacity: .6; }
 .surf-score { display: inline-block; min-width: 43px; padding: 3px 8px; border-radius: 6px; background: #edf0e7; text-align: center; font-weight: 700; }
-.surf-score[data-quality="good"] { background: #d7ebd9; color: #17653a; }
-.surf-score[data-quality="poor"] { background: #f0e5d9; color: #815b33; }
+/* Shared recommendation scale: red → orange → green. Missing data stays neutral. */
+[data-quality="bad"] { --rating-bg: #fee2e2; --rating-ink: #991b1b; --rating-line: #fca5a5; }
+[data-quality="poor"] { --rating-bg: #ffebe2; --rating-ink: #9a3412; --rating-line: #fdba9a; }
+[data-quality="weak"] { --rating-bg: #fff0dc; --rating-ink: #92400e; --rating-line: #f5c078; }
+[data-quality="fair"] { --rating-bg: #fff6d5; --rating-ink: #79520b; --rating-line: #e8cd70; }
+[data-quality="good"] { --rating-bg: #e7f3d9; --rating-ink: #3f6212; --rating-line: #b4d58b; }
+[data-quality="great"] { --rating-bg: #dcf3df; --rating-ink: #166534; --rating-line: #91cc9d; }
+[data-quality="excellent"] { --rating-bg: #c6ecd8; --rating-ink: #065f46; --rating-line: #67b993; }
+[data-quality="unknown"] { --rating-bg: #f0f2f3; --rating-ink: #52606b; --rating-line: #cdd3d8; }
+.surf-score[data-quality], .surf-metric[data-quality], .surf-window[data-quality] {
+  background: var(--rating-bg); color: var(--rating-ink); border-color: var(--rating-line);
+}
+.surf-window[data-quality] small { display: block; margin-top: 7px; color: inherit; }
+.surf-metric[data-quality] p { opacity: 1; }
+.surf-window[data-quality]:hover { box-shadow: 0 0 0 2px var(--rating-line); }
+.surf-window[data-quality]:focus-visible { outline: 3px solid var(--rating-ink); outline-offset: 3px; }
 .surf-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .surf-detail-grid .surf-box { margin: 0; }
 .surf-model-row { display: flex; gap: 10px; justify-content: space-between; padding: 7px 0; font-size: 11px; border-bottom: 1px solid var(--line); }
