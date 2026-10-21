@@ -21,18 +21,28 @@ document.addEventListener("DOMContentLoaded", () => {
   function link(label, url) { const a = node("a", label); a.href = url; return a; }
   const quality = score => !M.finite(score) ? "Brak oceny" : score >= 70 ? "Obiecujące" : score >= 45 ? "Umiarkowane" : score >= 20 ? "Słabe" : "Bardzo słabe";
   const scoreNode = score => { const e = node("span", fmt(score, 0), "surf-score"); e.dataset.quality = !M.finite(score) ? "unknown" : score >= 70 ? "good" : score < 45 ? "poor" : "fair"; return e; };
-  let currentSpot = null, loaded = null, rows = [], selectedDay = null, generation = 0, active = false, mapLayer = null;
+  let currentSpot = null, loaded = null, rows = [], selectedDay = null, generation = 0, active = false, loading = false;
   let lastAttempt = 0;
   let spotMap = null;
   let simulation = null, simulationTime = null;
 
   function populateSpots() {
     const region = $("surfRegion").value;
+    const pending = $("surfSpot").value;
     const options = spots.filter(s => region === "all" || region === s.region);
     $("surfSpot").replaceChildren(...options.map(s => { const o = node("option", `${s.town} — ${s.name}`); o.value = s.id; return o; }));
-    if (options.some(s => s.id === currentSpot?.id)) $("surfSpot").value = currentSpot.id;
+    if (options.some(s => s.id === pending)) $("surfSpot").value = pending;
+    else if (options.some(s => s.id === currentSpot?.id)) $("surfSpot").value = currentSpot.id;
     if (spotMap) spotMap.setRegion(region);
   }
+  function updateChoice() {
+    const choice = byId.get($("surfSpot").value);
+    const pending = choice && choice.id !== currentSpot?.id;
+    $("surfChoiceHint").hidden = !pending;
+    $("surfChoiceHint").textContent = pending ? `Wybrano: ${choice.town} — ${choice.name}. Kliknij „Pokaż prognozę”, aby otworzyć ten spot.` : "";
+    $("surfShowForecast").disabled = !choice || (loading && !pending);
+  }
+  $("surfRegion").value = "all";
   populateSpots();
 
   function cameraForecastLink(id) {
@@ -43,21 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("camera:selected", event => cameraForecastLink(event.detail.id));
   cameraForecastLink(location.hash.slice(1));
 
-  function setMap(layer = mapLayer) {
+  function setMap() {
     const s = currentSpot;
     if (!s) return;
     $("windyLink").href = `https://www.windy.com/?waves,${s.lat},${s.lon},9`;
-    $("windyWaves").setAttribute("aria-pressed", String(layer === "waves"));
-    $("windyWind").setAttribute("aria-pressed", String(layer === "wind"));
-    if (!layer) return;
-    mapLayer = layer;
     const params = new URLSearchParams({ lat: s.lat, lon: s.lon, detailLat: s.lat, detailLon: s.lon, width: 1000, height: 420,
-      zoom: 8, level: "surface", overlay: layer, product: "ecmwf", menu: "", message: "", marker: "true", calendar: "now", pressure: "", type: "map", location: "coordinates", detail: "", metricWind: "m/s", metricTemp: "°C" });
-    $("windyFrame").src = `https://embed.windy.com/embed2.html?${params}`;
-    $("windyFrame").hidden = false;
+      zoom: 8, level: "surface", overlay: "waves", product: "ecmwf", menu: "", message: "", marker: "true", calendar: "now", pressure: "", type: "map", location: "coordinates", detail: "", metricWind: "m/s", metricTemp: "°C" });
+    const url = `https://embed.windy.com/embed2.html?${params}`;
+    if ($("windyFrame").getAttribute("src") !== url) $("windyFrame").src = url;
   }
-  $("windyWaves").addEventListener("click", () => setMap("waves"));
-  $("windyWind").addEventListener("click", () => setMap("wind"));
 
   function renderSpotNotes() {
     const s = currentSpot, body = $("surfLocalBody");
@@ -147,14 +151,11 @@ document.addEventListener("DOMContentLoaded", () => {
         cell(scoreNode(r.score));
         cell(r.simulation ? `~${fmt(r.simulation.height)} m` : "Brak danych przy brzegu", true);
         cell(`${fmt(r.period)} s`, true);
-        cell(M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : "—", true);
         cell(M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : "—", true);
         cell(compass(r.direction));
         cell(r.wind ? `${compass(r.wind.direction)} · ${fmt(r.wind.speed)} m/s` : "Brak wiatru");
         cell(M.windRelative(r.wind, currentSpot) || "—");
         cell(r.simulation ? `~${Math.round(r.simulation.shoreDistance)} m od brzegu · ${fmt(r.simulation.depth)} m głębokości` : "—");
-        const sequence = node("span", r.cleanup?.label || "—", "surf-sequence-cell"); sequence.dataset.state = r.cleanup?.state || "unknown";
-        cell(sequence);
         return tr;
       }));
     $("surfDays").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.day === selectedDay)));
@@ -291,11 +292,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = ++generation;
     lastAttempt = Date.now();
     currentSpot = spot; loaded = null; rows = []; selectedDay = null; simulation = null; simulationTime = null;
+    loading = true;
     if ($("surfRegion").value !== "all" && $("surfRegion").value !== spot.region) { $("surfRegion").value = "all"; populateSpots(); }
     $("surfSpot").value = spot.id;
     $("surfTab").href = `#surf/${spot.id}`;
     $("surfContent").hidden = true;
-    $("surfRefresh").disabled = true;
+    updateChoice();
     $("surfStatus").dataset.state = "loading";
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
     document.title = `${spot.town} — prognoza surfingu | Nad morzem`;
@@ -319,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (token !== generation || !active) return;
       $("surfStatus").dataset.state = "error";
       $("surfStatus").textContent = `Nie udało się pobrać prognozy. ${error.message} Możesz odświeżyć dane lub porównać mapę Windy poniżej.`;
-    } finally { if (token === generation) $("surfRefresh").disabled = false; }
+    } finally { if (token === generation) { loading = false; updateChoice(); } }
   }
 
   function route() {
@@ -337,13 +339,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (spot.id !== currentSpot?.id || changed) loadSpot(spot);
     } else {
       ++generation;
-      $("windyFrame").removeAttribute("src"); $("windyFrame").hidden = true;
       if (cameras.has(location.hash.slice(1))) cameraForecastLink(location.hash.slice(1));
     }
   }
-  $("surfSpot").addEventListener("change", () => { location.hash = `surf/${$("surfSpot").value}`; });
-  $("surfRegion").addEventListener("change", () => { populateSpots(); if ($("surfSpot").value) location.hash = `surf/${$("surfSpot").value}`; });
-  $("surfRefresh").addEventListener("click", () => { if (currentSpot) loadSpot(currentSpot, true); });
+  $("surfSpot").addEventListener("change", updateChoice);
+  $("surfRegion").addEventListener("change", () => { populateSpots(); updateChoice(); });
+  $("surfChooser").addEventListener("submit", event => {
+    event.preventDefault();
+    const choice = byId.get($("surfSpot").value);
+    if (!choice) return;
+    if (location.hash !== `#surf/${choice.id}`) location.hash = `surf/${choice.id}`;
+    else loadSpot(choice, true);
+    $("surfStatus").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   $("surfHourly").addEventListener("change", renderHours);
   $("surfProfileTime").addEventListener("change", () => { simulationTime=Number($("surfProfileTime").value);selectedDay=dayKey(simulationTime);render(); });
   $("surfCleanupOnly").addEventListener("change", render);
@@ -360,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // Odświeżamy tylko otwartą, widoczną zakładkę. Awaria nie wywołuje pętli zapytań.
   setInterval(() => {
-    if (active && currentSpot && document.visibilityState === "visible" && Date.now() - lastAttempt >= 1800000) loadSpot(currentSpot);
+    if (active && currentSpot && $("surfSpot").value === currentSpot.id && document.visibilityState === "visible" && Date.now() - lastAttempt >= 1800000) loadSpot(currentSpot);
   }, 60000);
 
   const covered = CAMERAS.filter(c => cameraSpot.has(c.id));

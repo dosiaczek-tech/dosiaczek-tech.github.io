@@ -19,6 +19,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
   70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
+- Wybór regionu po lewej (domyślnie całe wybrzeże), filtrowana lista plaż
+  po prawej i przycisk „Pokaż prognozę”. Kliknięcie znacznika mapy otwiera spot od razu.
 - **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
@@ -32,9 +34,11 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Automatyczny backend GitHub Actions: wiatr co 3 h, nowe obliczenia SWAN
   w cyklach 00/12 UTC. W tabeli wiatr pod komórkami fal i pięć klas kierunku:
   onshore, cross-on, cross, cross-off, offshore.
-- Mapy Windy, godziny polskie, oznaczanie brakujących i nieaktualnych danych.
+- Automatycznie widoczna mapa fal Windy, godziny polskie, oznaczanie brakujących
+  i nieaktualnych danych. Mapa nie przeładowuje się przy odświeżaniu tego samego spotu.
 - Szacowana **moc fal przy spocie (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
-  tabeli oraz porównaniu modeli, z objaśnieniem jednostek i sposobu obliczania.
+  z objaśnieniem jednostek. Tabela godzinowa pokazuje energię, bez kolumn mocy
+  i sekwencji wiatru; opis sekwencji jest w osobnej sekcji.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
   prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą
   i filtrem regionu. Kolory odróżniają spoty z kamerą od pozostałych.

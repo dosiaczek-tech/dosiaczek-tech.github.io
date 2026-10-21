@@ -30,7 +30,7 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
   DWD EWAM / ECMWF WAM. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
 - Raster dna **EMODnet WCS**, niestacjonarny model SWAN z rzeczywistym wymuszeniem
   wiatrowym w trzech punktach przekroju, transportem widma, tarciem i załamywaniem.
-- Osadzana mapa **Windy** (fale / wiatr), uruchamiana przyciskiem; link do Windy
+- Osadzana mapa **fal Windy**, ładowana automatycznie po otwarciu prognozy; link do Windy
   i lokalizacji na OpenStreetMap. Dane z iframe nie są wejściem modelu.
 - Osobna **mapa wyboru spotów** (Leaflet + OpenStreetMap): znaczniki otwierają
   prognozę, grupy rozwijają się przy zbliżeniu, wybór i filtr regionu są
@@ -290,12 +290,17 @@ uwzględnia wysokość i okres fal. Jednostki i objaśnienia są widoczne na str
 - `surf-api.js`: główny widok pobiera pakiet SWAN oraz wiatr, bez zapytania
   do Marine API dla odległego punktu. Timeout 18 s, deduplikacja równoległych zapytań, pamięć RAM
   i localStorage. Prognozy: TTL 30 min; przy awarii jawnie oznaczony cache do 6 h,
-  starsze dane odrzucane. Przycisk odświeżenia ma minimalny odstęp 60 s.
+  starsze dane odrzucane. Ponowne „Pokaż prognozę” dla tego samego spotu może
+  odświeżyć dane, z minimalnym odstępem 60 s dla zapytań prognoz.
 - Widoczna zakładka próbuje aktualizacji co 30 min; ukryta nie odpytuje API.
   Profil dna: 30 dni dla pełnego wyniku, 10 min dla niepełnego. Zmiana geometrii
   spotu zmienia klucz pamięci. Profil nie wymaga pobierania co zmianę prognozy.
 - Odpowiedź po zmianie spotu nie nadpisuje nowego wyboru; osobny licznik generacji.
 - `surf-app.js`: nawigacja, stany braku danych, tabela, wykres, mapy i kamera ↔ spot.
+  Formularz działa w kolejności region → plaża → „Pokaż prognozę”; zmiana list
+  nie przełącza samoczynnie wyświetlanej prognozy. Mapa spotów nadal wybiera punkt
+  bezpośrednio. Windy startuje na warstwie fal i zachowuje działający iframe przy
+  odświeżaniu tej samej lokalizacji oraz przełączaniu zakładek strony.
 - `surf-map.js`: interaktywna mapa wyboru z Leaflet 1.9.4 i MarkerCluster 1.5.3
   (wersje CDN przypięte, kontrola integralności SRI). Podkład © OpenStreetMap
   contributors, ODbL, standardowe kafle OSM. Mapa inicjalizuje się dopiero

@@ -257,7 +257,7 @@
   <script defer src="surf-model.js?v=profile50-v1"></script>
   <script defer src="surf-api.js?v=profile50-v1"></script>
   <script defer src="surf-map.js"></script>
-  <script defer src="surf-app.js?v=profile50-v1"></script>
+  <script defer src="surf-app.js?v=chooser-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -367,11 +367,12 @@
         <div><p class="eyebrow">WARUNKI PRZY SPOCIE · DO 500 M OD BRZEGU</p><h1 id="surfTitle">Znajdź swoje fale.</h1><p>Wysokość fal, wiatr i najlepsze godziny na sesję w strefie przy plaży.</p></div>
         <span class="model-pill">Bałtyk Surf 1.2 · pełny profil 0–500 m</span>
       </div>
-      <div class="surf-toolbar">
-        <label>Miejscowość / plaża<select id="surfSpot"></select></label>
-        <label>Region<select id="surfRegion"><option value="all">Całe wybrzeże</option><option value="zachod">Zachodnie wybrzeże</option><option value="srodek">Środkowe wybrzeże</option><option value="polwysep">Półwysep — strona morska i okolice</option><option value="trojmiasto">Trójmiasto / Zatoka Gdańska</option><option value="mierzeja">Mierzeja Wiślana</option></select></label>
-        <button id="surfRefresh" class="primary-button" type="button">Odśwież prognozę</button>
-      </div>
+      <form id="surfChooser" class="surf-toolbar">
+        <label>Region<select id="surfRegion"><option value="all" selected>Całe wybrzeże</option><option value="zachod">Zachodnie wybrzeże</option><option value="srodek">Środkowe wybrzeże</option><option value="polwysep">Półwysep — strona morska i okolice</option><option value="trojmiasto">Trójmiasto / Zatoka Gdańska</option><option value="mierzeja">Mierzeja Wiślana</option></select></label>
+        <label>Miejscowość / plaża<select id="surfSpot" required></select></label>
+        <button id="surfShowForecast" class="primary-button" type="submit">Pokaż prognozę</button>
+      </form>
+      <p id="surfChoiceHint" class="surf-small" role="status" aria-live="polite" hidden></p>
       <section class="surf-box surf-spot-map-box" aria-labelledby="surfSpotMapTitle">
         <div class="surf-table-heading"><h3 id="surfSpotMapTitle">Wybierz spot na mapie</h3><div class="surf-map-actions"><button id="surfMapOverview" class="filter" type="button">Całe wybrzeże</button><button id="surfMapLocate" class="filter" type="button">Pokaż wybrany spot</button></div></div>
         <p id="surfSpotMapStatus" class="surf-small" role="status" aria-live="polite">Ładowanie mapy spotów…</p>
@@ -404,7 +405,7 @@
           <p class="surf-small">Wszystkie parametry fal dotyczą punktu przy spocie, maksymalnie 500 m od brzegu. Przedziały co 3 godziny, np. 00:00–03:00; wartości dotyczą ich początku. Kliknij godzinę, aby zobaczyć przekrój pierwszych 500 m. Kolumna „Punkt prognozy” pokazuje odległość od brzegu i głębokość.</p>
           <p class="surf-small">Pod komórkami fal: najnowszy BS Wind 3 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Osobna kolumna pokazuje wiatr względem brzegu.</p>
           <div id="surfDays" class="surf-days" role="group" aria-label="Dzień prognozy"></div>
-          <div class="surf-table-scroll" tabindex="0" role="region" aria-label="Tabela prognozy przy spocie"><table class="surf-table"><thead><tr><th>Przedział godzin</th><th>Ocena warunków</th><th>Wysokość fal przy spocie</th><th>Czas między falami</th><th>Moc fal · kW/m</th><th>Energia fal · kJ/m²</th><th>Fale nadchodzą z</th><th>Wiatr z / siła</th><th>Względem brzegu</th><th>Punkt prognozy</th><th>Sekwencja wiatru i fal</th></tr></thead><tbody id="surfHours"></tbody></table></div>
+          <div class="surf-table-scroll" tabindex="0" role="region" aria-label="Tabela prognozy przy spocie"><table class="surf-table"><thead><tr><th>Przedział godzin</th><th>Ocena warunków</th><th>Wysokość fal przy spocie</th><th>Czas między falami</th><th>Energia fal · kJ/m²</th><th>Fale nadchodzą z</th><th>Wiatr z / siła</th><th>Względem brzegu</th><th>Punkt prognozy</th></tr></thead><tbody id="surfHours"></tbody></table></div>
         </section>
         <div class="surf-detail-grid">
           <section class="surf-box"><h3>Źródła prognozy przy spocie</h3><div id="surfModels"></div><p class="surf-small">Fale są wynikiem SWAN dla punktu przy brzegu. Poniżej porównujemy modele wiatru; ich zgodność nie jest gwarancją trafności prognozy.</p></section>
@@ -413,10 +414,9 @@
         <section class="surf-box"><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
       </div>
       <section class="surf-box">
-        <div class="surf-table-heading"><h3>Porównaj sytuację na Windy</h3><a id="windyLink" target="_blank" rel="noopener noreferrer">Otwórz Windy ↗</a></div>
+        <div class="surf-table-heading"><h3>Mapa fal — Windy</h3><a id="windyLink" target="_blank" rel="noopener noreferrer">Otwórz Windy ↗</a></div>
         <p class="surf-small">Mapa Windy to niezależny podgląd. Jej wartości nie są pobierane do naszego wyniku.</p>
-        <div class="surf-map-actions"><button id="windyWaves" class="filter" type="button">Pokaż mapę fal</button><button id="windyWind" class="filter" type="button">Pokaż mapę wiatru</button></div>
-        <iframe id="windyFrame" title="Mapa pogody Windy dla wybranej plaży" loading="lazy" allowfullscreen hidden></iframe>
+        <iframe id="windyFrame" title="Mapa fal Windy dla wybranej plaży" loading="eager" allowfullscreen></iframe>
       </section>
       <details class="surf-box"><summary>Jak liczymy prognozę? Źródła i ograniczenia</summary>
         <p><strong>Bałtyk Surf 1.1</strong> pokazuje wyłącznie wynik SWAN w strefie do 500 m od oszacowanego brzegu. Wybieramy płytki punkt możliwie bliski głębokości 2 m i podajemy jego położenie. Gdy taki wynik jest niedostępny, nie zastępujemy go falą z dalszego morza. DWD EWAM / ECMWF WAM są jedynie danymi wejściowymi na zewnętrznej granicy obliczeń; wiatr BS Wind 3 i mapa dna pozwalają symulować drogę fali do plaży. Ocena sesji i ranking dotyczą już wyniku przy spocie.</p>
