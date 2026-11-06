@@ -24,4 +24,6 @@ class ArchivedInputs(unittest.TestCase):
             self.assertEqual(result["wind"][0]["fetchedAt"],now-3600)
             self.assertIsNone(archived_inputs(spot,cache,now+6*3600))
             self.assertIsNone(archived_inputs({**spot,"normal":90},cache,now))
+            self.assertIsNone(archived_inputs({**spot,"lat":spot["lat"]+.001},cache,now))
+            self.assertIsNone(archived_inputs({**spot,"lon":spot["lon"]+.08},cache,now))
             self.assertIsNone(archived_inputs({**spot,"id":"missing"},cache,now))

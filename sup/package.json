@@ -1,0 +1,25 @@
+{
+  "name": "sup-atlas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/prepare-river-network.mjs && esbuild src/app.js --bundle --minify --format=esm --target=es2022 --outdir=assets --loader:.png=dataurl --legal-comments=eof",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "playwright test",
+    "data:map": "node tools/prepare-map.mjs",
+    "data:access": "node tools/prepare-access.mjs",
+    "data:refresh-access": "node tools/prepare-access.mjs && node tools/prepare-map.mjs --quiet && node tools/prepare-access.mjs",
+    "data:catalogue": "node tools/expand-catalogue.mjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@supabase/supabase-js": "2.118.0",
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11",
+    "@playwright/test": "1.56.1",
+    "esbuild": "0.25.11"
+  }
+}

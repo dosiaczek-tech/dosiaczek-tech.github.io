@@ -70,7 +70,7 @@ def refresh_forecast_dns(url):
     return False
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "BS-SWAN-1.2-full-profile500"
+VERSION = "BS-SWAN-1.3-seaward2m"
 ENGINE_URL = "https://swanmodel.sourceforge.io/download/zip/SWAN-41.51-Linux.tar.gz"
 ENGINE_SHA256 = "11ec02bd4106cee1e9267a648a525ec009a5c0e18c5fe57a3a1f685b90b4f894"
 WAVE_MODELS = ["dwd_ewam", "ecmwf_wam"]
@@ -80,8 +80,10 @@ DX = 100
 COMPUTE_DX = 50
 DT_MINUTES = 10
 SPINUP_HOURS = 12
+HISTORY_HOURS = 12
 HORIZON_HOURS = 120
 MAX_SHORE_DISTANCE = 500
+SUMMARY_DEPTH = 2
 
 
 def finite(value):
@@ -133,7 +135,8 @@ def request(url, params=None):
             response.raise_for_status()
             return response
         except requests.RequestException as error:
-            print(f"Network retry {attempt + 1}/4 for {url}: {type(error).__name__}", flush=True)
+            status = error.response.status_code if error.response is not None else None
+            print(f"Network retry {attempt + 1}/4 for {url}: {type(error).__name__}, HTTP {status}", flush=True)
             if attempt == 3:
                 raise
             if isinstance(error, (requests.ConnectionError, requests.Timeout)) and not isinstance(error, requests.exceptions.SSLError) and refresh_forecast_dns(url):
@@ -144,7 +147,7 @@ def request(url, params=None):
 def install_engine(cache):
     executable = cache / "engine" / "SWAN-41.51-Linux" / "bin" / "swan.exe"
     if executable.exists():
-        return executable.resolve()
+        return configure_engine(executable)
     data = request(ENGINE_URL).content
     if hashlib.sha256(data).hexdigest() != ENGINE_SHA256:
         raise ValueError("SWAN archive checksum changed; review upstream before upgrading")
@@ -159,6 +162,15 @@ def install_engine(cache):
                 raise ValueError("Unsafe archive path")
         archive.extractall(target)
     executable.chmod(0o755)
+    return configure_engine(executable)
+
+
+def configure_engine(executable):
+    # NixOS supplies the loader/libraries through shell.nix; solver code and inputs stay unchanged.
+    linker = os.environ.get("SWAN_DYNAMIC_LINKER")
+    libraries = os.environ.get("SWAN_LIBRARY_PATH")
+    if linker and libraries:
+        subprocess.run(["patchelf", "--set-interpreter", linker, "--set-rpath", libraries, str(executable)], check=True)
     return executable.resolve()
 
 
@@ -256,8 +268,9 @@ def shoreline_reference(spot, bath):
             "note": "Brzeg szacowany z DTM względem LAT, nie bieżący pomiar geodezyjny"}
 
 
-def bulk_forecast(points, marine=False):
+def bulk_forecast(points, marine=False, cache=None):
     result = []
+    rate_limited = False
     # 18 is divisible by three: each wind transect stays in one API request.
     for offset in range(0, len(points), 18):
         batch = points[offset:offset + 18]
@@ -270,12 +283,38 @@ def bulk_forecast(points, marine=False):
             params.update(hourly="wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day",
                           models=",".join(WIND_MODELS), wind_speed_unit="ms", cell_selection="nearest")
             url = "https://api.open-meteo.com/v1/forecast"
+        # Persist each completed batch independently. A later failed request must
+        # not discard wind already downloaded for other beaches.
+        key = hashlib.sha256(json.dumps([url, params], sort_keys=True).encode()).hexdigest()
+        path = cache / "inputs" / f"{key}.json" if cache else None
         fetched = int(time.time())
-        data = request(url, params).json()
-        data = data if isinstance(data, list) else [data]
-        if len(data) != len(batch) or any(not d.get("hourly", {}).get("time") for d in data):
-            raise ValueError("Forecast response count/shape mismatch")
-        result.extend({"fetchedAt": fetched, "data": d} for d in data)
+        old = load(path) if path else None
+        valid_cache = isinstance(old, list) and len(old) == len(batch) and all(
+            isinstance(b, dict) and finite(b.get("fetchedAt")) and 0 <= fetched - b["fetchedAt"] <= 6 * 3600
+            and b.get("data", {}).get("hourly", {}).get("time") for b in old)
+        # Hourly scheduler checks do not multiply the provider's request load.
+        # The original retrieval timestamps remain visible to every client.
+        if valid_cache and all(fetched - b["fetchedAt"] < 3 * 3600 for b in old):
+            result.extend(old)
+            continue
+        try:
+            if rate_limited:
+                raise ValueError("Provider rate limit; no additional requests in this run")
+            data = request(url, params).json()
+            data = data if isinstance(data, list) else [data]
+            if len(data) != len(batch) or any(not d.get("hourly", {}).get("time") for d in data):
+                raise ValueError("Forecast response count/shape mismatch")
+            bundles = [{"fetchedAt": fetched, "data": d} for d in data]
+            if path:
+                dump(path, bundles)
+        except (requests.RequestException, ValueError) as error:
+            if path is None:
+                raise
+            if isinstance(error, requests.HTTPError) and error.response is not None and error.response.status_code == 429:
+                rate_limited = True
+            bundles = [{**b, "reusedInputs": True} for b in old] if valid_cache else [None] * len(batch)
+            print(f"Forecast batch {offset // 18 + 1}: {'retained original inputs' if valid_cache else 'unavailable'} ({type(error).__name__})", flush=True)
+        result.extend(bundles)
         time.sleep(.3)
     return result
 
@@ -392,6 +431,29 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
     return boundary_model, used
 
 
+def summary_location(coast, distances, depths):
+    """Choose a fixed shallow-water node on the sea-facing part of the profile.
+
+    Stop at the first <=2 m node when travelling landwards within the confirmed
+    500 m zone. Searching beyond that contour can pick a sheltered trough behind
+    a sandbar merely because its depth is a few centimetres closer to 2 m.
+    Use bathymetry, never the largest wave or best score; calm/missing output must
+    not move the point. Equal depths favour the seaward node. If the whole zone
+    is deeper than 2 m, keep the closest admissible depth within the same limit.
+    """
+    candidates = []
+    for distance, depth in reversed(list(zip(distances, depths))):
+        if not (coast["waterDistance"] <= distance <= coast["landDistance"] + MAX_SHORE_DISTANCE):
+            continue
+        if .3 <= depth <= 4:
+            candidates.append((distance, depth))
+        if depth <= SUMMARY_DEPTH:
+            break
+    if not candidates:
+        raise ValueError("Brak poprawnego punktu od strony morza w strefie do 500 m od rozpoznanego brzegu")
+    return min(candidates, key=lambda p: (round(abs(p[1] - SUMMARY_DEPTH), 6), -p[0]))[0]
+
+
 def parse_output(path, spot, bath, start, end):
     by_time = {}
     for line in path.read_text().splitlines():
@@ -408,16 +470,14 @@ def parse_output(path, spot, bath, start, end):
     result = []
     coast, grid_distances, grid_depths = calculation_grid(spot, bath)
     domain_length = (len(grid_distances) - 1) * COMPUTE_DX
+    if any(timestamp not in by_time or len(by_time[timestamp]) != len(grid_distances)
+           for timestamp in range(start, end + 1, 3600)):
+        raise ValueError("SWAN did not finish the full requested horizon")
+    target_x = round(LENGTH - summary_location(coast, grid_distances, grid_depths))
     for timestamp in range(start, end + 1, 3600):
-        if timestamp not in by_time or len(by_time[timestamp]) != len(grid_distances):
-            raise ValueError("SWAN did not finish the full requested horizon")
         points = sorted(by_time[timestamp].values())
         valid = [p for p in points if 0 < p[1] < 1000 and 0 <= p[2] < 20 and ((p[3] > 0 and p[4] > 0) or p[2] < .001)]
-        near = [p for p in valid if .3 <= p[1] <= 4 and
-                0 <= LENGTH - p[0] - coast["waterDistance"] and LENGTH - p[0] - coast["landDistance"] <= MAX_SHORE_DISTANCE]
-        if not near:
-            raise ValueError("Brak poprawnego wyniku w strefie do 500 m od rozpoznanego brzegu")
-        target = min(near, key=lambda p: (abs(p[1] - 2), -p[0]))
+        target = next((p for p in valid if round(p[0]) == target_x), None)
         breaking = next((p for p in valid if .3 <= p[1] <= 4 and
                          0 < LENGTH - p[0] - coast["distance"] <= MAX_SHORE_DISTANCE and p[6] >= .1), None)
         def record(p):
@@ -460,13 +520,16 @@ def parse_output(path, spot, bath, start, end):
             missing = [d for d in range(0, MAX_SHORE_DISTANCE + 1, COMPUTE_DX) if d not in [p["shoreDistance"] for p in profile]]
             details = [p[:4] for p in points if round(LENGTH - p[0] - coast["distance"]) in missing]
             raise ValueError(f"Incomplete SWAN profile at {swan_time(timestamp)}: missing {missing}, raw x/depth/height/period={details}")
+        if target is None:
+            raise ValueError("Brak poprawnego wyniku SWAN w wybranym punkcie od strony morza")
         result.append({"time": timestamp, **record(target), "breaking": record(breaking) if breaking else None, "profile": profile})
     return result
 
 
 def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HOURS, calm_test=False):
     forecast_start = int(now // 3600) * 3600
-    start = forecast_start - SPINUP_HOURS * 3600
+    history_start = forecast_start - HISTORY_HOURS * 3600
+    start = history_start - SPINUP_HOURS * 3600
     end = min(forecast_start + hours * 3600, max(marine["data"]["hourly"]["time"]),
               *(max(w["data"]["hourly"]["time"]) for w in winds))
     if end < forecast_start + min(hours, 24) * 3600:
@@ -480,7 +543,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
         if run.returncode or "** Error" in log or "No continuation" in log or not (directory / "profile.tbl").exists():
             raise ValueError("SWAN failed: " + (run.stderr or log[-1800:]))
         hourly = parse_output(directory / "profile.tbl", spot, bath, forecast_start, end)
-        history = parse_output(directory / "profile.tbl", spot, bath, start + 6 * 3600, forecast_start - 3600)
+        history = parse_output(directory / "profile.tbl", spot, bath, history_start, forecast_start - 3600)
         input_hash = hashlib.sha256((directory / "INPUT").read_bytes() + (directory / "boundary.tpar").read_bytes() +
                                    (directory / "bottom.dat").read_bytes() + b"".join(p.read_bytes() for p in sorted(directory.glob("wind*.dat")))).hexdigest()
         archive_dir = cache / "reproducibility"
@@ -491,7 +554,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
                 if file.is_file():
                     archive.add(file, arcname=file.name)
     return {"schema": 2, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
-            "forecastHours": (end - forecast_start) // 3600,
+            "forecastHours": (end - forecast_start) // 3600, "historyHours": HISTORY_HOURS,
             "shoreline": shoreline_reference(spot, bath), "maxShoreDistanceM": MAX_SHORE_DISTANCE,
             "profileGridM": COMPUTE_DX, "profileReference": "estimated-shoreline",
             "cycle": int(now // 43200) * 43200,
@@ -539,23 +602,40 @@ def main():
     # public table use the same BS Wind 3 algorithm and raw three-model data.
     points = [offshore(s, d) for s in spots for d in [5000, 2500, 0]]
     try:
-        winds = bulk_forecast(points)
-        wind_by_spot = {s["id"]: winds[i * 3:i * 3 + 3] for i, s in enumerate(spots)}
+        winds = bulk_forecast(points, cache=args.cache)
+        wind_by_spot = {}
+        for i, s in enumerate(spots):
+            batch = winds[i * 3:i * 3 + 3]
+            if not all(batch):
+                batch = saved(s)["wind"] if saved(s) else None
+                if batch:
+                    reused.add(s["id"])
+            if batch and any(b.get("reusedInputs") for b in batch):
+                reused.add(s["id"])
+            wind_by_spot[s["id"]] = batch
     except (requests.RequestException, ValueError) as error:
         refresh_warnings.append(f"Wind download failed: {type(error).__name__}")
         wind_by_spot = {s["id"]: saved(s)["wind"] if saved(s) else None for s in spots}
         reused.update(s["id"] for s in spots if wind_by_spot[s["id"]])
         print(f"Using original wind snapshots (max age 6 h) for {len(reused)} spots; timestamps retained", flush=True)
     for s in spots:
+        wind_spot = {key: s[key] for key in ["id", "lat", "lon"]}
         if not wind_by_spot[s["id"]]:
-            dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "fetchedAt": 0, "data": None})
+            dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "spot": wind_spot, "fetchedAt": 0, "data": None})
             continue
         shore = wind_by_spot[s["id"]][-1]
-        dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "fetchedAt": shore["fetchedAt"] * 1000,
+        dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "spot": wind_spot, "fetchedAt": shore["fetchedAt"] * 1000,
             "data": shore["data"], "source": "BS Wind 3 — ICON / GFS / ECMWF", "sourceType": "scheduled", "reusedInputs": s["id"] in reused})
     try:
-        marine = bulk_forecast([offshore(s, 5000) for s in needed], marine=True) if needed else []
-        marine_by_spot = {s["id"]: m for s, m in zip(needed, marine)}
+        marine = bulk_forecast([offshore(s, 5000) for s in needed], marine=True, cache=args.cache) if needed else []
+        marine_by_spot = {}
+        for s, m in zip(needed, marine):
+            if m is None and saved(s):
+                m = saved(s)["marine"]
+                reused.add(s["id"])
+            if m and m.get("reusedInputs"):
+                reused.add(s["id"])
+            marine_by_spot[s["id"]] = m
     except (requests.RequestException, ValueError) as error:
         refresh_warnings.append(f"Marine download failed: {type(error).__name__}")
         marine_by_spot = {s["id"]: saved(s)["marine"] if saved(s) else None for s in needed}
@@ -585,22 +665,32 @@ def main():
             print(f'{id}: {"OK" if not error else "FAILED " + error[:180]}', flush=True)
     errors = {s["id"]: s["error"] for s in statuses if s["error"]}
     ready = 0
+    ready_input_stamps = []
     for s in spots:
         result = results[s["id"]]
         if result and result.get("schema") == 2 and result.get("version") == VERSION and result.get("geometryKey") == geometry_key(s):
             document = {**result, "lastAttemptError": errors.get(s["id"])}
-            if 0 <= time.time() - result.get("generatedAt", 0) <= 18 * 3600:
+            if all(finite(result.get(k)) and -300 <= time.time() - result[k] <= 18 * 3600
+                   for k in ("generatedAt", "windFetchedAt", "boundaryFetchedAt")):
                 ready += 1
+                ready_input_stamps.append(min(result[k] for k in ("generatedAt", "windFetchedAt", "boundaryFetchedAt")))
         else:
             document = {"schema": 2, "status": "unavailable", "spot": {"id": s["id"]}, "error": errors.get(s["id"], "Brak potwierdzonej prognozy w strefie 0–500 m")}
         dump(args.output / "nearshore" / f'{s["id"]}.json', document)
+    wind_available = sum(bool(wind_by_spot[s["id"]]) for s in spots)
+    wind_stamps = [wind_by_spot[s["id"]][-1]["fetchedAt"] for s in spots if wind_by_spot[s["id"]]]
+    if wind_available < len(spots):
+        refresh_warnings.append(f"Missing fresh wind for {len(spots) - wind_available} spots")
     dump(args.output / "status.json", {"generatedAt": int(time.time()), "engine": "SWAN 41.51AB", "version": VERSION,
         "spots": len(spots), "available": ready, "newRuns": len(needed), "errors": errors,
+        "windAvailable": wind_available,
+        "oldestWaveInputAt": min(ready_input_stamps, default=None),
+        "oldestWindFetchedAt": min(wind_stamps, default=None),
         "reusedInputSpots": sorted(reused), "refreshWarnings": refresh_warnings,
         "windScheduleHours": 3, "simulationMaxAgeHours": 12})
     print(f"Published {ready}/{len(spots)} simulations to {args.output}", flush=True)
-    if not ready:
-        raise SystemExit("No usable SWAN results; refusing empty publication")
+    if not ready or not wind_available:
+        raise SystemExit("No usable waves or wind; refusing empty publication")
 
 
 if __name__ == "__main__":

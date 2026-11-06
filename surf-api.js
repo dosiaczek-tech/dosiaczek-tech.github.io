@@ -13,46 +13,70 @@
     memory.set(key, value);
     try { localStorage.setItem(PREFIX + key, JSON.stringify(value)); } catch { /* RAM cache still works. */ }
   }
-  async function json(url) {
+  async function json(url, { allowError = false } = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 18000);
     try {
       const r = await fetch(url, { signal: controller.signal });
       if (!r.ok) throw new Error(r.status === 429 ? "Limit zapytań dostawcy — spróbuj za kilka minut." : `Dostawca zwrócił HTTP ${r.status}.`);
       const data = await r.json();
-      if (data.error) throw new Error(data.reason || "Nieprawidłowa odpowiedź dostawcy.");
+      if (data.error && !allowError) throw new Error(data.reason || "Nieprawidłowa odpowiedź dostawcy.");
       return data;
     } finally { clearTimeout(timer); }
   }
   function endpoint(base, params) { return `${base}?${new URLSearchParams(params)}`; }
   async function scheduledWeather(spot, fallbackURL, force, publishedOnly = false) {
     const key = `scheduled-wind-${spotKey(spot)}`, previous = memory.get(key);
+    const saved = read(`${key}-saved`);
     if (previous && !force && Date.now() - previous.loadedAt < 1800000) return previous.value;
     try {
       const data = await json(`data/wind/${encodeURIComponent(spot.id)}.json?v=${Math.floor(Date.now() / 1800000)}`);
       const age = Date.now() - data.fetchedAt;
       if (data.schema !== 1 || data.spotId !== spot.id || !M.finite(data.fetchedAt) || age < -300000 || age > 21600000 ||
-          !Array.isArray(data.data?.hourly?.time) || !data.data.hourly.time.length) throw new Error("Nieaktualny pakiet wiatru");
+          !Array.isArray(data.data?.hourly?.time) || !data.data.hourly.time.length)
+        throw new Error(age > 21600000 ? "Opublikowany wiatr ma ponad 6 godzin — potrzebne jest odświeżenie danych." : "Nieprawidłowy lub nieaktualny pakiet wiatru.");
+      if (!M.windMatchesSpot(data, spot)) throw new Error("Pakiet wiatru nie potwierdza aktualnych współrzędnych spotu.");
       const value = { ...data, stale: Boolean(data.reusedInputs) };
       memory.set(key, { loadedAt: Date.now(), value });
+      write(`${key}-saved`, value);
       return value;
     } catch (error) {
-      if (publishedOnly) throw error;
-      const result = await cached(`weather-${spotKey(spot)}`, fallbackURL, force);
-      return { ...result, sourceType: "direct", source: "BS Wind 3 — bezpośrednie dane Open-Meteo" };
+      let failure = error;
+      if (!publishedOnly) {
+        try {
+          const result = await cached(`weather-${spotKey(spot)}`, fallbackURL, force);
+          return { ...result, sourceType: "direct", source: "BS Wind 3 — bezpośrednie dane Open-Meteo" };
+        } catch (directError) { failure = directError; }
+      }
+      const age = Date.now() - saved?.fetchedAt;
+      if (saved?.schema === 1 && saved.spotId === spot.id && age >= 0 && age <= 21600000 &&
+          M.windMatchesSpot(saved, spot) && saved.data?.hourly?.time?.length)
+        return { ...saved, stale: true, error: failure.message };
+      throw failure;
     }
   }
   async function nearshore(spot, force = false) {
-    const key = `swan-profile50-${spotKey(spot)}`, previous = memory.get(key);
-    if (previous && !force && Date.now() - previous.loadedAt < 900000) return previous.value;
+    const key = `swan-${M.SIMULATION_VERSION}-${spotKey(spot)}`, previous = memory.get(key);
+    const age = M.simulationAge(previous?.value, Date.now());
+    const ttl = previous?.value.refreshPending || previous?.value.refreshError || !M.finite(age) || age > 18 ? 5000 : 900000;
+    if (previous && !force && Date.now() - previous.loadedAt < ttl) return previous.value;
     try {
-      const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?profile=50m-v1&v=${Math.floor(Date.now() / 900000)}`);
+      const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`, { allowError: true });
       if (value.schema !== 2 || value.spot?.id !== spot.id) throw new Error("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
+      if (value.status === "ready" && value.version !== M.SIMULATION_VERSION) throw new Error("Prognoza wymaga przeliczenia dla nowego punktu od strony morza.");
       if (value.status === "ready" && (![value.generatedAt, value.windFetchedAt, value.boundaryFetchedAt].every(M.finite) || !Array.isArray(value.hourly) ||
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");
       memory.set(key, { loadedAt: Date.now(), value });
+      const valueAge = M.simulationAge(value, Date.now());
+      if (value.status === "ready" && M.finite(valueAge) && valueAge <= 18) write(`${key}-saved`, value);
       return value;
-    } catch (error) { return { status: "unavailable", error: error.message }; }
+    } catch (error) {
+      const saved = read(`${key}-saved`), savedAge = M.simulationAge(saved, Date.now());
+      if (saved?.status === "ready" && saved.version === M.SIMULATION_VERSION && saved.schema === 2 && saved.spot?.id === spot.id &&
+          ["lat", "lon", "normal"].every(k => saved.spot[k] === spot[k]) && M.finite(savedAge) && savedAge <= 18)
+        return { ...saved, stale: true, refreshPending: false, refreshError: error.message, retryAfter: 60 };
+      return { status: "unavailable", error: error.message };
+    }
   }
   async function cached(key, url, force = false) {
     const old = read(key), age = Date.now() - old?.fetchedAt;
@@ -88,6 +112,22 @@
         weather: weather.status === "fulfilled" ? weather.value : null,
         errors: [marine, weather].filter(r => r.status === "rejected").map(r => r.reason.message) }));
   }
+  function conditions(spot, force = false) {
+    // Only the open spot requests these extras; the coast-wide ranking uses published wind/SWAN.
+    const common = { latitude: spot.lat, longitude: spot.lon, past_days: 1, forecast_days: 6,
+      timeformat: "unixtime", timezone: "Europe/Warsaw" };
+    const weatherURL = endpoint("https://api.open-meteo.com/v1/forecast", { ...common,
+      hourly: "temperature_2m,cloud_cover,weather_code", daily: "sunrise,sunset", temperature_unit: "celsius", cell_selection: "nearest" });
+    const seaURL = endpoint("https://marine-api.open-meteo.com/v1/marine", { ...common,
+      hourly: "sea_surface_temperature", cell_selection: "sea" });
+    return Promise.allSettled([cached(`conditions-weather-v2-${spotKey(spot)}`, weatherURL, force),
+      cached(`conditions-sea-v1-${spotKey(spot)}`, seaURL, force)]).then(([weather, sea]) => ({
+        weather: weather.status === "fulfilled" ? weather.value : null,
+        sea: sea.status === "fulfilled" ? sea.value : null,
+        errors: [weather, sea].flatMap((result, i) => result.status === "rejected"
+          ? [`${i === 0 ? "Pogoda i słońce" : "Temperatura wody"}: ${result.reason.message}`] : [])
+      }));
+  }
   async function bathymetry(spot) {
     const key = `bath-${spotKey(spot)}`, old = read(key);
     const age = Date.now() - old?.fetchedAt;
@@ -119,5 +159,5 @@
     pending.set(key, task);
     return task;
   }
-  root.SurfAPI = { forecasts, bathymetry, nearshore };
+  root.SurfAPI = { forecasts, conditions, bathymetry, nearshore };
 })(globalThis);

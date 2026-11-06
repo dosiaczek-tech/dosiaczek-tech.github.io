@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from assets/logo.svg by tools/prepare-brand.mjs. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.058" android:scaleY="0.058" android:translateX="17.634" android:translateY="17.634">
+        <path android:fillColor="#00000000" android:strokeColor="#FAFCF4" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M949 1056 C889 1095 742 1072 616 1027 C485 979 366 892 308 818 C252 746 299 731 401 764 C599 827 834 913 933 1005 C960 1033 966 1045 949 1056 Z" />
+        <path android:fillColor="#00000000" android:strokeColor="#FAFCF4" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M714 393 L840 777" />
+        <path android:fillColor="#DDB15D"
+            android:pathData="M838 767 C871 790 922 846 935 883 C953 926 907 949 874 933 C834 919 815 870 827 802 C830 785 832 775 838 767 Z" />
+        <path android:fillColor="#0C5E4E" android:strokeColor="#FAFCF4" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M540 207 C527 174 499 168 475 179 C451 190 440 214 429 232 C419 247 402 250 385 249 C398 273 420 283 441 277 C463 272 474 246 486 232 C497 218 512 215 525 224 Z" />
+        <path android:fillColor="#0C5E4E" android:strokeColor="#FAFCF4" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M540 318 C517 302 505 280 510 253 C515 219 540 199 571 200 C607 198 631 224 634 251 C641 284 622 319 580 326 C572 333 575 345 586 353 C610 359 620 380 661 415 L690 383 C694 375 691 367 701 359 C716 343 732 355 735 366 C741 380 732 392 718 399 L688 440 C678 456 666 460 651 453 C637 446 622 434 612 424 C599 443 603 458 622 474 C641 490 692 510 727 524 C740 529 751 527 760 526 C775 528 785 539 779 554 C774 568 763 568 750 564 C710 556 661 540 622 520 C643 563 663 616 670 666 L687 840 C688 858 693 869 708 878 C725 889 742 896 740 910 C735 925 679 917 653 902 C639 893 649 880 653 866 C659 846 643 813 633 782 C624 758 624 738 631 720 C641 701 606 648 582 597 L555 685 C552 704 541 714 535 728 L507 805 C500 823 503 838 515 849 C530 861 540 870 530 875 C509 883 467 865 455 858 C444 853 452 842 460 828 C467 815 470 801 474 777 C480 731 487 710 506 690 C523 674 511 642 507 609 C496 567 505 543 520 514 C541 481 534 466 520 437 C507 411 500 391 507 372 C513 352 531 345 538 330 Z" />
+    </group>
+</vector>

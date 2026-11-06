@@ -1,4 +1,4 @@
-# BS-SWAN 1.2 — pełny przekrój od brzegu do 500 m
+# BS-SWAN 1.3 — punkt prognozy od strony morza i pełny przekrój 0–500 m
 
 **Główny wykres pokazuje cały przekrój 0–500 m co 50 m**, z wyborem godziny.
 Podsumowanie i ocena sesji dotyczą oznaczonego punktu w tej strefie, a dodatkowy
@@ -28,8 +28,9 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   Nie ekstrapolujemy brakujących głębokości. Jeśli nie ma rozpoznanej strefy
   płytszej niż 4 m, wynik jest niedostępny zamiast fikcyjnej prognozy surfbreaku.
 - 36 kierunków (co 10°), 32 częstotliwości logarytmicznych 0,05–1 Hz.
-- Niestacjonarny krok 10 minut, schemat BSBT; 12 godzin rozbiegu przed terminami
-  wyświetlanymi użytkownikowi, następnie 120 godzin prognozy.
+- Niestacjonarny krok 10 minut, schemat BSBT; 12 godzin rozbiegu modelu,
+  następnie 12 godzin historii i 120 godzin prognozy. Symulacja zaczyna się
+  24 godziny przed bieżącą godziną, żeby także historia miała pełny rozbieg.
 
 ### Granica od morza
 
@@ -70,10 +71,23 @@ były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafnośc
 
 ## Wyniki dla surferów
 
-- Wysokość znacząca, okres średni, okres energetyczny, kierunek i moc w morskim
-  punkcie możliwie bliskim głębokości 2 m, **wyłącznie w pierwszych 500 m od
-  rozpoznanego brzegu**. Gdy punkt bliższy głębokości 2 m leży dalej, wybierany
-  jest poprawny płytszy punkt wewnątrz limitu, a nie punkt poza nim.
+- Wysokość znacząca, okres średni, okres energetyczny, kierunek i moc pochodzą
+  z **jednego, stałego w czasie węzła SWAN**, wybranego z głębokości dna.
+  Od zewnętrznej krawędzi potwierdzonej strefy do 500 m idziemy w stronę lądu
+  do pierwszego węzła o głębokości ≤2 m, włącznie. Tylko na tym morskim odcinku
+  wybieramy punkt z zakresu 0,3–4 m najbliższy głębokości 2 m; remis rozstrzygamy
+  na korzyść punktu bardziej morskiego. Nie przeskakujemy pierwszego wypłycenia
+  w poszukiwaniu kolejnej głębokości 2 m w zagłębieniu za rewą.
+  Gdy cały odcinek jest głębszy niż 2 m, bierzemy najbliższą dopuszczalną
+  głębokość w limicie. Gdy już zewnętrzny węzeł jest płytszy niż 2 m, wybieramy
+  ten węzeł, o ile ma co najmniej 0,3 m. Brak dopuszczalnego punktu oznacza
+  niedostępny wynik. Limit uwzględnia także niepewność położenia brzegu.
+- To definicja punktu odniesienia dla porównania spotów, **nie wybór najwyższej
+  fali ani najlepszej oceny**. Nie zmieniamy współczynników fizyki SWAN,
+  obliczonych widm, współrzędnych spotów ani skali ocen. Spokojna woda w wybranym
+  punkcie pozostaje spokojna; błędny wynik nie przenosi punktu do innej komórki.
+  Cały profil nadal pokazuje tłumienie za rewą. Pierwsza izobata 2 m nie zawsze
+  jest miejscem surfowania; rozdzielczość dna i poziom LAT nadal ograniczają model.
 - Pierwsze od morza miejsce w tej strefie, gdzie SWAN przewiduje `QB >= 0.1`
   (co najmniej 10% fal załamujących się), z wysokością, głębokością i odległością.
   Brak takiego punktu oznacza brak rozpoznanego załamania, nie arbitralnie wyznaczony break.
@@ -131,8 +145,15 @@ oznaczony `profileGridM: 50` i `profileReference: estimated-shoreline`.
 Niepełny profil nie jest sztucznie przedłużany na wykresie. Publikacja wymaga zgodnej
 wersji pakietu danych, dzięki czemu awaryjne przywrócenie starego artefaktu
 nie podmieni nowych wyników na dawne wartości z innego zakresu przestrzennego.
-Do diagnozy wywiewki udostępniamy dodatkowo 6 godzin historii modelowej z drugiej
-połowy rozbiegu; wykres prognozy pokazuje dopiero bieżącą godzinę i przyszłość.
+Frontend przyjmuje wyłącznie `BS-SWAN-1.3-seaward2m`. Cache prognoz oraz historia
+ocen tabeli porównawczej i heat mapy są rozdzielone według wersji metody i geometrii.
+Stare oceny nie są domieszane do poprawionych wyników; archiwalny kolor pojawi się
+tylko dla godzin dostępnych w zgodnych obliczeniach lub zapisanej historii tej wersji.
+Udostępniamy 12 godzin historii modelowej po zakończeniu pełnego rozbiegu.
+Wynik zawiera `historyHours: 12`, 12 próbek w `history` oraz osobne `hourly`
+z bieżącą godziną i prognozą. Tabela, przekrój i wykres czasowy domyślnie obejmują
+ostatnie 12 godzin liczone od początku bieżącej godziny oraz przyszłość.
+Historia jest wcześniejszym wynikiem modelowym, nie pomiarem.
 
 ## Backend i publikacja
 
@@ -172,6 +193,15 @@ przywracany. Brak poprawnego poprzedniego pakietu lub błąd testów zatrzymuje 
 
 ## Odtworzenie lokalnie
 
+Podgląd przez `nix-shell --run 'node scripts/dev-server.cjs'` automatycznie uruchamia
+ten sam solver, gdy opublikowanych fal brakuje lub najstarsze dane mają co najmniej
+12 godzin. Wyniki lokalne są zapisywane w `.dev-preview/swan-data/`, z oryginalnymi
+czasami rzeczywistego pobrania wejść i zakończenia obliczeń. Nie wydłuża to limitu
+18 godzin w walidatorze. NixOS wymaga ustawienia interpretera ELF i ścieżek bibliotek
+w pobranym pliku wykonywalnym; `shell.nix` i `configure_engine` robią to przez
+`patchelf`, po sprawdzeniu SHA256 oficjalnego archiwum, bez zmiany kodu solvera.
+Podgląd przechowuje cache i archiwa w `.dev-preview/swan-cache/`; nie uruchamia publikacji Pages.
+
 Linux amd64, Node.js, Python 3.10+ i biblioteki systemowe libgfortran5/libgomp1:
 
 ```sh
@@ -198,6 +228,21 @@ granicznej zmienia wyłącznie wiatr. Sprawdza zmianę obliczonej wysokości, pe
 horyzont, wielkości fizyczne i archiwum wejść. Testy frontendu sprawdzają odrzucanie
 przeterminowanych wyników oraz pięć kategorii kierunków. To weryfikacja działania
 oprogramowania, nie walidacja prognoz na rzeczywistych obserwacjach surferów.
+
+Osobna kontrola wyboru punktu jest dostępna w `model/verify_nearshore_selection.py`.
+Odtwarza podsumowania z zapisanych surowych tabel solvera, bez nowych pobrań
+prognoz. Porównuje cały profil, strefę załamania i poszczególne wielkości z tabelą
+SWAN, kontroluje limit odległości oraz stałość punktu w czasie. Wskazuje wszystkie
+spoty ze zmianą, zamiast sprawdzać wyłącznie Jantar. Zestaw testów zawiera również
+oryginalne tabele Jantaru i Stegny z 6.11.2026 09:00 czasu polskiego.
+
+```sh
+python model/verify_nearshore_selection.py --cache .dev-preview/swan-cache --output .dev-preview/selection-audit
+```
+
+Do porównania przed/po należy podać zachowaną kopię cache sprzed zmiany metody.
+Pliki powstające z audytu służą kontroli, nie publikacji. Takie odtworzenie
+wykrywa błędy algorytmu, ale nie mierzy trafności względem rzeczywistego morza.
 
 ## Źródła i uznanie autorstwa
 

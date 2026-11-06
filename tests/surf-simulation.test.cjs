@@ -7,7 +7,7 @@ const result = {time,height:.8,period:5,energyPeriod:5.7,direction:0,depth:2,dis
   shoreDistance:150,shoreDistanceMin:100,shoreDistanceMax:200,lat:54.8018,lon:18.4};
 const wind = M.windConsensus([{speed:3,direction:180},{speed:3,direction:180}]);
 const rows = [{time,score:20,wind,members:[],flags:[],height:5,period:12,powerKWm:90,energyKJm2:15}];
-const document = {schema:2,status:'ready',spot,generatedAt:time,maxShoreDistanceM:500,
+const document = {schema:2,version:M.SIMULATION_VERSION,status:'ready',spot,generatedAt:time,maxShoreDistanceM:500,
   windFetchedAt:time,boundaryFetchedAt:time,
   profileGridM:50,profileReference:'estimated-shoreline',
   shoreline:{landDistance:0,waterDistance:100,distance:50},hourly:[result],windUsed:[{time,speed:3,direction:180}]};
@@ -17,6 +17,16 @@ test('five directional classes are relative to the beach or to the incoming wave
   for(const [direction,label] of classes) assert.equal(M.windRelative({speed:4,direction},spot),label);
   assert.equal(M.windRelativeToWave({speed:4,direction:180},90),'cross');
   assert.equal(M.windRelativeToWave({speed:4,direction:180},0),'offshore');
+});
+test('comparison and heatmap history keys separate model versions and spot geometries',()=>{
+  const key=M.coastalHistoryKey(spot);
+  assert.ok(key.includes(M.SIMULATION_VERSION));
+  assert.notEqual(key,`nad-morzem:compare-history-v1:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`);
+  assert.notEqual(key,M.coastalHistoryKey({...spot,lat:54.9}));
+});
+test('the frontend version gate matches the version emitted by the Python solver pipeline',()=>{
+  const backend=require('node:fs').readFileSync(require('node:path').join(__dirname,'../model/nearshore.py'),'utf8');
+  assert.equal(M.SIMULATION_VERSION,backend.match(/^VERSION = "([^"]+)"/m)?.[1]);
 });
 test('fresh SWAN result replaces the session rating without re-transforming its height',()=>{
   const row=M.applySimulation(rows,document,spot,time*1000)[0];
@@ -30,12 +40,22 @@ test('fresh SWAN result replaces the session rating without re-transforming its 
 });
 test('expired, wrong-spot and invalid SWAN data never masquerade as a current simulation',()=>{
   for(const doc of [{...document,generatedAt:time-19*3600},{...document,windFetchedAt:time-19*3600},{...document,spot:{...spot,lon:19}},
+    {...document,version:'BS-SWAN-1.2-full-profile500'},{...document,version:undefined},
     {...document,status:'unavailable'},{...document,hourly:[{...result,height:-9}]}, {...document,hourly:[]},
     {...document,schema:1},{...document,hourly:[{...result,distance:501,shoreDistance:451,shoreDistanceMin:401,shoreDistanceMax:501}]}]) {
     const row=M.applySimulation(rows,doc,spot,time*1000)[0];
     assert.equal(row.simulation,null);assert.equal(row.score,null);assert.equal(row.scoreSource,'unavailable');
     for(const field of ['height','period','powerKWm','energyKJm2']) assert.equal(row[field],null,'Never substitute offshore data: '+field);
   }
+});
+test('the oldest actual input controls expiry, including the exact eighteen-hour boundary',()=>{
+  const fresh={...document,windFetchedAt:time-18*3600};
+  assert.equal(M.simulationAge(fresh,time*1000),18);
+  assert.ok(M.applySimulation(rows,fresh,spot,time*1000)[0].simulation);
+  assert.equal(M.applySimulation(rows,fresh,spot,time*1000+1)[0].simulation,null);
+  assert.equal(M.simulationAge({...document,boundaryFetchedAt:time-19*3600},time*1000),19);
+  assert.equal(M.simulationAge({...document,boundaryFetchedAt:time+301},time*1000),null);
+  assert.equal(M.simulationAge({...document,windFetchedAt:null},time*1000),null);
 });
 test('profile includes all eleven points from shore boundary to a computed 500 m node',()=>{
   const profile=Array.from({length:11},(_,i)=>({shoreDistance:i*50,distance:50+i*50,shoreDistanceMin:i*50-50,shoreDistanceMax:i*50+50,
@@ -64,6 +84,21 @@ test('nearshore zero waves stay zero and missing wind does not produce a confide
   assert.equal(missing.score,null);assert.equal(missing.simulation.height,.8);
 });
 
+test('heatmap can use available older hours without widening default history or accepting expired SWAN inputs',()=>{
+  const old = time - 20 * 3600;
+  const hourly = {time:[old,time]};
+  for(const model of Object.keys(M.WIND_MODELS)) {
+    hourly[`wind_speed_10m_${model}`] = [3,3];
+    hourly[`wind_direction_10m_${model}`] = [180,180];
+  }
+  const input = {...document,history:[{...result,time:old}]};
+  assert.ok(!M.buildCoastalForecast(spot,{hourly},input,time*1000).some(r=>r.time===old));
+  const history = M.buildCoastalForecast(spot,{hourly},input,time*1000,{historyHours:48});
+  assert.ok(Number.isFinite(history.find(r=>r.time===old).score));
+  const expired = {...input,windFetchedAt:time-19*3600};
+  assert.ok(M.buildCoastalForecast(spot,{hourly},expired,time*1000,{historyHours:48}).every(r=>r.score===null));
+});
+
 test('coastal recommendation uses past stability and keeps confidence separate from score',()=>{
   const times=[time-7200,time-3600,time,time+3600,time+7200];
   const hourly={time:times};
@@ -74,7 +109,7 @@ test('coastal recommendation uses past stability and keeps confidence separate f
   }
   const input={...document,history:times.slice(0,2).map(t=>({...result,time:t})),
     hourly:times.slice(2).map(t=>({...result,time:t}))};
-  const forecast=doc=>M.buildCoastalForecast(spot,{hourly},doc,time*1000);
+  const forecast=doc=>M.buildCoastalForecast(spot,{hourly},doc,time*1000,{historyHours:0});
   const stable=forecast(input);
   assert.equal(stable[0].confidence.level,'średnia');
   assert.ok(stable[0].components.order>.5);
@@ -92,4 +127,24 @@ test('coastal recommendation uses past stability and keeps confidence separate f
   const withHistory=M.buildCoastalForecast(spot,{hourly},input,time*1000,{historyHours:12});
   assert.equal(withHistory[0].time,time-7200);
   assert.equal(stable[0].time,time);
+});
+
+test('the default coastal forecast includes twelve previous hours without truncating the last future hour',()=>{
+  const times=Array.from({length:134},(_,i)=>time+(i-13)*3600),hourly={time:times};
+  for(const model of Object.keys(M.WIND_MODELS)){
+    hourly[`wind_speed_10m_${model}`]=times.map(()=>3);
+    hourly[`wind_direction_10m_${model}`]=times.map(()=>180);
+    hourly[`is_day_${model}`]=times.map(()=>1);
+  }
+  const input={...document,history:times.filter(t=>t<time).map(t=>({...result,time:t})),
+    hourly:times.filter(t=>t>=time).map(t=>({...result,time:t}))};
+  const now=time*1000+37*60000;
+  const forecast=M.buildCoastalForecast(spot,{hourly},input,now);
+  assert.equal(forecast.filter(r=>r.time<time).length,12);
+  assert.equal(forecast[0].time,time-12*3600);
+  assert.equal(forecast.length,133);
+  assert.equal(forecast.at(-1).time,time+120*3600);
+  assert.ok(forecast.every(r=>r.simulation));
+  const future=M.buildCoastalForecast(spot,{hourly},input,now,{historyHours:0});
+  assert.equal(future.length,121);assert.equal(future[0].time,time);assert.equal(future.at(-1).time,time+120*3600);
 });

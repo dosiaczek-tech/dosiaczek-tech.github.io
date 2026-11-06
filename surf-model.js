@@ -3,7 +3,9 @@
  */
 (function (root) {
   "use strict";
-  const VERSION = "Bałtyk Surf 1.2 / pełny profil 0–500 m";
+  const VERSION = "Bałtyk Surf 1.3 / punkt od strony morza";
+  const SIMULATION_VERSION = "BS-SWAN-1.3-seaward2m";
+  const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
@@ -15,6 +17,11 @@
     const n = sorted.length;
     return n ? (sorted[Math.floor((n - 1) / 2)] + sorted[Math.floor(n / 2)]) / 2 : null;
   };
+
+  function windMatchesSpot(bundle, spot) {
+    if (!bundle?.spot) return !spot.requireWindGeometry;
+    return bundle.spot.id === spot.id && ["lat", "lon"].every(key => finite(bundle.spot[key]) && bundle.spot[key] === spot[key]);
+  }
 
   function offshore(spot, distance = 5000) {
     const a = radians(spot.normal), lat = radians(spot.lat), lon = radians(spot.lon), d = distance / 6371000;
@@ -293,14 +300,19 @@
     }
     return selected;
   }
+  function simulationAge(document, now = Date.now()) {
+    const stamps = [document?.generatedAt, document?.windFetchedAt, document?.boundaryFetchedAt];
+    if (!stamps.every(t => finite(t) && t <= now / 1000 + 300)) return null;
+    return Math.max(0, (now / 1000 - Math.min(...stamps)) / 3600);
+  }
   function applySimulation(rows, document, spot, now = Date.now()) {
     const coast = document?.shoreline;
-    const valid = document?.status === "ready" && document.schema === 2 && document.maxShoreDistanceM === 500 && document.spot?.id === spot.id &&
+    const age = simulationAge(document, now);
+    const valid = document?.status === "ready" && document.version === SIMULATION_VERSION && document.schema === 2 && document.maxShoreDistanceM === 500 && document.spot?.id === spot.id &&
       ["lat", "lon", "normal"].every(k => document.spot[k] === spot[k]) && finite(document.generatedAt) &&
       [coast?.landDistance, coast?.waterDistance, coast?.distance].every(finite) && coast.waterDistance > coast.landDistance &&
       coast.waterDistance - coast.landDistance <= 100 && coast.distance >= coast.landDistance && coast.distance <= coast.waterDistance &&
-      [document.windFetchedAt, document.boundaryFetchedAt].every(t => finite(t) && now / 1000 - t <= 18 * 3600 && t <= now / 1000 + 300) &&
-      now / 1000 >= document.generatedAt - 300 && now / 1000 - document.generatedAt <= 18 * 3600;
+      finite(age) && age <= 18;
     const byTime = new Map((valid && Array.isArray(document.hourly) ? [...(Array.isArray(document.history) ? document.history : []), ...document.hourly] : []).map(r => [r.time, r]));
     const usedWind = new Map((valid && Array.isArray(document.windUsed) ? document.windUsed : []).map(r => [r.time, r]));
     const inZone = point => point && [point.distance, point.shoreDistance, point.shoreDistanceMin, point.shoreDistanceMax].every(finite) &&
@@ -342,7 +354,8 @@
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 0 } = {}) {
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 12 } = {}) {
+    const lookback = finite(historyHours) ? clamp(historyHours, 0, 48) : 0;
     const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
       ...(Array.isArray(simulation?.hourly) ? simulation.hourly : []).map(r => r.time)])].filter(finite).sort((a, b) => a - b);
     const base = buildForecast(spot, { hourly: { time: times } }, weather, null, now - 48 * 3600000);
@@ -366,8 +379,8 @@
         score: rating?.score ?? row.score,
         flags: rating ? [...rating.flags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })
-      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - clamp(historyHours, 0, 12) * 3600000).slice(0, 132);
+      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, 132 + lookback);
   }
-  const api = { VERSION, WAVE_MODELS, WIND_MODELS, finite, angle, median, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

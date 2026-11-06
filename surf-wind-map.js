@@ -21,8 +21,10 @@
     if (!root.L) { status.textContent = "Mapa nie mogła się załadować. Kierunek i prędkość wiatru są nadal podane liczbowo."; return null; }
     const L = root.L, map = L.map(container, { scrollWheelZoom: true, minZoom: 10, maxZoom: 17 });
     const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 17,
+      referrerPolicy: "origin",
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>' });
     const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 17,
+      referrerPolicy: "origin",
       attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener noreferrer">Esri</a> — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' }).addTo(map);
     L.control.layers({ "Satelita": satellite, "Mapa standardowa": osm }, null, { position: "topright" }).addTo(map);
     const overlay = L.layerGroup().addTo(map);

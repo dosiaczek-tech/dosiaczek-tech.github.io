@@ -1,0 +1,7 @@
+/result
+/result-*
+/dist/
+*.p12
+*.jks
+*.keystore
+*.password

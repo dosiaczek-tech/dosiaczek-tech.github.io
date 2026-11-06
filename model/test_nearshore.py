@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, WIND_MODELS, calculation_grid, consensus, install_engine,
+from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, HISTORY_HOURS, WIND_MODELS, calculation_grid, consensus, install_engine,
                        local_direction, offshore, parse_output, shoreline_reference, simulate, swan_time, wind_components)
 
 
@@ -45,6 +45,16 @@ class ModelUtilities(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "full requested horizon"):
                 parse_output(path, {"normal": 0, "lat":54.8,"lon":18.4},
                     {"wetStart": 1, "depth": [None]+[10]*50, "elevation":[1]+[-10]*50, "distances":list(range(0,5100,100))}, 1792497600, 1792501200)
+
+    def test_history_requires_real_forcing_before_the_first_published_hour(self):
+        now = 1792497600
+        times = list(range(now - 12*3600, now + 6*3600 + 1, 3600))
+        marine = {"data": {"hourly": {"time": times, "wave_height_dwd_ewam": [.5]*len(times),
+            "wave_period_dwd_ewam": [4]*len(times), "wave_direction_dwd_ewam": [0]*len(times)}}}
+        winds = [{"data": {"hourly": {"time": times}}} for _ in range(3)]
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "Incomplete offshore boundary"):
+                simulate({"id": "short-input"}, {}, marine, winds, Path("unused"), Path(directory), now, hours=6)
 
     def test_point_is_within_500_m_even_if_deeper_target_is_farther_away(self):
         self.check_coastal_selection(0)
@@ -108,7 +118,7 @@ class ModelUtilities(unittest.TestCase):
 class SwanPhysics(unittest.TestCase):
     def test_wind_changes_spectral_solution_and_outputs_are_physical(self):
         now = 1792497600
-        start = now - SPINUP_HOURS*3600
+        start = now - (SPINUP_HOURS + HISTORY_HOURS)*3600
         times = list(range(start, now + 6*3600 + 1, 3600))
         count = len(times)
         marine = {"fetchedAt": now, "data": {"hourly": {"time": times,
@@ -130,6 +140,12 @@ class SwanPhysics(unittest.TestCase):
         result = simulate(spot, bath, marine, winds, executable, cache, now, hours=6)
         calm = simulate(spot, bath, marine, winds, executable, cache, now, hours=6, calm_test=True)
         self.assertEqual(len(result["hourly"]), 7)
+        self.assertEqual(result["historyHours"], 12)
+        self.assertEqual(len(result["history"]), 12)
+        self.assertEqual(result["history"][0]["time"], now - 12*3600)
+        self.assertEqual(result["history"][-1]["time"], now - 3600)
+        self.assertEqual(result["history"][0]["time"] - start, SPINUP_HOURS*3600)
+        self.assertTrue(all(row["height"] > 0 and row["period"] > 0 and len(row["profile"]) == 11 for row in result["history"]))
         row = result["hourly"][-1]
         self.assertTrue(0 < row["height"] < 2)
         self.assertTrue(row["period"] > 0)

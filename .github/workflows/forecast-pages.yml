@@ -4,7 +4,7 @@ on:
   push:
     branches: [master]
   schedule:
-    - cron: '17 */3 * * *'
+    - cron: '23 * * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -50,6 +50,12 @@ jobs:
         run: |
           node --test tests/*.test.cjs
           SWAN_INTEGRATION=1 python -m unittest discover -s model -p 'test_*.py' -v
+      - name: Build and test SUP
+        working-directory: sup
+        run: |
+          npm ci
+          npm test
+          npm run build
       - name: Refresh wind and compute due SWAN forecasts
         id: compute
         continue-on-error: true
@@ -85,7 +91,8 @@ jobs:
           python model/build_site.py
           echo '::warning::Forecast refresh failed; interface uses the last published data with unchanged timestamps.'
       - uses: actions/cache/save@v4
-        if: always() && steps.compute.outcome == 'success'
+        # Preserve successful batches even when a later batch fails.
+        if: always()
         with:
           path: .forecast-cache
           key: nearshore-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -111,3 +118,12 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v4
         id: deployment
+
+  availability:
+    needs: deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check both public apps and actual forecast ages
+        run: python3 model/check_public_forecast.py

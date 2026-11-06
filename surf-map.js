@@ -23,6 +23,8 @@
     const map = L.map(container, { scrollWheelZoom: true, maxZoom: 19, minZoom: 6, zoomControl: false });
     L.control.zoom({ zoomInTitle: "Przybliż mapę", zoomOutTitle: "Oddal mapę" }).addTo(map);
     const tile = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      // OSM requires the page's real origin, including when cameras use a stricter document policy.
+      referrerPolicy: "origin",
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'
     }).addTo(map);
     const visibleSpots = () => spots.filter(s => currentRegion === "all" || s.region === currentRegion);

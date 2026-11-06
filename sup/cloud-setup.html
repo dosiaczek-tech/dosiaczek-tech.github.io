@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#185b4d">
+    <title>Wspólny dziennik — konfiguracja chmury · Z nurtem</title>
+    <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./assets/app.css">
+  </head>
+  <body>
+    <main class="page-width cloud-setup">
+      <a class="text-link" href="./#moje-trasy">← Wróć do dziennika</a>
+      <p class="eyebrow">TE SAME WYPRAWY NA KAŻDYM URZĄDZENIU</p>
+      <h1>Dziennik w chmurze.<br>E-mail i hasło.</h1>
+      <p>Do synchronizacji korzystamy z <strong>Supabase w planie Free</strong>. Konto Google nie jest potrzebne. Poniższe kroki wykonujesz raz dla aplikacji; później po prostu logujesz się do dziennika na komputerze i telefonie.</p>
+      <h2>1. Utwórz darmowy projekt</h2>
+      <ol>
+        <li>Otwórz <a href="https://supabase.com/dashboard/sign-up" target="_blank" rel="noopener noreferrer">rejestrację Supabase</a>. Wybierz pola <strong>Email</strong> i <strong>Password</strong>, a następnie potwierdź e-mail.</li>
+        <li>Utwórz organizację z planem <strong>Free</strong> i nowy projekt, np. <strong>z-nurtem</strong>.</li>
+        <li>Wybierz region w Europie, ustaw hasło bazy danych i zaczekaj na przygotowanie projektu. Hasło bazy zachowaj dla siebie.</li>
+      </ol>
+      <h2>2. Przygotuj prywatny zapis wypraw</h2>
+      <p>W panelu projektu otwórz <strong>SQL Editor → New query</strong>. Skopiuj całą zawartość pliku <a href="./supabase/journal.sql" target="_blank" rel="noopener noreferrer">journal.sql</a>, wklej do edytora i wybierz <strong>Run</strong>.</p>
+      <p>Skrypt tworzy tabelę dzienników oraz reguły, dzięki którym zalogowana osoba może odczytać i zapisać tylko własny dziennik. Wersjonowanie chroni zmiany z różnych urządzeń przed nadpisaniem.</p>
+      <h2>3. Ustaw logowanie e-mailem</h2>
+      <ol>
+        <li>W <strong>Authentication → Sign In / Providers</strong> włącz <strong>Email</strong>. Pozostaw potwierdzanie adresu e-mail.</li>
+        <li>W <strong>Authentication → URL Configuration</strong> ustaw <strong>Site URL</strong> na adres aplikacji zakończony <code>/sup/</code>, np. <code>https://dosiaczek-tech.github.io/sup/</code>.</li>
+        <li>Dodaj używany adres do <strong>Redirect URLs</strong>. Dla lokalnego podglądu dodaj również <code>http://zuffie.test:8766/sup/</code>. Linki potwierdzające i odzyskiwanie hasła wracają na tę stronę.</li>
+      </ol>
+      <p><strong>Poczta:</strong> domyślna wysyłka Supabase działa tylko na adresy członków projektu i ma niewielki limit (obecnie 2 wiadomości na godzinę). Dla własnego dziennika możesz zacząć od e-maila użytego przy zakładaniu projektu. Wysyłka potwierdzeń i odzyskiwanie hasła na inne adresy wymagają ustawienia własnego SMTP w Authentication. <a href="https://supabase.com/docs/guides/auth/auth-smtp" target="_blank" rel="noopener noreferrer">Szczegóły wysyłki e-mail</a>.</p>
+      <h2>4. Połącz projekt z aplikacją</h2>
+      <p>Z panelu projektu skopiuj <strong>Project URL</strong> oraz <strong>Publishable key</strong> (klucz zaczynający się od <code>sb_publishable_</code>; obsługiwany jest też starszy klucz <code>anon</code>). To publiczne ustawienia aplikacji — możesz przekazać je osobie, która ją konfiguruje.</p>
+      <p>Wpisuje się je do pliku <code>sup/cloud-config.json</code>:</p>
+      <pre>{
+  "url": "https://TWOJ-PROJEKT.supabase.co",
+  "publishableKey": "sb_publishable_TUTAJ_PUBLICZNY_KLUCZ"
+}</pre>
+      <p>W tym pliku nie umieszczaj hasła bazy ani kluczy <code>secret</code> / <code>service_role</code>. Po zmianie konfiguracji odśwież aplikację. Konfiguracja musi być dostępna pod adresem aplikacji używanym na obu urządzeniach.</p>
+      <h2>5. Przenieś swoje dotychczasowe wyprawy</h2>
+      <ol>
+        <li>Na komputerze, na którym masz zapisane trasy, otwórz „Moje wyprawy”. W sekcji wspólnego dziennika wybierz <strong>Załóż konto</strong>. To konto do dziennika — osobne od konta administracyjnego w panelu Supabase.</li>
+        <li>Potwierdź adres e-mail i zaloguj się. Kliknij <strong>Przenieś wcześniejsze wpisy z tego urządzenia</strong>.</li>
+        <li>Zaczekaj na komunikat <strong>„Zsynchronizowano — dziennik jest zapisany w chmurze”</strong>.</li>
+        <li>Na telefonie zaloguj się tym samym e-mailem i hasłem do dziennika. Twoje wyprawy zostaną pobrane automatycznie.</li>
+      </ol>
+      <p>Pierwotny dziennik lokalny pozostaje osobną kopią. Kolejne zapisy, edycje i usunięcia na koncie synchronizują się automatycznie. Przycisk „Synchronizuj teraz” pozwala od razu pobrać zmiany z drugiego urządzenia.</p>
+      <h2>Jak działa zapis bez połączenia?</h2>
+      <p>W już załadowanej aplikacji możesz nadal zapisywać wyprawy do lokalnej kopii konta. Zmiany czekają na wysłanie do czasu połączenia i ważnej sesji logowania. Przy jednoczesnych, różnych edycjach zachowujemy obie wersje — jedna otrzymuje dopisek „kopia konfliktu”.</p>
+      <p>Wyczyść dane przeglądarki dopiero po wysłaniu zmian lub pobraniu kopii przez „Eksportuj”. Wylogowanie przełącza na osobny dziennik lokalny; kopia konta czeka na ponowne zalogowanie na tym urządzeniu.</p>
+      <h2>Co obejmuje darmowy plan?</h2>
+      <p>Według <a href="https://supabase.com/pricing" target="_blank" rel="noopener noreferrer">cennika Supabase</a> plan Free ma 500 MB bazy danych i 5 GB transferu — dla osobistego dziennika jest to duży zapas. Projekt może zostać uśpiony po tygodniu nieaktywności. W takim przypadku zaloguj się do panelu Supabase i wybierz wznowienie projektu. W tym czasie lokalna kopia pozostaje na urządzeniu.</p>
+      <h2>Chcesz przenieść wpisy już teraz?</h2>
+      <p>Na komputerze wybierz <strong>Eksportuj</strong>, prześlij pobrany plik JSON na telefon, a tam wybierz <strong>Importuj</strong>. To jednorazowe skopiowanie zapisów; po uruchomieniu chmury kolejne zmiany będą przenoszone automatycznie.</p>
+      <a class="button" href="./#moje-trasy">Wróć do moich wypraw</a>
+    </main>
+  </body>
+</html>

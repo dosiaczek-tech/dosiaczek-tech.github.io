@@ -9,15 +9,21 @@
     ["miedzyzdroje", "Międzyzdroje", "Plaża przy molo", 53.933, 14.444, 325, "zachod", ["miedzyzdroje", "miedzyzdroje-plaza", "miedzyzdroje-plaza-zachod"]],
     ["miedzywodzie", "Międzywodzie", "Plaża", 54.012, 14.694, 340, "zachod", ["miedzywodzie"]],
     ["dziwnow", "Dziwnów", "Plaża morska", 54.027, 14.746, 335, "zachod", ["dziwnow-plaza"]],
+    ["dziwnowek", "Dziwnówek", "Plaża morska", 54.038, 14.802, 335, "zachod", []],
+    ["lukecin", "Łukęcin", "Plaża morska", 54.050, 14.865, 340, "zachod", []],
+    ["pobierowo", "Pobierowo", "Plaża morska", 54.063, 14.931, 345, "zachod", []],
+    ["pustkowo", "Pustkowo", "Plaża morska", 54.073, 14.973, 350, "zachod", []],
     ["trzesacz", "Trzęsacz", "Plaża", 54.079, 14.994, 350, "zachod", ["trzesacz"]],
     ["rewal", "Rewal", "Plaża", 54.084, 15.017, 350, "zachod", ["rewal-plaza"]],
     ["niechorze", "Niechorze", "Plaża przy molo", 54.100, 15.079, 350, "zachod", ["niechorze-molo-kamera", "niechorze-plaza"]],
+    ["pogorzelica", "Pogorzelica", "Plaża morska", 54.106, 15.118, 350, "zachod", []],
     ["mrzezyno", "Mrzeżyno", "Plaża", 54.148, 15.299, 345, "zachod", ["mrzezyno-plaza"]],
     ["rogowo", "Rogowo", "Plaża", 54.158, 15.352, 345, "zachod", ["rogowo"]],
     ["dzwirzyno", "Dźwirzyno", "Plaża", 54.163, 15.411, 350, "zachod", ["dzwirzyno", "dzwirzyno-plaza"]],
     ["grzybowo", "Grzybowo", "Plaża", 54.165, 15.492, 355, "zachod", ["grzybowo"]],
     ["kolobrzeg", "Kołobrzeg", "Molo i plaże centralne", 54.188, 15.554, 335, "zachod", ["kolobrzeg", "kolobrzeg-plaza", "zachodnia-plaza-kolobrzeg"]],
     ["ustronie", "Ustronie Morskie", "Plaża", 54.218, 15.755, 335, "zachod", ["ustronie-morskie"]],
+    ["gaski", "Gąski", "Plaża przy latarni", 54.245, 15.873, 350, "zachod", []],
     ["sarbinowo", "Sarbinowo", "Plaża", 54.249, 15.956, 350, "zachod", ["sarbinowo", "kamera-na-plazy-w-sarbinowie"]],
     ["chlopy", "Chłopy", "Plaża przy przystani", 54.255, 15.990, 350, "zachod", ["chlopy"]],
     ["mielno", "Mielno", "Plaża przy promenadzie", 54.263, 16.055, 330, "zachod", ["mielno", "sofra-mielno-kamera"]],
@@ -27,28 +33,43 @@
     ["darlowko", "Darłowo", "Darłówko — plaża wschodnia", 54.443, 16.384, 320, "srodek", ["darlowo", "darlowo-plaza-darlowko"]],
     ["jaroslawiec", "Jarosławiec", "Plaża morska", 54.538, 16.541, 290, "srodek", ["jaroslawiec-plaza", "jaroslawiec-dubaj"]],
     ["ustka", "Ustka", "Plaża wschodnia", 54.591, 16.861, 345, "srodek", ["ustka", "ustka-rafa"]],
+    ["poddabie", "Poddąbie", "Plaża pod klifem", 54.629, 16.983, 330, "srodek", []],
+    ["debina", "Dębina", "Plaża morska", 54.650, 17.019, 325, "srodek", []],
     ["rowy", "Rowy", "Plaża", 54.667, 17.049, 320, "srodek", ["rowy-plaza"]],
+    ["czolpino", "Czołpino", "Plaża morska", 54.727, 17.235, 335, "srodek", []],
     ["leba", "Łeba", "Plaża wschodnia", 54.770, 17.565, 0, "srodek", ["leba", "leba-neptun"]],
+    ["stilo", "Sasino", "Stilo — plaża morska", 54.798, 17.735, 350, "srodek", []],
+    ["kopalino", "Kopalino", "Plaża morska", 54.814, 17.840, 350, "srodek", []],
     ["lubiatowo", "Lubiatowo", "Plaża", 54.811, 17.864, 350, "srodek", ["lubiatowo-kamera"]],
     ["bialogora", "Białogóra", "Plaża", 54.838, 17.956, 355, "polwysep", ["bialogora-plaza"]],
     ["debki", "Dębki", "Plaża", 54.833, 18.079, 0, "polwysep", ["debki", "debki-plaza-n24", "debki-plaza-obrotowa", "debki-wieza"]],
     ["karwia", "Karwia", "Plaża", 54.832, 18.210, 0, "polwysep", ["karwia-plaza", "karwia-plaza-n24"]],
     ["ostrowo", "Ostrowo", "Plaża", 54.834, 18.255, 0, "polwysep", ["ostrowo-plaza"]],
-    ["jastrzebia", "Jastrzębia Góra", "Plaża", 54.836, 18.310, 0, "polwysep", ["jastrzebia-gora", "jastrzebia-gora-n24"]],
+    ["jastrzebia", "Jastrzębia Góra", "Faleza", 54.836, 18.310, 0, "polwysep", ["jastrzebia-gora", "jastrzebia-gora-n24"]],
+    ["rozewie", "Rozewie", "Plaża pod przylądkiem", 54.835, 18.340, 15, "polwysep", []],
     ["chlapowo", "Chłapowo", "Plaża pod klifem", 54.807, 18.383, 30, "polwysep", ["chlapowo-lazurowe"]],
     ["wladyslawowo", "Władysławowo", "Plaża od strony Bałtyku", 54.800, 18.407, 30, "polwysep", ["wladyslawowo", "wladyslawowo-druga-plaza", "wladyslawowo-plaza-n24", "wladyslawowo-baltyk"]],
+    ["rurociag", "Władysławowo", "Rurociąg — plaża morska", 54.794, 18.424, 35, "polwysep", []],
+    ["chalupy", "Chałupy", "Wejście 10/11", 54.773, 18.475, 35, "polwysep", []],
+    ["kuznica", "Kuźnica", "Wejście 26", 54.748635, 18.547192, 35, "polwysep", []],
     ["jastarnia", "Jastarnia", "Plaża morska — Dom Zdrojowy", 54.707, 18.685, 35, "polwysep", ["jastarnia-dom-zdrojowy"]],
     ["jurata", "Jurata", "Plaża od strony Bałtyku", 54.683, 18.722, 35, "polwysep", ["jurata-plaza"]],
-    ["gdynia", "Gdynia", "Plaża miejska · Zatoka Gdańska", 54.514, 18.552, 85, "trojmiasto", ["gdynia-plaza"]],
+    ["hel", "Hel", "Plaża od strony otwartego morza", 54.613, 18.829, 55, "polwysep", []],
     ["orlowo", "Gdynia", "Orłowo · Zatoka Gdańska", 54.480, 18.565, 75, "trojmiasto", ["gdynia-orlowo"]],
-    ["sopot", "Sopot", "Plaża i molo · Zatoka Gdańska", 54.447, 18.574, 65, "trojmiasto", ["sopot", "sopot-molo-n24", "sopot-male-molo", "sopot-meridian"]],
-    ["brzezno", "Gdańsk", "Brzeźno · Zatoka Gdańska", 54.411, 18.624, 35, "trojmiasto", ["brzezno"]],
+    ["sopot", "Sopot", "Plaża i molo · Zatoka Gdańska", 54.454665, 18.565443, 65, "trojmiasto", ["sopot", "sopot-molo-n24", "sopot-male-molo", "sopot-meridian"]],
+    ["jelitkowo", "Gdańsk", "Jelitkowo · Zatoka Gdańska", 54.429478, 18.593886, 45, "trojmiasto", []],
+    ["brzezno", "Gdańsk", "Brzeźno · Zatoka Gdańska", 54.413916, 18.625796, 35, "trojmiasto", ["brzezno"]],
     ["stogi", "Gdańsk", "Stogi · Zatoka Gdańska", 54.375, 18.733, 15, "trojmiasto", ["gdansk-plaza-stogi"]],
-    ["sobieszewo", "Gdańsk", "Sobieszewo — plaża morska", 54.350, 18.831, 0, "trojmiasto", []],
-    ["jantar", "Jantar", "Plaża morska", 54.346, 19.028, 340, "mierzeja", ["jantar"]],
-    ["stegna", "Stegna", "Plaża morska", 54.346, 19.112, 350, "mierzeja", ["stegna-plaza", "kamera-stegna-plaza"]],
-    ["katy", "Kąty Rybackie", "Plaża morska", 54.354, 19.234, 350, "mierzeja", ["katyrybackie"]],
-    ["krynica", "Krynica Morska", "Plaża morska", 54.389, 19.444, 330, "mierzeja", ["krynica-morska-plaza", "krynica-morska-kamera", "krynicamorska"]]
+    ["gorki-zachodnie", "Gdańsk", "Górki Zachodnie — plaża morska", 54.370686, 18.769595, 10, "trojmiasto", []],
+    // Punkt użytkowniczki: 54°20'55.5"N 18°52'31.0"E; osobny od dotychczasowego Sobieszewa.
+    ["sobieszewo-hotel-orle", "Gdańsk", "Sobieszewo — Hotel Orle", 54.34875, 18.87527777777778, 0, "trojmiasto", []],
+    ["sobieszewo", "Gdańsk", "Sobieszewo — Tawerna Łosoś", 54.34652508378602, 18.91065779954801, 0, "trojmiasto", []],
+    ["jantar", "Jantar", "Plaża morska", 54.344853, 19.041600, 340, "mierzeja", ["jantar"]],
+    ["stegna", "Stegna", "Plaża morska", 54.347136, 19.113608, 350, "mierzeja", ["stegna-plaza", "kamera-stegna-plaza"]],
+    ["sztutowo", "Sztutowo", "Plaża morska", 54.351, 19.178, 350, "mierzeja", []],
+    ["katy", "Kąty Rybackie", "Plaża morska", 54.361475, 19.293021, 350, "mierzeja", ["katyrybackie"]],
+    ["krynica", "Krynica Morska", "Plaża morska", 54.385702, 19.432434, 330, "mierzeja", ["krynica-morska-plaza", "krynica-morska-kamera", "krynicamorska"]],
+    ["piaski", "Krynica Morska", "Piaski — plaża morska", 54.438, 19.597, 330, "mierzeja", []]
   ];
   const spots = rows.map(([id, town, name, lat, lon, normal, region, cameras]) => ({
     id, town, name, lat, lon, normal, region, cameras,
@@ -63,7 +84,20 @@
         geometry: "Punkt z mapy WestCoast; normalna brzegu przybliżona, bez obliczonej osłony falochronów." });
     } else spots.push({ ...record, geometry: "Punkt z mapy WestCoast; normalna brzegu przybliżona, bez obliczonej osłony falochronów." });
   }
-  spots.find(s => s.id === "sobieszewo").nearbySpot = "stogi";
+  const sobieszewo = spots.find(s => s.id === "sobieszewo");
+  sobieszewo.nearbySpot = "stogi";
+  // This spot moved: legacy wind bundles identified only by ID belong to the old location.
+  sobieszewo.requireWindGeometry = true;
+  // Stegna also moved: do not accept legacy wind bundles without matching coordinates.
+  spots.find(s => s.id === "stegna").requireWindGeometry = true;
+  spots.find(s => s.id === "jantar").requireWindGeometry = true;
+  spots.find(s => s.id === "katy").requireWindGeometry = true;
+  spots.find(s => s.id === "krynica").requireWindGeometry = true;
+  spots.find(s => s.id === "gorki-zachodnie").requireWindGeometry = true;
+  spots.find(s => s.id === "brzezno").requireWindGeometry = true;
+  spots.find(s => s.id === "jelitkowo").requireWindGeometry = true;
+  spots.find(s => s.id === "sopot").requireWindGeometry = true;
+  spots.find(s => s.id === "kuznica").requireWindGeometry = true;
   if (typeof module !== "undefined") module.exports = spots;
   else root.SurfSpots = spots;
 })(typeof globalThis !== "undefined" ? globalThis : this);

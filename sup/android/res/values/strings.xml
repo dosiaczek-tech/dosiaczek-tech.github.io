@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">supy</string>
+    <string name="home_url" translatable="false">https://dosiaczek-tech.github.io/sup/#moje-trasy</string>
+    <string name="menu">Menu supy</string>
+    <string name="reload">Odśwież</string>
+    <string name="reload_app">Odśwież aplikację</string>
+    <string name="home">Moje trasy</string>
+    <string name="website_address">Adres strony</string>
+    <string name="open_in_browser">Otwórz w przeglądarce</string>
+    <string name="copy_address">Kopiuj adres</string>
+    <string name="copied">Adres skopiowany</string>
+    <string name="address_detail">Bieżąca strona:\n%1$s\n\nStrona startowa:\n%2$s</string>
+    <string name="loading">Wczytywanie strony</string>
+    <string name="error_title">Nie udało się wczytać supy</string>
+    <string name="error_network">Nie udało się połączyć z aplikacją. Sprawdź dostęp do internetu. Po powrocie do aplikacji połączenie zostanie ponowione.</string>
+    <string name="error_http">Serwer zwrócił błąd HTTP %1$d. Spróbuj za chwilę.</string>
+    <string name="error_ssl">Nie można zweryfikować certyfikatu HTTPS. Sprawdź certyfikat serwera oraz datę i godzinę w telefonie.</string>
+    <string name="error_detail">%1$s\n\n%2$s</string>
+    <string name="retry">Spróbuj ponownie</string>
+    <string name="no_browser">Brak przeglądarki, która może otworzyć ten link.</string>
+    <string name="unsupported_link">Nie można otworzyć tego rodzaju linku.</string>
+    <string name="choose_file">Wybierz plik</string>
+    <string name="no_picker">Systemowy wybór plików jest niedostępny.</string>
+    <string name="picker_recreated">Strona została odtworzona. Wybierz plik ponownie.</string>
+    <string name="export_failed">Nie udało się zapisać kopii. Ponownie wybierz „Eksportuj”.</string>
+    <string name="export_saved">Kopia wypraw została zapisana.</string>
+</resources>

@@ -20,7 +20,10 @@ test('town groups keep every spot once, sorted west to east within and between g
 test('search tolerates missing diacritics, omitted letters and transposed letters',()=>{
   for(const [query,id] of [['kolobrzeg','kolobrzeg'],['kołobżeg','kolobrzeg'],['kolobzreg','kolobrzeg'],
     ['sobjeszewo','sobieszewo'],['palik piont','kolobrzeg-palikpoint'],['wladek','wladyslawowo'],
-    ['Jastrzebia Gora','jastrzebia'],['9ka','ustronie-centralna']]){
+    ['Jastrzebia Gora','jastrzebia'],['9ka','ustronie-centralna'],
+    ['Górki Zachodnie','gorki-zachodnie'],['gorki zachodnie','gorki-zachodnie'],
+    ['Sztutowo','sztutowo'],['Chalupy','chalupy'],['Kuznica','kuznica'],
+    ['Hotel Orle','sobieszewo-hotel-orle'],['Gdańsk Sobieszewo Hotel Orle','sobieszewo-hotel-orle']]){
     const results=S.search(spots,query);
     assert.equal(results[0].spot.id,id,query);
     assert.equal(results[0].strong,true,query);
@@ -37,7 +40,7 @@ test('compound names, city plus spot and partial words find an actual catalog sp
 test('short, unknown and ambiguous input does not claim a confident location',()=>{
   assert.deepEqual(S.search(spots,''),[]);
   assert.deepEqual(S.search(spots,'k'),[]);
-  for(const query of ['zzqxw','Górki Zachodnie','plaża']){
+  for(const query of ['zzqxw','Atlantyda','plaża']){
     const results=S.search(spots,query);
     assert.ok(results.length>0 && results.length<=6);
     assert.equal(results[0].strong,false,query);

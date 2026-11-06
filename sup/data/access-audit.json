@@ -1,0 +1,3361 @@
+{
+  "generatedAt": "2026-10-23T21:33:26.274Z",
+  "summary": {
+    "sites": 240,
+    "approximateSites": 12,
+    "routes": 117,
+    "anchoredRoutes": 117,
+    "approximateEndpointRoutes": 11,
+    "selectableRoutes": 117,
+    "waterLegs": 134,
+    "completeLegs": 130
+  },
+  "routes": [
+    {
+      "id": "krutynia-krutyn-ukta",
+      "points": 5,
+      "start": "Stanica Wodna PTTK Krutyń",
+      "finish": "Stanica wodna PTTK Ukta",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "krutynia-ukta-nowy-most",
+      "points": 3,
+      "start": "Stanica wodna PTTK Ukta",
+      "finish": "Stanica wodna PTTK w Nowym Moście",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "krutynia-zgon-krutyn",
+      "points": 2,
+      "start": "Zgon — Stanica Wodna PTTK",
+      "finish": "Stanica Wodna PTTK Krutyń",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-swornegacie-mecikal",
+      "points": 2,
+      "start": "Slip / zejście do wody",
+      "finish": "Męcikał — przystań przy ul. Leśnej",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-mecikal-woziwoda",
+      "points": 4,
+      "start": "Męcikał — przystań przy ul. Leśnej",
+      "finish": "Woziwoda — przystań i biwak",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-woziwoda-pila",
+      "points": 2,
+      "start": "Woziwoda — przystań i biwak",
+      "finish": "Piła-Młyn — pomost przy biwaku",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "bukowina-skrzeszewo-kozin",
+      "points": 3,
+      "start": "Skrzeszewo — wodowanie przy moście DW214",
+      "finish": "Kozin — meta Bukowiny",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kamienica-tuchomie-galaznia",
+      "points": 4,
+      "start": "Tuchomie — wodowanie na Kamienicy",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "chocina-zielona-swornegacie",
+      "points": 3,
+      "start": "Zielona Chocina — wodowanie przy DW212",
+      "finish": "Agrokajaki",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "zbrzyca-mlosina-ksieze",
+      "points": 2,
+      "start": "Kaszuba — wodowanie przy moście",
+      "finish": "Laska — zakończenie przy moście nad Zbrzycą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "hancza-mackowa-fracki",
+      "points": 2,
+      "start": "Maćkowa Ruda — baza AS-TOUR / U Roxi",
+      "finish": "Miejsce wodowania",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "pilica-tomaszow-spala",
+      "points": 5,
+      "start": "Slip / zejście do wody",
+      "finish": "Miejsce wodowania kajaków",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wkra-biezany-strzegowo",
+      "points": 2,
+      "start": "Bieżany — wodowanie przy bazie AGRO-KAJAK",
+      "finish": "Strzegowo — rejon wyjścia przy przenosce koło Kantoru",
+      "full": true,
+      "approximateEndpoints": 2,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "drawa-barnimie-bogdanka",
+      "points": 4,
+      "start": "Barnimie — pomost kajakowy przy moście",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "czarna-nida-morawica-ostrow",
+      "points": 2,
+      "start": "Morawica — przystań przy muszli koncertowej",
+      "finish": "Ostrów / Nida — przystań KAJARK",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "czarna-nida-kuby-morawica",
+      "points": 2,
+      "start": "Kuby-Młyny — zejście przy mostku",
+      "finish": "Morawica — przystań przy muszli koncertowej",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "piasnica-zarnowieckie-debki",
+      "points": 3,
+      "start": "Piaśnica — wodowanie przy drodze",
+      "finish": "Dębki — plaża przy ujściu Piaśnicy",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "reda-zamostne-reda",
+      "points": 8,
+      "start": "Baza Kajakowa Wiosło",
+      "finish": "Przystań kajakowa w Miejskim Parku Rodzinnym w Redzie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "czarna-wda-klanino-ostrowo",
+      "points": 2,
+      "start": "Kłanino — wodowanie przy DW213",
+      "finish": "Ostrowo — przystań na Czarnej Wodzie",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-bak-hydrostacja",
+      "points": 13,
+      "start": "Bąk — wodowanie na Wdzie",
+      "finish": "Czarna Woda — przystań Hydrostacja",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-wojtal-hydrostacja",
+      "points": 6,
+      "start": "Wojtal — wodowanie przy niskim moście",
+      "finish": "Czarna Woda — przystań Hydrostacja",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-hydrostacja-czarne",
+      "points": 5,
+      "start": "Czarna Woda — przystań Hydrostacja",
+      "finish": "Czarne — biwak za mostem",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-hydrostacja-osowo",
+      "points": 7,
+      "start": "Czarna Woda — przystań Hydrostacja",
+      "finish": "Osowo Leśne — wodowanie przy pomniku",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-miedzno-hydrostacja",
+      "points": 11,
+      "start": "Miejsce wodowania",
+      "finish": "Czarna Woda — przystań Hydrostacja",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-klonowice-hydrostacja",
+      "points": 4,
+      "start": "Klonowice — wodowanie przy moście",
+      "finish": "Czarna Woda — przystań Hydrostacja",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-gorskie-mosty-hydrostacja",
+      "points": 14,
+      "start": "Górskie Mosty — start / przenoska",
+      "finish": "Czarna Woda — przystań Hydrostacja",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-hydrostacja-mlynsk",
+      "points": 6,
+      "start": "Czarna Woda — przystań Hydrostacja",
+      "finish": "Młyńsk — wyjście przed drewnianym mostem",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-osowo-wdecki-mlyn",
+      "points": 5,
+      "start": "Osowo Leśne — wodowanie przy pomniku",
+      "finish": "Wdecki Młyn — biwak poniżej elektrowni",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-hydrostacja-mlynki",
+      "points": 8,
+      "start": "Czarna Woda — przystań Hydrostacja",
+      "finish": "Młynki — biwak przy leśniczówce",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-rytel-woziwoda",
+      "points": 2,
+      "start": "Rytel — biwak kajakowy",
+      "finish": "Woziwoda — przystań i biwak",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-wdecki-mlyn-bledno",
+      "points": 4,
+      "start": "Wdecki Młyn — biwak poniżej elektrowni",
+      "finish": "Błędno — biwak leśny",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-soszyca-golebia",
+      "points": 5,
+      "start": "Przystań Soszyca",
+      "finish": "Przystań Gołębia Góra",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "lupawa-lupawsko-kozin",
+      "points": 2,
+      "start": "Łupawsko",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-kajlandia-bylina",
+      "points": 4,
+      "start": "Kajlandia",
+      "finish": "Bylina",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "lupawa-kozin-lupawa",
+      "points": 3,
+      "start": "Slip / zejście do wody",
+      "finish": "Łupawa — przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-parchowo-bylina",
+      "points": 3,
+      "start": "Miejsce wodowania",
+      "finish": "Bylina",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "lupawa-lupawa-lebien",
+      "points": 4,
+      "start": "Łupawa — przystań kajakowa",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "bukowina-siemirowice-kozin",
+      "points": 2,
+      "start": "Siemirowice — wodowanie na Bukowinie",
+      "finish": "Kozin — meta Bukowiny",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kamienica-kamienc-galaznia",
+      "points": 2,
+      "start": "Kamieńc — wodowanie przy moście",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-wegorzyno-parchowo",
+      "points": 4,
+      "start": "Jezioro Węgorzyno — wodowanie",
+      "finish": "Miejsce wodowania",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-lipusz-wdzydze",
+      "points": 6,
+      "start": "Lipusz — początek spływu do Wdzydz",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "trzebiocha-rybaki-wdzydze",
+      "points": 9,
+      "start": "Rybaki — wodowanie na Trzebiosze",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-galaznia-krzynia",
+      "points": 6,
+      "start": "Slip / zejście do wody",
+      "finish": "Przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "portage"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "slupia-galaznia-lesny-dwor",
+      "points": 7,
+      "start": "Slip / zejście do wody",
+      "finish": "Przystań kajakowa w Leśnym Dworze",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "portage"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "bytowa-bytow-osieki",
+      "points": 3,
+      "start": "Bytów — wodowanie na Bytowej",
+      "finish": "Osieki Bytowskie — wyjście z Bytowej",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-golebia-glebokie",
+      "points": 4,
+      "start": "Przystań Gołębia Góra",
+      "finish": "Jezioro Głębokie — miejsce zakończenia",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "skotawa-jawory-jamrzyno",
+      "points": 2,
+      "start": "Jawory — wodowanie na Skotawie",
+      "finish": "Jamrzyno — wodowanie poniżej młyna",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "skotawa-jamrzyno-debnica",
+      "points": 2,
+      "start": "Jamrzyno — wodowanie poniżej młyna",
+      "finish": "Dębnica Kaszubska — meta na Skotawie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-wegorzyno-golebia",
+      "points": 10,
+      "start": "Jezioro Węgorzyno — wodowanie",
+      "finish": "Przystań Gołębia Góra",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "transport"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport"
+        }
+      ]
+    },
+    {
+      "id": "lupawa-kozin-lebien",
+      "points": 6,
+      "start": "Slip / zejście do wody",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-kajlandia-glebokie",
+      "points": 11,
+      "start": "Kajlandia",
+      "finish": "Jezioro Głębokie — miejsce zakończenia",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "transport"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport"
+        }
+      ]
+    },
+    {
+      "id": "slupia-gowidlino-bylina",
+      "points": 7,
+      "start": "Przystań żeglarsko – kajakowa wraz z infrastrukturą rekreacyjno – wędkarską w miejscowości Gowidlino",
+      "finish": "Bylina",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "bukowina-siemirowice-lupawa",
+      "points": 4,
+      "start": "Siemirowice — wodowanie na Bukowinie",
+      "finish": "Łupawa — przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "lupawa-lupawsko-lupawa",
+      "points": 4,
+      "start": "Łupawsko",
+      "finish": "Łupawa — przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kamienica-tuchomie-kamienc",
+      "points": 3,
+      "start": "Tuchomie — wodowanie na Kamienicy",
+      "finish": "Kamieńc — wodowanie przy moście",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "skotawa-jawory-debnica",
+      "points": 3,
+      "start": "Jawory — wodowanie na Skotawie",
+      "finish": "Dębnica Kaszubska — meta na Skotawie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-galaznia-slupsk",
+      "points": 10,
+      "start": "Slip / zejście do wody",
+      "finish": "Słupsk — miejsce zakończenia spływu",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "portage"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "pokrzywna-glewnik-kepice",
+      "points": 5,
+      "start": "Pokrzywna",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-gowidlino-ustka",
+      "points": 28,
+      "start": "Przystań żeglarsko – kajakowa wraz z infrastrukturą rekreacyjno – wędkarską w miejscowości Gowidlino",
+      "finish": "Stanica kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "transport"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport",
+          "finishBreak": "transport"
+        },
+        {
+          "index": 2,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport",
+          "finishBreak": "portage"
+        },
+        {
+          "index": 3,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "bukowina-siemirowice-damno",
+      "points": 8,
+      "start": "Siemirowice — wodowanie na Bukowinie",
+      "finish": "Przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kamienica-tuchomie-ustka",
+      "points": 17,
+      "start": "Tuchomie — wodowanie na Kamienicy",
+      "finish": "Stanica kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "portage"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "radunia-stezyca-gdansk",
+      "points": 12,
+      "start": "Przystań kajakowa w miejscowości Stężyca",
+      "finish": "Przystań kajakowa w Gdańsku przy ulicy Żabi Kruk",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "transport"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport",
+          "finishBreak": "transport"
+        },
+        {
+          "index": 2,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport"
+        }
+      ]
+    },
+    {
+      "id": "brda-nowa-brda-gostycyn",
+      "points": 11,
+      "start": "Stanica Wodna Nowa Brda",
+      "finish": "Stanica wodna PTTK Gostycyn-Nogawica",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "leba-sianowo-gac",
+      "points": 4,
+      "start": "Sianowo — wodowanie na jeziorze Sianowskim",
+      "finish": "Gać — zakończenie przy moście drogowym",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "bytowa-bytow-ustka",
+      "points": 19,
+      "start": "Bytów — wodowanie na Bytowej",
+      "finish": "Stanica kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "transport"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "transport",
+          "finishBreak": "portage"
+        },
+        {
+          "index": 2,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "skotawa-jawory-ustka",
+      "points": 10,
+      "start": "Jawory — wodowanie na Skotawie",
+      "finish": "Stanica kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wda-lipusz-tlen",
+      "points": 36,
+      "start": "Lipusz — początek spływu do Wdzydz",
+      "finish": "Wypożyczalnia kajaków",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-wielki-podles-gniew",
+      "points": 42,
+      "start": "Przystań kajakowa nad jeziorem Zagnanie w Wielkim Podlesiu",
+      "finish": "Przystań kajakowa w Gniewie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "pokrzywna-glewnik-darlowko",
+      "points": 9,
+      "start": "Pokrzywna",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-galaznia-ustka",
+      "points": 14,
+      "start": "Slip / zejście do wody",
+      "finish": "Stanica kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true,
+          "finishBreak": "portage"
+        },
+        {
+          "index": 1,
+          "start": true,
+          "finish": true,
+          "startBreak": "portage"
+        }
+      ]
+    },
+    {
+      "id": "zbrzyca-kaszuba-mylof",
+      "points": 4,
+      "start": "Kaszuba — wodowanie przy moście",
+      "finish": "Przenoska i pole biwakowe w Mylofie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "radunia-ostrzyce-kielpino",
+      "points": 4,
+      "start": "Pomost w Ostrzycach",
+      "finish": "Kayak King",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "radunia-rutki-zukowo",
+      "points": 2,
+      "start": "Przystań kajakowa w Borkowie (Rutkach) · slip",
+      "finish": "Przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "radunia-straszyn-krepiec",
+      "points": 3,
+      "start": "Przystań kajakowa w Straszynie",
+      "finish": "Przystań kajakowa w Krępcu",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kolko-radunskie-stezyca-golubie",
+      "points": 4,
+      "start": "Przystań kajakowa w miejscowości Stężyca",
+      "finish": "Przystań kajakowa w Gołubiu",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "reda-reda-mrzezino",
+      "points": 2,
+      "start": "Przystań kajakowa w Miejskim Parku Rodzinnym w Redzie",
+      "finish": "Mrzezino — przystań Moście Błota",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "chelst-stilo-leba",
+      "points": 3,
+      "start": "Stilo — wodowanie przy moście na Chełście",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "kanal-wdy-borsk-cegielnia",
+      "points": 4,
+      "start": "Górskie Mosty — start / przenoska",
+      "finish": "Cegielnia — meta przy moście",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "mlosina-lesno-kaszuba",
+      "points": 2,
+      "start": "Przystań kajakowa w Leśnie",
+      "finish": "Kaszuba — wodowanie przy moście",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "niechwaszcz-chlopowy-czarna-woda",
+      "points": 3,
+      "start": "Chłopowy — początek szlaku przy przeprawie drogowej",
+      "finish": "Kajaki Sękowski",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "graniczna-wieprznica-rybaki",
+      "points": 2,
+      "start": "Wieprznica — przystań kajakowa",
+      "finish": "Rybaki — wodowanie na Trzebiosze",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": false,
+          "finishBreak": "missing-data"
+        },
+        {
+          "index": 1,
+          "start": false,
+          "finish": false,
+          "startBreak": "missing-data",
+          "finishBreak": "missing-data"
+        },
+        {
+          "index": 2,
+          "start": false,
+          "finish": false,
+          "startBreak": "missing-data",
+          "finishBreak": "missing-data"
+        },
+        {
+          "index": 3,
+          "start": false,
+          "finish": true,
+          "startBreak": "missing-data"
+        }
+      ]
+    },
+    {
+      "id": "pilica-kaszubska-korne-lubiana",
+      "points": 3,
+      "start": "Korne — Kajaki Młyn",
+      "finish": "Pilica kaszubska — most Łubiana–Grzybowo",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "trzebiocha-rybaki-loryniec",
+      "points": 5,
+      "start": "Rybaki — wodowanie na Trzebiosze",
+      "finish": "Miejsce wodowania",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wietcisa-wolny-dwor-czarnocin",
+      "points": 2,
+      "start": "Wolny Dwór — wodowanie przy moście",
+      "finish": "Czarnocin — przystań",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "bytowa-bytow-glebokie",
+      "points": 5,
+      "start": "Bytów — wodowanie na Bytowej",
+      "finish": "Jezioro Głębokie — miejsce zakończenia",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "studnica-miastko-kawka",
+      "points": 5,
+      "start": "Miastko — wodowanie na Studnicy",
+      "finish": "Slip / zejście do wody",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "klonecznica-studzienice-laska",
+      "points": 2,
+      "start": "Studzienice — pomost przy Słonecznej Przystani",
+      "finish": "Laska — zakończenie przy moście nad Zbrzycą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-dolinka-przechlewo",
+      "points": 2,
+      "start": "Dolinka — przystań przy polu namiotowym",
+      "finish": "Przystań kajakowa w OSIR Przechlewo",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "brda-charzykowy-swornegacie",
+      "points": 3,
+      "start": "Charzykowy — przystań nad Jeziorem Charzykowskim",
+      "finish": "Agrokajaki",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "zbrzyca-sominy-mlosina",
+      "points": 2,
+      "start": "Sominy — początek spływu Zbrzycą",
+      "finish": "Kaszuba — wodowanie przy moście",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "zbrzyca-ksieze-witoczno",
+      "points": 2,
+      "start": "Laska — zakończenie przy moście nad Zbrzycą",
+      "finish": "Przystań kajakowa w Stanicy Wodnej PTTK Swornegacie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "lipczynka-lipczynek-sapolno",
+      "points": 2,
+      "start": "Lipczynek — wodowanie przy Jeziorze Lipczyno Wielkie",
+      "finish": "Sąpolno — zakończenie spływu nad Brdą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "slupia-soszyca-glebokie",
+      "points": 7,
+      "start": "Przystań Soszyca",
+      "finish": "Jezioro Głębokie — miejsce zakończenia",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "leba-leczyce-gac",
+      "points": 3,
+      "start": "Przystań i przenoska w Łęczycach",
+      "finish": "Gać — zakończenie przy moście drogowym",
+      "full": true,
+      "approximateEndpoints": 1,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-pogodki-czarnocin",
+      "points": 3,
+      "start": "Pogódki — przystań",
+      "finish": "Czarnocin — przystań",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-czarnocin-kregski-mlyn",
+      "points": 4,
+      "start": "Czarnocin — przystań",
+      "finish": "Kręgski Młyn — most",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-baczek-starogard",
+      "points": 14,
+      "start": "Bączek — wodowanie przy moście",
+      "finish": "Starogard Gdański — stanica ZHP",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-starogard",
+      "points": 13,
+      "start": "Kręgski Młyn — most",
+      "finish": "Starogard Gdański — stanica ZHP",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-zabno",
+      "points": 14,
+      "start": "Kręgski Młyn — most",
+      "finish": "Żabno — przystań",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-owidz-kolincki-mlyn",
+      "points": 5,
+      "start": "Owidz — wodowanie przy Grodzisku",
+      "finish": "Kolincki Młyn — pomost przed tamą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-owidz-klonowka",
+      "points": 6,
+      "start": "Owidz — wyjście przy elektrowni",
+      "finish": "Klonówka — wyjście przed elektrownią",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-kolincki-rajkowski-mlyn",
+      "points": 8,
+      "start": "Kolincki Młyn — wodowanie poniżej tamy",
+      "finish": "Rajkowski Młyn — przystań",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-klonowka-pelplin",
+      "points": 5,
+      "start": "Klonówka — start poniżej elektrowni",
+      "finish": "Pelplin — zakończenie przed tamą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-klonowka-rajkowski-mlyn",
+      "points": 4,
+      "start": "Klonówka — przystań",
+      "finish": "Rajkowski Młyn — przystań",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-rajkowski-mlyn-pelplin",
+      "points": 3,
+      "start": "Rajkowski Młyn — przystań",
+      "finish": "Pelplin — zakończenie przed tamą",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-wielki-klincz-wielki-podles",
+      "points": 2,
+      "start": "01-2022 Start",
+      "finish": "Przystań kajakowa nad jeziorem Zagnanie w Wielkim Podlesiu",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-wielki-podles-bartoszylas",
+      "points": 2,
+      "start": "Przystań kajakowa nad jeziorem Zagnanie w Wielkim Podlesiu",
+      "finish": "Bartoszylas — przystań kajakowa",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-bartoszylas-maliki",
+      "points": 7,
+      "start": "Bartoszylas — przystań kajakowa",
+      "finish": "Maliki Dolne- most",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-maliki-czarnocin",
+      "points": 5,
+      "start": "Maliki Dolne- most",
+      "finish": "Czarnocin — przystań",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-starogard-owidz",
+      "points": 4,
+      "start": "Starogard Gdański — stanica ZHP",
+      "finish": "Owidz — wyjście przy elektrowni",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-pelplin-stocki-mlyn",
+      "points": 2,
+      "start": "Pelplin — zakończenie przed tamą",
+      "finish": "Przystań w Stockim Młynie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-pelplin-brody",
+      "points": 4,
+      "start": "Pelplin — zakończenie przed tamą",
+      "finish": "Przystań w Brodach Pomorskich",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-stocki-mlyn-gniew",
+      "points": 4,
+      "start": "Przystań w Stockim Młynie",
+      "finish": "Przystań kajakowa w Gniewie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-brody-gniew",
+      "points": 3,
+      "start": "Przystań w Brodach Pomorskich",
+      "finish": "Przystań kajakowa w Gniewie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-owidz",
+      "points": 16,
+      "start": "Kręgski Młyn — most",
+      "finish": "Owidz — wyjście przy elektrowni",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-pelplin-gniew",
+      "points": 5,
+      "start": "Pelplin — zakończenie przed tamą",
+      "finish": "Przystań kajakowa w Gniewie",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    },
+    {
+      "id": "wierzyca-stocki-mlyn-brody",
+      "points": 3,
+      "start": "Przystań w Stockim Młynie",
+      "finish": "Przystań w Brodach Pomorskich",
+      "full": true,
+      "approximateEndpoints": 0,
+      "endpointPair": true,
+      "selectableSection": true,
+      "legs": [
+        {
+          "index": 0,
+          "start": true,
+          "finish": true
+        }
+      ]
+    }
+  ],
+  "unresolvedSources": [
+    {
+      "id": "psk:kajaczkowo",
+      "name": "Kajaczkowo",
+      "address": "Dworcowa 20, 83-307 Kiełpino",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:pomost-kajakowy-w-baku-na-kanale-rzeki-wdy",
+      "name": "Pomost kajakowy w Bąku na kanale rzeki Wdy",
+      "address": "83-440 Bąk, przy moście",
+      "rivers": [
+        "kanal wdy"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:pomost-przy-ostrzyku-w-ostrzycach",
+      "name": "Pomost przy Ostrzyku w Ostrzycach",
+      "address": "Ostrzyce",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:pomost-rekreacyjny-nad-jeziorem-fiszewo-w-skwierawach-w-ramach-pomorskich-szlakow-kajakowych",
+      "name": "Pomost rekreacyjny nad jeziorem Fiszewo w Skwierawach w ramach Pomorskich Szlaków Kajakowych",
+      "address": "77-143 Skwierawy",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:pomost-w-ostrzycach",
+      "name": "Pomost w Ostrzycach",
+      "address": "83-314 Ostrzyce, Droga Kaszubska",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystanek-kajakowy-nad-jeziorem-bialym",
+      "name": "Przystanek kajakowy nad jeziorem Białym",
+      "address": "83-333 Chmielno",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystanek-kajakowy-przy-osrodku-wypoczynkowym-krefta",
+      "name": "Przystanek kajakowy przy Ośrodku Wypoczynkowym Krefta",
+      "address": "ul. Grodziska 10, 83-333 Chmielno",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystanek-kajakowy-przy-przystani-zeglarskiej-dulka",
+      "name": "Przystanek kajakowy przy przystani żeglarskiej Dulka",
+      "address": "ul. Raduńska, 83-333 Chmielno",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystanek-kajakowy-w-przewozie",
+      "name": "Przystanek kajakowy w Przewozie",
+      "address": "83-324 Przewóz",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-flisacka-w-bolszewie",
+      "name": "Przystań Flisacka w Bolszewie",
+      "address": "Bolszewo, gmina Wejherowo",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-i-pole-biwakowe-w-gwiezdzinie",
+      "name": "Przystań i pole biwakowe w Gwieździnie",
+      "address": "77-304 Gwieździn",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-i-przenoska-w-kawczynie",
+      "name": "Przystań i przenoska w Kawczynie",
+      "address": "Kawczyn",
+      "rivers": [
+        "studnica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-mlyn-modrzejewo",
+      "name": "Przystań kajakowa – Młyn Modrzejewo",
+      "address": "Modrzejewo Młyn",
+      "rivers": [
+        "kamienica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-bartoszylas-w-przygotowaniu",
+      "name": "Przystań kajakowa Bartoszylas",
+      "address": "Bartoszylas, przy boisku",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-chocielewko",
+      "name": "Przystań kajakowa Chocielewko",
+      "address": "Chocielewko - Gmina Nowa Wieś Lęborska",
+      "rivers": [
+        "leba"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-miejsce-poczatkowe-splywow-pokrzywna-w-glewniku",
+      "name": "Przystań kajakowa i miejsce początkowe spływów Pokrzywną w Glewniku",
+      "address": "Glewnik",
+      "rivers": [
+        "pokrzywna"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-pole-biwakowe-w-rzewnicy",
+      "name": "Przystań kajakowa i pole biwakowe w Rzewnicy",
+      "address": "77-304 Rzeczenica",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-pole-biwakowe-w-starej-brdzie-pilskiej",
+      "name": "Przystań kajakowa i pole biwakowe w Starej Brdzie Pilskiej",
+      "address": "Stara Brda Pilska Gmina Koczała",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-pole-biwakowe-w-swieszynie-nad-jeziorem-glebokim",
+      "name": "Przystań kajakowa i pole biwakowe w Świeszynie nad Jeziorem Głębokim",
+      "address": "Świeszyno",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-pole-namiotowe-w-kielpinie",
+      "name": "Przystań kajakowa i pole namiotowe w Kiełpinie",
+      "address": "Raduńska 4A, 83-307 Kiełpino",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-przenoska-w-pelplinie",
+      "name": "Przystań kajakowa i przenoska w Pelplinie",
+      "address": "Pelplin, ul. Podgórna",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-i-przenoska-w-zukowie",
+      "name": "Przystań kajakowa i przenoska w Żukowie",
+      "address": "Żukowo",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-izba-regionalna-w-modrzejewie",
+      "name": "Przystań kajakowa Izba Regionalna w Modrzejewie",
+      "address": "Modrzejewo",
+      "rivers": [
+        "kamienica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-kajaki-slupia-kajlandia",
+      "name": "Przystań kajakowa kajaki – Słupia „KAJLANDIA”",
+      "address": "Brzozowa, 83-320 Sulęczyno",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-kregskim-mlynie",
+      "name": "Przystań kajakowa Kręgski Młyn",
+      "address": "Kręski Młyn, ul. Transportowa, przy moście",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lupawsku-w-budowie",
+      "name": "Przystań kajakowa Łupawsko",
+      "address": "77-116 Łupawsko",
+      "rivers": [
+        "lupawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-na-rzece-raduni-przy-faktorii-w-pruszczu-gdanskim",
+      "name": "Przystań kajakowa na rzece Raduni przy Faktorii w Pruszczu Gdańskim",
+      "address": "Pruszcz Gdański",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-na-rzece-redzie-przy-drodze-wojewodzkiej-nr-218-ul-ofiar-piasnicy-w-wejherowie",
+      "name": "Przystań kajakowa na rzece Redzie przy drodze wojewódzkiej nr 218 (ul. Ofiar Piaśnicy) w Wejherowie",
+      "address": "Wejherowo, ul. Ofiar Piaśnicy",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-na-terenie-sosir-w-slupsku",
+      "name": "Przystań kajakowa na terenie SOSiR w Słupsku",
+      "address": "ul. Rybacka, Słupsk",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-glebokim",
+      "name": "Przystań kajakowa nad Jeziorem Głębokim",
+      "address": "76-248 Gałęzów",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-klodno-w-zaworach",
+      "name": "Przystań kajakowa nad jeziorem Kłodno w Zaworach",
+      "address": "83-333 Zawory, ul. Szkolna",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-lubiszewskim",
+      "name": "Przystań kajakowa nad jeziorem Lubiszewskim",
+      "address": "Papiernia, ul. Jeziorna,",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-radunskim-w-przewozie",
+      "name": "Przystań kajakowa nad jeziorem Raduńskim w Przewozie",
+      "address": "83-324 Przewóz",
+      "rivers": [
+        "radunia",
+        "kolko jezior radunskich"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-wegorzyno",
+      "name": "Przystań kajakowa nad jeziorem Węgorzyno",
+      "address": "83-320 Sulęczyno",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-wegorzyno-w-suleczynie",
+      "name": "Przystań kajakowa nad jeziorem Węgorzyno w Sulęczynie",
+      "address": "83-320 Sulęczyno",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-zagnanie-w-wielkim-podlesiu",
+      "name": "Przystań kajakowa nad jeziorem Zagnanie w Wielkim Podlesiu",
+      "address": "Wielki Podleś",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-rzeka-radunia-w-miejscowosci-ostrzyce",
+      "name": "Przystań kajakowa nad rzeką Radunią w miejscowości Ostrzyce",
+      "address": "Ostrzyce, ul. Nad Radunią",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-rzeka-radunia-w-miejscowosci-somonino",
+      "name": "Przystań kajakowa nad rzeką Radunią w miejscowości Somonino",
+      "address": "Somonino, ul. Wolności, przy moście",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-pogodki-jaroszewy",
+      "name": "Przystań kajakowa Pogódki – Jaroszewy",
+      "address": "Pogódki, ul. Akacjowa, przy moście na drodze do Jaroszewów",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:centrum-uslug-turystycznych-wdzydze-kiszewskie",
+      "name": "Przystań kajakowa przy Centrum Usług Turystycznych Wdzydze Kiszewskie",
+      "address": "Stolema 3, 83-406 Wdzydze Kiszewskie",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-przy-oplywie-motlawy-na-szancach",
+      "name": "Przystań kajakowa przy Opływie Motławy „Na Szańcach”",
+      "address": "Gdańsk, ul. Na Szańcach",
+      "rivers": [
+        "motlawa",
+        "martwa wisla i wewnetrzne wody gdansk"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-przy-stanicy-zhp-w-starogardzie-gdanskim-2",
+      "name": "Przystań kajakowa przy stanicy ZHP w Starogardzie Gdańskim",
+      "address": "Starogard Gdański, ul. Hallera 19",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-przy-szkole-w-lipuszu",
+      "name": "Przystań kajakowa przy szkole w Lipuszu",
+      "address": "Lipusz, ul. Derdowskiego (przy szkole)",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-przy-ul-wiosny-ludow",
+      "name": "Przystań kajakowa przy ul. Wiosny Ludów",
+      "address": "Gdańsk, ul. Wiosny Ludów",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-przy-stanicy-zhp-w-starogardzie-gdanskim",
+      "name": "Przystań kajakowa Rajkowski Młyn",
+      "address": "Rajkowski Młyn, ul. Leszczynowa",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-suleczyno-centrum",
+      "name": "Przystań kajakowa Sulęczyno – Centrum",
+      "address": "83-320 Sulęczyno",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-tuchomie",
+      "name": "Przystań kajakowa Tuchomie",
+      "address": "Tuchomie",
+      "rivers": [
+        "kamienica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-bolszewie",
+      "name": "Przystań kajakowa w Bolszewie",
+      "address": "Bolszewo, ul. Kanałowa, gmina Wejherowo",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-borkowie-rutkach",
+      "name": "Przystań kajakowa w Borkowie (Rutkach)",
+      "address": "Borkowo",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-bozympolu-wielkim",
+      "name": "Przystań kajakowa w Bożympolu Wielkim",
+      "address": "Bożepole Wielkie, gm. Łęczyce",
+      "rivers": [
+        "leba"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-broczynie",
+      "name": "Przystań kajakowa w Broczynie",
+      "address": "Broczyna",
+      "rivers": [
+        "wieprza"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-chocinskim-mlynie",
+      "name": "Przystań kajakowa w Chocińskim Młynie",
+      "address": "Chociński Młyn",
+      "rivers": [
+        "chocina"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-czarlina",
+      "name": "Przystań kajakowa w Czarlinie",
+      "address": "Czarlina",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-czarnocinie",
+      "name": "Przystań kajakowa w Czarnocinie",
+      "address": "Czarnocin 41",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-czernicy",
+      "name": "Przystań kajakowa w Czernicy",
+      "address": "89-632 Czernica",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-damnie",
+      "name": "Przystań kajakowa w Damnie",
+      "address": "Damno, przy moście drogowym",
+      "rivers": [
+        "lupawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-przechlewie",
+      "name": "Przystań kajakowa w Dolince",
+      "address": "77-320 Przechlewo",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-dolnych-malikach-w-przygotowaniu",
+      "name": "Przystań kajakowa w Dolnych Malikach",
+      "address": "Dolne Maliki, przy moście drogowym",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-dziewieciu-wlokach",
+      "name": "Przystań kajakowa w Dziewięciu Włókach",
+      "address": "Dziewięć Włók",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-folbryku",
+      "name": "Przystań kajakowa w Folbryku",
+      "address": "Folbryk",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-galazni-malej-2",
+      "name": "Przystań kajakowa w Gałąźni Małej",
+      "address": "Gałąźnia Mała",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-garczynie",
+      "name": "Przystań kajakowa w Garczynie",
+      "address": "Przystań kajakowa w Garczynie przy obozowisku Garczyn",
+      "rivers": [
+        "pilica kaszubska",
+        "graniczna",
+        "trzebiocha"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-gdansku-przy-oplywie-motlawy-kamienna-grodza",
+      "name": "Przystań kajakowa w Gdańsku przy Opływie Motławy – Kamienna Grodza",
+      "address": "Gdańsk Kamienna Grodza",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-gdansku-przy-ulicy-zabi-kruk",
+      "name": "Przystań kajakowa w Gdańsku przy ulicy Żabi Kruk",
+      "address": "Gdańsk, Żabi Kruk",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-gniewie",
+      "name": "Przystań kajakowa w Gniewie",
+      "address": "Gniew, ul. Rybacka",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-golubiu",
+      "name": "Przystań kajakowa w Gołubiu",
+      "address": "Gołubie, ul. Józefa Dambka",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-goreczynie",
+      "name": "Przystań kajakowa w Goręczynie",
+      "address": "Goręczyno, ul. Sportowa",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-jastrzebiej-gorze",
+      "name": "Przystań kajakowa w Jastrzębiej Górze",
+      "address": "Jastrzębia Góra, ul. Obozowa; Gmina Władysławowo",
+      "rivers": [
+        "czarna wda",
+        "czarna woda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-kamiencu",
+      "name": "Przystań kajakowa w Kamieńcu",
+      "address": "Kamieńc",
+      "rivers": [
+        "kamienica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przenoska-kajakowa-w-kawce",
+      "name": "Przystań kajakowa w Kawce",
+      "address": "Kawka, przy Nadleśnictwie Warcino",
+      "rivers": [
+        "wieprza"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-korzybiu",
+      "name": "Przystań kajakowa w Korzybiu",
+      "address": "Korzybie, ul. Łętowska",
+      "rivers": [
+        "wieprza"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-kozinie",
+      "name": "Przystań kajakowa w Kozinie",
+      "address": "Kozin 9a, 77-116 Kozin",
+      "rivers": [
+        "lupawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-krepcu",
+      "name": "Przystań kajakowa w Krępcu",
+      "address": "Krępiec, gm. Pruszcz Gdański",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-krzyni",
+      "name": "Przystań kajakowa w Krzyni",
+      "address": "76-248 Krzynia",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lesnie",
+      "name": "Przystań kajakowa w Leśnie",
+      "address": "ul. Kaszubska, 89-634 Leśno",
+      "rivers": [
+        "mlosina",
+        "zbrzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lesnym-dworze",
+      "name": "Przystań kajakowa w Leśnym Dworze",
+      "address": "76-248 Łysomiczki",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-ledowie",
+      "name": "Przystań kajakowa w Lędowie",
+      "address": "83-021 Lędowo",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lipuszu-w-przygotowaniu",
+      "name": "Przystań kajakowa w Lipuszu",
+      "address": "Lipusz, ul. Lipowa 5a",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-loryncu",
+      "name": "Przystań kajakowa w Loryńcu",
+      "address": "Loryniec, ul. Sosnowa przy moście",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lebie-ii",
+      "name": "Przystań kajakowa w Łebie I",
+      "address": "Łeba, al. Świętego Jakuba",
+      "rivers": [
+        "leba",
+        "kanal chelst"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lebie-ii-2",
+      "name": "Przystań kajakowa w Łebie II",
+      "address": "Łeba, ul. 10 marca",
+      "rivers": [
+        "leba",
+        "kanal chelst"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lubianie-nad-rzeka-graniczna",
+      "name": "Przystań kajakowa w Łubianie nad rzeką Graniczną",
+      "address": "Centrum Łubiany",
+      "rivers": [
+        "pilica kaszubska",
+        "graniczna",
+        "trzebiocha"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lupawie",
+      "name": "Przystań kajakowa w Łupawie",
+      "address": "76-242 Łupawa, w okolicach mostu drogowego",
+      "rivers": [
+        "lupawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-lupawsku",
+      "name": "Przystań kajakowa w Łupawsku",
+      "address": "Łupawsko 12A 77-116 Łupawsko",
+      "rivers": [
+        "lupawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-m-garbaty-most",
+      "name": "Przystań kajakowa w m. Garbaty Most",
+      "address": "Garbaty Most",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-mecikale",
+      "name": "Przystań kajakowa w Męcikale",
+      "address": "ul. Leśna, 89-632 Męcikał",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miastku",
+      "name": "Przystań kajakowa w Miastku",
+      "address": "Miastko, ul. Fabryczna",
+      "rivers": [
+        "studnica"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-borucino",
+      "name": "Przystań kajakowa w miejscowości Borucino",
+      "address": "Borucino",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-gac",
+      "name": "Przystań kajakowa w miejscowości Gać",
+      "address": "Gać, gm. Główczyce",
+      "rivers": [
+        "leba"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-nad-jeziorem-orle",
+      "name": "Przystań kajakowa w miejscowości Góra nad Jeziorem Orle",
+      "address": "Góra, ul. Jeziorna, gmina Wejherowo",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-lubun",
+      "name": "Przystań kajakowa w miejscowości Lubuń",
+      "address": "76-251 Lubuń, przy moście na drodze Lubuń - Żelkowo",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-orlu",
+      "name": "Przystań Kajakowa w miejscowości Orle",
+      "address": "Orle, ul. Bukowa 1, gmina Wejherowo",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-rolbik-nad-zbrzyca",
+      "name": "Przystań kajakowa w miejscowości Rolbik nad Zbrzycą",
+      "address": "89-634 Rolbik",
+      "rivers": [
+        "mlosina",
+        "zbrzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-stezyca",
+      "name": "Przystań kajakowa w miejscowości Stężyca",
+      "address": "Stężyca, ul. Raduńska",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-swornegacie-kokoszka",
+      "name": "Przystań kajakowa w miejscowości Swornegacie Kokoszka",
+      "address": "Kokoszka (Swornegacie), gmina Chojnice",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejscowosci-zgorzale",
+      "name": "Przystań kajakowa w miejscowości Zgorzałe",
+      "address": "Zgorzałe",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-miejskim-parku-rodzinnym-w-redzie",
+      "name": "Przystań kajakowa w Miejskim Parku Rodzinnym w Redzie",
+      "address": "Reda",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-mokrym-dworze",
+      "name": "Przystań kajakowa w Mokrym Dworze",
+      "address": "Mokry Dwór, gm. Pruszcz Gdański",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-nowej-brdzie",
+      "name": "Przystań kajakowa w Nowej Brdzie",
+      "address": "77-320 Nowa Brda",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-nowej-kiszewie-w-przygotowaniu",
+      "name": "Przystań kajakowa w Nowej Kiszewie",
+      "address": "Nowa Kiszewa, przy moście",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-osir-przechlewo",
+      "name": "Przystań kajakowa w OSIR Przechlewo",
+      "address": "Przechlewo",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-ostrowie",
+      "name": "Przystań kajakowa w Ostrowie",
+      "address": "Ostrowo; Gmina Władysławowo",
+      "rivers": [
+        "czarna wda",
+        "czarna woda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-pelplinie",
+      "name": "Przystań kajakowa w Pelplinie",
+      "address": "Pelplin, przy polu kempingowym",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-poblizu-miejscowosci-ciecholewy",
+      "name": "Przystań kajakowa w pobliżu miejscowości Ciecholewy",
+      "address": "Ciecholewy, gmina Konarzyny",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-pogodkach",
+      "name": "Przystań kajakowa w Pogódkach",
+      "address": "Pogódki, ul. Cystersów",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-poraju",
+      "name": "Przystań kajakowa w Poraju",
+      "address": "Poraj, gm. Wicko",
+      "rivers": [
+        "leba"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-rybakach-nad-jeziorem-sudomie",
+      "name": "Przystań kajakowa w Rybakach nad jeziorem Sudomie",
+      "address": "Rybaki",
+      "rivers": [
+        "pilica kaszubska",
+        "graniczna",
+        "trzebiocha"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-skarszewach",
+      "name": "Przystań kajakowa w Skarszewach",
+      "address": "Skarszewy, przy stadionie",
+      "rivers": [
+        "wietcisa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-skoszewie",
+      "name": "Przystań kajakowa w Skoszewie",
+      "address": "89-634 Skoszewo",
+      "rivers": [
+        "mlosina",
+        "zbrzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-soszycy",
+      "name": "Przystań kajakowa w Soszycy",
+      "address": "Soszyca 2",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:stanica-wodna-pttk-swornegacie",
+      "name": "Przystań kajakowa w Stanicy Wodnej PTTK Swornegacie",
+      "address": "Zbrzyca 17, 89-608 Swornegacie",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:stanica-wodna-pttk-wdzydze",
+      "name": "Przystań kajakowa w Stanicy Wodnej PTTK Wdzydze",
+      "address": "Stolema 1, 83-406 Wdzydze",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-starym-klesniku",
+      "name": "Przystań kajakowa w Starym Kleśniku",
+      "address": "Stary Kleśnik, Gmina Przechlewo",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-straszynie",
+      "name": "Przystań kajakowa w Straszynie",
+      "address": "83-010 Straszyn",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-suchym-debie",
+      "name": "Przystań kajakowa w Suchym Dębie",
+      "address": "Suchy Dąb",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-sluzie",
+      "name": "Przystań kajakowa w Śluzie",
+      "address": "Śluza, gm. Lipusz",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-wislinie",
+      "name": "Przystań kajakowa w Wiślinie",
+      "address": "Wiślina, gm. Pruszcz Gdański",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-zamku-kiszewskim-w-przygotowaniu",
+      "name": "Przystań kajakowa w Zamku Kiszewskim",
+      "address": "Zamek Kiszewski, przy drodze do Chwarzna",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-zielonej-chocinie",
+      "name": "Przystań kajakowa w Zielonej Chocinie",
+      "address": "89-607 Zielona Chocina",
+      "rivers": [
+        "chocina"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-zabnie",
+      "name": "Przystań kajakowa w Żabnie",
+      "address": "Żabno, ul. Łabędzia",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-w-zolnie",
+      "name": "Przystań kajakowa w Żołnie",
+      "address": "77-320 Żołna",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-we-wdzydzach-kiszewskich-centrum-wsi",
+      "name": "Przystań kajakowa Wdzydze Kiszewskie – centrum wsi",
+      "address": "Wdzydze, ul. Gulgowskich",
+      "rivers": [
+        "wda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-we-wlynkowku-przy-mlynie",
+      "name": "Przystań kajakowa we Włynkówku przy młynie",
+      "address": "Aleja Nad Rzeką 26, 76-200 Włynkówko",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-we-wroblewie",
+      "name": "Przystań kajakowa we Wróblewie",
+      "address": "Wróblewo",
+      "rivers": [
+        "motlawa"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-kajakowa-zakowo-przed-jeziorem-wegorzyno",
+      "name": "Przystań kajakowa Żakowo przed jeziorem Węgorzyno",
+      "address": "83-320 Żakowo",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-koncowa-na-szlaku-kajakowym-redy-w-mrzezinie",
+      "name": "Przystań końcowa na szlaku kajakowym Redy w Mrzezinie",
+      "address": "Mrzezino, ul. Gdyńska, gm. Puck",
+      "rivers": [
+        "reda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-nad-jeziorem-obleskim-w-oblezu",
+      "name": "Przystań nad jeziorem Obłęskim w Obłężu",
+      "address": "Obłęże",
+      "rivers": [
+        "wieprza"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-nad-jeziorem-zukowskim",
+      "name": "Przystań nad jeziorem Żukowskim",
+      "address": "Żukówko, na północnym brzegu jeziora",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-przy-grodzisku-w-owidzu",
+      "name": "Przystań przy grodzisku w Owidzu",
+      "address": "Owidz, ul. Rycerska",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-w-brodach-pomorskich",
+      "name": "Przystań w Brodach Pomorskich",
+      "address": "Brody Pomorskie",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-w-stockim-mlynie",
+      "name": "Przystań w Stockim Młynie",
+      "address": "Stocki Młyn, ul. Szkolna",
+      "rivers": [
+        "wierzyca"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:przystan-zeglarsko-kajakowa-wraz-z-infrastruktura-rekreacyjno-wedkarska-w-miejscowosci-gowidlino",
+      "name": "Przystań żeglarsko – kajakowa wraz z infrastrukturą rekreacyjno – wędkarską w miejscowości Gowidlino",
+      "address": "83-341 Gowidlino",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:stanica-kajakowa-w-ustce",
+      "name": "Stanica Kajakowa w Ustce",
+      "address": "ul. darłowska, 76-270 Ustka",
+      "rivers": [
+        "slupia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:stanica-wodna-chmielno",
+      "name": "Stanica wodna Chmielno",
+      "address": "Grodziska 3a, 83-333 Chmielno",
+      "rivers": [
+        "radunia"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    },
+    {
+      "id": "psk:zagospodarowanie-miejsca-wodowania-kajakow-postoju-i-odpoczynku-w-miejscowosci-brda",
+      "name": "Zagospodarowanie miejsca wodowania kajaków, postoju i odpoczynku w miejscowości Brda",
+      "address": "Brda",
+      "rivers": [
+        "brda"
+      ],
+      "reason": "Brak jednoznacznie dopasowanego obiektu przy trasie."
+    }
+  ],
+  "geocodingStatus": "completed"
+}

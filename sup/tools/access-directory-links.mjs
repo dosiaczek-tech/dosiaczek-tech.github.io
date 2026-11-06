@@ -1,0 +1,33 @@
+// Reviewed matches: a known OSM facility and its description in the regional
+// directory. No nearest-village or arbitrary pier matching is used.
+export const directoryLinks = {
+  'way/1212365628': 'przystan-kajakowa-nad-jeziorem-zagnanie-w-wielkim-podlesiu',
+  'way/1423088720': 'przystan-kajakowa-w-gniewie',
+  'way/1322337812': 'przystan-w-stockim-mlynie',
+  'way/1239149904': 'przystan-kajakowa-w-krepcu',
+  'way/75088106': 'przystan-kajakowa-w-golubiu',
+  'way/370724969': 'przystan-kajakowa-w-lesnie',
+  'way/368369979': 'przenoska-i-pole-biwakowe-w-mylofie',
+  'way/173524480': 'pomost-w-ostrzycach',
+  'node/14101451575': 'przystan-kajakowa-w-miejskim-parku-rodzinnym-w-redzie',
+  'way/301630673': 'przystan-kajakowa-w-gdansku-przy-ulicy-zabi-kruk',
+  'way/301630662': 'przystan-kajakowa-w-gdansku-przy-ulicy-zabi-kruk',
+  'node/9165163286': 'przystan-i-przenoska-w-leczycach',
+  'node/9034490003': 'przystan-kajakowa-nad-jeziorem-wierzysko-w-koscierzynie',
+  'way/1327949527': 'przystan-kajakowa-w-miejscowosci-losino',
+  'node/7922990455': 'przystan-kajakowa-wraz-z-przenoska-w-leborku',
+  'way/918609237': 'przystan-kajakowa-w-miejscowosci-stezyca',
+  'node/11118828094': 'przystan-kajakowa-nad-rzeka-radunia-w-miejscowosci-somonino',
+  'node/11113945511': 'kajaczkowo',
+  'node/7366065737': 'przystan-kajakowa-w-borkowie-rutkach',
+  'way/645592017': 'przystan-kajakowa-w-straszynie',
+  'way/478468445': 'przystan-kajakowa-w-juszkowie',
+  'way/975880468': 'przystan-zeglarsko-kajakowa-wraz-z-infrastruktura-rekreacyjno-wedkarska-w-miejscowosci-gowidlino',
+  'way/951899368': 'przystan-kajakowa-w-osir-przechlewo',
+  'way/1323221059': 'przystan-w-brodach-pomorskich',
+  'way/368365202': 'stanica-wodna-pttk-swornegacie',
+  'node/9084566555': 'stanica-wodna-pttk-wdzydze',
+  'way/754853637': 'przystan-kajakowa-tuchomie',
+  'way/224496796': 'przystan-kajakowa-w-lesnym-dworze',
+  'way/715568387': 'pole-biwakowe-pod-mostem-kajaker'
+};

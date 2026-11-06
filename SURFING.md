@@ -22,7 +22,7 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
 
 - Osobne zakładki **Kamery** i **Prognozy surfingowe**; wejście bezpośrednie:
   `/#surf/wladyslawowo`. Po przejściu do prognozy odtwarzacz kamery jest zatrzymywany.
-- 71 spotów / odcinków w 43 miejscowościach, 70 bezpośrednio powiązanych kamer.
+- 91 spotów / odcinków w 59 miejscowościach, 69 bezpośrednio powiązanych kamer.
   Rejestr w `surf-spots.js`: współrzędne, normalna brzegu, region i jawne ID kamer.
 - Pięć kolejnych dób, wartości godzinowe, porównanie modeli, trzy najlepsze
   niepokrywające się okna dzienne po trzy godziny dla wybranej plaży.
@@ -40,7 +40,8 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
 - Wykrywanie sekwencji onshore → słaby offshore / cisza przy utrzymującej się
   fali. Historia poprzednich 24 h jest analizowana także dla pierwszej godziny
   prognozy; API pobiera dodatkowo dwa poprzednie dni modelowe.
-- 30 opisów społecznościowej mapy WestCoast i dodatkowo Sobieszewo. 28 spotów
+- 30 opisów społecznościowej mapy WestCoast, Sobieszewo i uzupełnienie plaż
+  opisane w [SPOTY.md](SPOTY.md). 49 spotów
   nie ma kamery konkretnego peaku; kamery sąsiednich plaż są oznaczone jako pobliskie.
 
 To działający model lokalny oparty o uruchomiony solver **SWAN**, ale nie
@@ -53,8 +54,11 @@ czy windsurfingu, ani ocenę bezpieczeństwa.
 Prognoza dotyczy strony morskiej. Zatoka Gdańska (Trójmiasto i Mierzeja) jest
 uwzględniona; zatoka wewnętrzna / Pucka — nie. Przykładowo Jastarnia ma prognozę
 dla plaży Domu Zdrojowego, ale nie dla mola i Maszoperii. Jurata ma prognozę
-dla morskiej plaży, nie mola na zatoce. Hel, Kuźnica, Chałupy, Puck i Rewa
-nie otrzymują prognozy tylko dlatego, że istnieje kamera w danej miejscowości.
+dla morskiej plaży, nie mola na zatoce. Hel, Kuźnica i Chałupy mają osobne
+punkty na brzegu otwartego Bałtyku, bez przypisania kamer z Zatoki Puckiej.
+Puck i Rewa nie otrzymują prognozy tylko dlatego, że istnieje tam kamera.
+Górki Zachodnie dotyczą plaży morskiej na zachód od ujścia Wisły Śmiałej,
+nie mariny NCŻ; Sztutowo — plaży morskiej, nie centrum miejscowości.
 Tak samo pomijamy jeziora, centra miast, porty i widoki bez potwierdzonej plaży.
 
 W zakładce prognoz jest wykaz **wszystkich miejscowości z katalogu kamer**:

@@ -17,8 +17,67 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Pełny ekran i pobieranie playlisty `.m3u` do VLC.
 - Układ dostosowany do komputera i telefonu.
 - Ponawianie połączenia po utracie internetu.
-- Osobna zakładka **Prognozy surfingowe**: 71 spotów / odcinków w 43 miejscowościach,
-  70 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
+- Osobna zakładka **Prognozy surfingowe**: 91 spotów / odcinków w 59 miejscowościach,
+  69 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
+  Katalog obejmuje również miejsca bez kamery, m.in. Górki Zachodnie i Sztutowo.
+  Zakres uzupełnienia i kontrola punktów: [SPOTY.md](SPOTY.md).
+- **Porównanie uruchamiane na żądanie**: po wejściu pięć list pokazuje „Wybierz”,
+  także gdy wcześniej używano zapisanych wyborów. „Pokaż najlepsze” wyszukuje spoty,
+  a „Porównaj wybrane” wczytuje od jednego do pięciu wskazanych miejsc. Sama zmiana
+  list przygotowuje wybór; dane są pobierane dopiero po kliknięciu przycisku.
+  Wczytany zestaw jest wykorzystywany przy kolejnych zmianach dnia. Ponowne pobranie
+  i wyszukiwanie spotów uruchamiają wyłącznie przyciski „Pokaż najlepsze” i „Porównaj wybrane”.
+  Podczas pobierania w miejscu wykresu pojawia się duży napis **Loading** i wskaźnik ładowania.
+- **Pięć najlepszych spotów na wybrany dzień**: w trybie automatycznym każda data dobiera własną piątkę
+  z całego katalogu według oceny pełnego trzygodzinnego okna dziennego.
+  Wykres porównuje te wybrane spoty w kolejnych dniach, a karty prowadzą do sesji z wybranej daty.
+  Przyszłe okna mają pierwszeństwo przed oznaczoną historią z ostatnich 12 godzin.
+  Gdy ta historia obejmuje poprzedni dzień, jego data jest również dostępna w porównaniu.
+  Gdy ocen jest mniej niż pięć, ranking pokazuje tylko dostępne wyniki.
+  Zmiana dnia korzysta z już pobranych danych; wybór spośród remisów pozostaje stały
+  do odświeżenia. „Porównaj wybrane” zatwierdza własny zestaw do porównywania między dniami;
+  „Pokaż najlepsze” uruchamia ranking automatyczny dla aktualnie wskazanej daty.
+- **Prognoza godzinowa i pogoda na spocie** tworzą jedną tabelę. Pod oceną warunków,
+  falami i wiatrem znajdują się temperatura wody, temperatura powietrza
+  i zachmurzenie, dopasowane do tych samych godzin. Punkt prognozy (odległość od brzegu
+  i głębokość) jest opisany raz nad tabelą; gdy zmienia się w czasie, opis podaje zakres
+  wartości. Przy braku poprawnych danych punktu opis jest ukryty. Większe kafelki dni mają pod sobą
+  godziny wschodu i zachodu słońca dla danej daty. Ikony przy zachmurzeniu korzystają
+  z kodu pogody WMO Open-Meteo: rozróżniają pogodę, chmury, deszcz, śnieg i burze;
+  uwzględniają również noc. Samo duże zachmurzenie nie jest oznaczane jako deszcz.
+  Domyślnie dostępne są **ostatnie 12 godzin oraz prognoza**. Początek tabeli pokazuje
+  wcześniejsze dostępne godziny z oznaczeniem „historia”; „Teraz” przewija do bieżącej godziny.
+  To historia modelowa, a nie pomiary. SWAN oblicza ją po osobnym 12-godzinnym rozbiegu,
+  więc nowy spot otrzymuje cały wcześniejszy zakres przy pierwszym przeliczeniu.
+  Kolejne dni tworzą jedną ciągłą tabelę: kolumny mają
+  stałą, kompaktową szerokość i datę nad godziną. Mniejsze odstępy oraz miniaturki
+  kierunków pozwalają pokazać więcej godzin naraz. Tabelę można przesuwać w bok myszką lub palcem;
+  nazwy parametrów zawijają się w wąskiej kolumnie przyklejonej po lewej. Kafelki dni przewijają do daty, a turkusowe
+  podświetlenie przechodzi na następny dzień dopiero po zniknięciu poprzedniego z widoku.
+  Pod dniami są małe przyciski **Rano**, **Po południu** i **Wieczór**, przewijające
+  wybrany dzień od 06:00, 12:00 lub 18:00. Gdy brakuje początku danej pory, używana
+  jest jej pierwsza dostępna godzina. Pory bez prognozy są nieaktywne. Przewijanie
+  ręczne aktualizuje wyróżnienie pory dnia. Każda dostępna godzina ma własną kolumnę,
+  z nagłówkiem „Godzina” po lewej. Dostępny jest przycisk „Teraz” oraz wyróżnienie godzin wybranej sesji.
+  **Bladożółte tło danych oznacza dzień, niebieskie noc**, według początku przedziału; zachmurzenie
+  jest osobnym parametrem. Turkusowa obwódka wyróżnia wybraną godzinę. Godziny są podawane
+  w czasie polskim, także przy zmianie czasu.
+  Tabela pokazuje tylko godziny z poprawną prognozą wysokości fal przy spocie i kończy się
+  na ostatniej dostępnej prognozie fal. Sama pogoda nie dodaje kolejnych godzin ani dni.
+  Luki w falach są pomijane; dni bez fal nie mają kafelków.
+  Wiatr, temperatury i zachmurzenie pozostają dopasowane do zachowanych godzin.
+  Brakujące dane dodatkowe zostawiają puste komórki; całkowicie puste wiersze są pomijane.
+  W wierszu ocen cała komórka ma kolor jakości warunków: od czerwonego przez pomarańczowy
+  i mocniejszy żółty po zielony. Czarna czcionka jest czytelna na każdym z tych teł;
+  kolor oceny jest niezależny od pory dnia. Wartości zerowe są wyświetlane jako dane.
+  Wiersze „Fale nadchodzą z” i „Wiatr przy brzegu” mają miniaturki morza i plaży
+  ze strzałką ruchu. Kierunek, prędkość oraz opis wiatru względem brzegu są w jednej
+  komórce z jedną miniaturką. Morze jest u góry, ląd na dole — widok osoby patrzącej
+  z plaży na morze. Strzałki uwzględniają orientację danego spotu i pokazują kierunek
+  od źródła do celu; obok są opisy „do brzegu”, „od brzegu” lub „wzdłuż brzegu”.
+  Przy ciszy i zerowej fali nie ma strzałki; brak kierunku nie jest zastępowany domyślnym.
+  Dane Open-Meteo są pobierane tylko dla otwartego spotu. Temperatura wody pochodzi
+  z morskiej siatki około 8 km. Przy braku poprawnej prognozy fal tabela jest ukryta.
 - Wyszukiwarka miejscowości i spotów po lewej, lista plaż po prawej i przycisk
   „Pokaż prognozę”. Wyszukiwanie toleruje literówki, przestawione litery i brak
   polskich znaków. Podpowiedzi działają też z klawiatury.
@@ -30,6 +89,13 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Główny wykres pokazuje **pełny przekrój 0, 50, 100, …, 500 m** i jest od razu
   widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
   jest zaznaczeniem na całej krzywej, nie początkiem wykresu.
+  Panel **„Wybierz porę”** najpierw pokazuje dni, a po rozwinięciu dnia — jego godziny.
+  Jest otwarty do użycia „Zwiń” lub Escape; wybranie godziny i kliknięcie poza panelem
+  go nie zamykają. Można przewijać zawartość pionowo kółkiem myszy lub dotykiem.
+  Dni i godziny pozostają chronologiczne. Wybrana godzina jest turkusowa, oznaczona ✓
+  i przewijana do widocznej części listy pod nagłówkiem swojego dnia. Wysokość panelu
+  dopasowuje się do zawartości, bez pustego obszaru pod ostatnią pozycją. Wcześniejsze dni
+  są powyżej, dostępne po przewinięciu. Panel pokazuje CEST/CET i obsługuje klawiaturę.
 - Podsumowanie, tabela, wykres czasowy i ranking dotyczą
   **tego samego punktu w strefie do 500 m od oszacowanego brzegu**. Podajemy
   odległość, głębokość oraz link do punktu prognozy na mapie. Brak wyniku
@@ -37,20 +103,27 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Automatyczny backend GitHub Actions: wiatr co 3 h, nowe obliczenia SWAN
   w cyklach 00/12 UTC. W tabeli wiatr pod komórkami fal i pięć klas kierunku:
   onshore, cross-on, cross, cross-off, offshore.
-- Automatycznie widoczna mapa fal Windy, godziny polskie, oznaczanie brakujących
-  i nieaktualnych danych. Mapa nie przeładowuje się przy odświeżaniu tego samego spotu.
+- Automatycznie widoczna mapa Windy z zakładkami **Fale** i **Wiatr**, godziny polskie,
+  oznaczanie brakujących i nieaktualnych danych. Wybrana warstwa podąża za lokalizacją spotu;
+  odnośnik „Otwórz Windy” otwiera tę samą warstwę. Zakładki obsługują również klawiaturę.
+  Mapa nie przeładowuje się przy ponownym wybraniu aktywnej zakładki ani przy odświeżaniu tego samego spotu.
 - Szacowana **moc fal przy spocie (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
-  z objaśnieniem jednostek. Tabela godzinowa pokazuje energię, bez kolumn mocy
-  i sekwencji wiatru; opis sekwencji jest w osobnej sekcji.
+  z objaśnieniem jednostek. Tabela godzinowa pokazuje energię, a opis sekwencji
+  wiatru znajduje się w osobnej sekcji.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
   prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą.
   Znaczniki mają stałe nazwy; grupy pokazują miejscowość, a po przybliżeniu
   widać nazwy poszczególnych spotów. Kolory odróżniają spoty z kamerą od pozostałych.
+  Wybrany spot jest większy i pomarańczowy; ten sam kolor wyróżnia jego grupę po oddaleniu mapy.
 - Historia onshore → offshore / cisza z potwierdzeniem utrzymania fal:
   opis fazy i filtr „Tylko wywiewka po nawianiu”.
 - Sobieszewo oraz 30 opisów spotów z mapy WestCoast (3 scalone z istniejącymi,
   27 nowych punktów). Pochodzenie, lokalne kierunki, charakter i poziom wg autora;
   bez przypisywania ocen kitesurfingowych do surfingu.
+  Punkt odniesienia Sobieszewa: **54.34652508378602, 18.91065779954801**.
+  Nowe współrzędne wyznaczają pobieranie danych i przekrój SWAN; archiwalne wyniki
+  poprzedniej lokalizacji nie są ponownie używane. Pakiety wiatru dla przeniesionego
+  spotu muszą zawierać zgodne współrzędne, a nie tylko ten sam identyfikator.
 
 Prognozy: https://dosiaczek-tech.github.io/#surf/wladyslawowo
 Przykładowe nowe spoty: `#surf/sobieszewo`, `#surf/kolobrzeg-palikpoint`,
@@ -61,6 +134,101 @@ satelitów. Konfiguracja solvera i odtwarzanie obliczeń: [MODEL.md](MODEL.md).
 Opis oceny surfingu, ograniczeń i źródeł: [SURFING.md](SURFING.md).
 
 ## Uruchomienie i publikacja
+
+### Szybki podgląd lokalny — NixOS
+
+#### Stała usługa dla dotychczasowych APK
+
+Od 4.11.2026 port 8766 obsługuje jednostka użytkownika `falki-apps.service`,
+zdefiniowana w `scripts/falki-apps.service`. Jest włączona przy starcie; konto
+ma `Linger=yes`, a `Restart=always` przywraca proces po awarii. Nie zależy to
+od otwartej sesji narzędzia programistycznego. Stan i logi:
+
+```sh
+systemctl --user status falki-apps.service
+journalctl --user -u falki-apps.service
+```
+
+To nadal usługa na domowym komputerze: wymaga jego zasilania oraz dostępu
+telefonu do domowej sieci/VPN. Nowe APK Falki 1.0.2 i supy 1.0.6 przygotowano
+pod publiczne HTTPS `https://dosiaczek-tech.github.io/` i `/sup/`.
+**Nie instalować ich jako gotowego wdrożenia przed publikacją obu stron.**
+Paczki i sumy SHA-256 są w `downloads/` oraz `sup/android/releases/`.
+Migracja zapisów Androida używa lokalnego dokumentu o starym originie,
+bez kontaktu z dawnym serwerem; zachowuje oryginały i nie nadpisuje konfliktów.
+
+Przygotowany workflow sprawdza aktualizację co godzinę, ale dane wejściowe
+zachowuje przez trzy godziny, ograniczając zapytania do dostawcy. Każda udana
+partia wejść jest zapisywana osobno. Błąd kolejnej partii nie usuwa poprzednich.
+Po wdrożeniu osobny etap sprawdza realny wiek wiatru i fal oraz dostępność SUP;
+nie utożsamia udanego przesłania plików z działającą prognozą. Harmonogram
+GitHub Actions jest [realizowany bez gwarancji punktualności](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+Nie stanowi gwarancji nieprzerwanego dostępu do świeżych danych dostawcy.
+W przeglądarce pozostają limity: 6 h dla wiatru, 18 h dla wejść SWAN.
+
+#### Uruchomienie ręczne
+
+W katalogu repozytorium uruchom:
+
+```sh
+nix-shell --run 'node scripts/dev-server.cjs'
+```
+
+Otwórz http://zuffie.test:8766/#kolobrzeg lub
+http://zuffie.test:8766/#surf/kolobrzeg. Zapisz zmiany HTML, CSS albo JavaScript
+i odśwież przeglądarkę — serwer czyta pliki bezpośrednio z dysku i wyłącza ich
+cache HTTP. Do podglądu nie jest potrzebny build ani publikacja w GitHub Pages.
+
+Serwer udostępnia `/data/` z aktualnej publikacji https://dosiaczek-tech.github.io,
+więc lokalnie działają również wykresy i ranking. Odpowiedzi są buforowane przez
+60 sekund; podgląd może odświeżyć dane lokalnie przy problemach z publikacją.
+
+Podgląd odświeża fale w tle co sześć godzin, również bez otwartej strony.
+Przy starcie sprawdza datę ostatniego zapisanego przeliczenia; potem co minutę
+sprawdza termin kolejnej próby. Żądanie brakujących lub starzejących się fal
+również może uruchomić przeliczenie. Uruchamiany jest rzeczywisty solver SWAN
+lokalnie, dla całego katalogu, z czterema
+równoległymi obliczeniami. Pobiera świeże wymuszenie falowe, wiatr w trzech punktach
+przekroju i raster EMODnet. Nix zapewnia Python, requests/Pillow oraz biblioteki solvera.
+Wyniki są oznaczone jako lokalne i zachowują rzeczywiste daty obliczeń oraz źródeł.
+Limit ważności 18 godzin nadal obowiązuje. Tabela pokazuje stan przeliczania i pobiera
+gotowe wyniki; przeterminowana odpowiedź nie blokuje jej przez 15-minutowy cache przeglądarki.
+Porównanie spotów zachowuje wczytany zestaw — nowe wyniki pobiera się przyciskiem.
+
+Obliczenia są współdzielone przez wszystkie żądania. Po ukończonej aktualizacji
+obowiązuje sześciogodzinna przerwa między zadaniami, a po błędzie — 15 minut.
+Cache, wyniki i archiwa wejść są w `.dev-preview/swan-cache/` i `.dev-preview/swan-data/`;
+log kolejnych zadań: `.dev-preview/swan-refresh.log`. Wyniki przetrwają restart serwera.
+Wybierany jest najświeższy poprawny wynik z pełnymi 12 godzinami historii. Starszy
+format publikacji z krótszą historią nie wypiera poprawnego kompletnego wyniku lokalnego.
+
+Jeżeli opublikowany wiatr jest niedostępny lub ma ponad 6 godzin, lokalny serwer
+pobiera aktualny BS Wind 3 z Open-Meteo partiami do 20 spotów. Współdzieli zapytania
+między rankingiem i szczegółami, zapisuje rzeczywisty czas pobrania i oznacza źródło
+jako „lokalne odświeżenie Open-Meteo”. Cache wiatru trwa 30 minut. Przy awarii może
+użyć ostatnio pobranych lokalnych danych do 6 godzin, z oryginalną datą i oznaczeniem
+danych z pamięci. Limity wieku fal nadal wynikają z modelu SWAN.
+
+Podgląd wymaga internetu; własne obliczenia SWAN uruchamia się osobno według
+[MODEL.md](MODEL.md).
+
+`shell.nix` zapewnia Node.js 22 i środowisko lokalnych obliczeń SWAN. Poza Nix
+`node scripts/dev-server.cjs` wymaga także Python 3 z requests/Pillow i bibliotek
+solvera opisanych w [MODEL.md](MODEL.md). Zajęty port można zmienić przez `--port 8767`.
+Serwer domyślnie nasłuchuje na `0.0.0.0`, aby podgląd był dostępny również
+z innego urządzenia przez sieć lokalną lub Tailscale. Domena `zuffie.test`
+powinna wskazywać na komputer z projektem; w tym środowisku jest już skonfigurowana.
+Używaj pełnego adresu `http://zuffie.test:8766` z portem podglądu.
+
+### Równoległa praca nad aplikacją SUP
+
+Druga aplikacja ma osobny katalog `sup/` i podgląd
+http://zuffie.test:8766/sup/. Drugą sesję OpenCode uruchom z katalogiem roboczym
+`sup/`; instrukcje współpracy są w głównym `AGENTS.md` oraz `sup/AGENTS.md`.
+Sesja Bałtyk zajmuje się główną aplikacją i wspólną infrastrukturą, a sesja SUP
+kodem, zależnościami, testami i dokumentacją wewnątrz `sup/`.
+
+### Publikacja i pełne obliczenia
 
 Frontend można uruchomić lokalnie przez `python3 -m http.server 8000`.
 Odtwarzanie wymaga internetu; biblioteka hls.js 1.6.13 jest pobierana z jsDelivr

@@ -1,0 +1,2091 @@
+{
+  "generatedAt": "2026-10-23T21:27:18.955Z",
+  "routes": [
+    {
+      "id": "krutynia-krutyn-ukta",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 310,
+      "mappedKm": 14.04,
+      "publishedKm": 13.5,
+      "snapKm": [
+        0.037,
+        0.01
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "krutynia-ukta-nowy-most",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 227,
+      "mappedKm": 7.56,
+      "publishedKm": 7,
+      "snapKm": [
+        0.01,
+        0.02
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "krutynia-zgon-krutyn",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 136,
+      "mappedKm": 11.52,
+      "publishedKm": 12.5,
+      "snapKm": [
+        0.021,
+        0.037
+      ],
+      "gaps": [],
+      "lakes": [
+        "mokre",
+        "krutynskie"
+      ]
+    },
+    {
+      "id": "brda-swornegacie-mecikal",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 301,
+      "mappedKm": 16.79,
+      "publishedKm": 17,
+      "snapKm": [
+        0.074,
+        0
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "brda-mecikal-woziwoda",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1312,
+      "mappedKm": 35.66,
+      "publishedKm": 41,
+      "snapKm": [
+        0,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "brda-woziwoda-pila",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 753,
+      "mappedKm": 31.24,
+      "publishedKm": 26,
+      "snapKm": [
+        0.008,
+        0.01
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "bukowina-skrzeszewo-kozin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 426,
+      "mappedKm": 18.97,
+      "publishedKm": 19,
+      "snapKm": [
+        0.004,
+        0.009
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "kamienica-tuchomie-galaznia",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1574,
+      "mappedKm": 37.63,
+      "publishedKm": 42,
+      "snapKm": [
+        0.009,
+        0.015
+      ],
+      "gaps": [],
+      "lakes": [
+        "tuchomskie"
+      ]
+    },
+    {
+      "id": "chocina-zielona-swornegacie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1690,
+      "mappedKm": 24.02,
+      "publishedKm": 29,
+      "snapKm": [
+        0.003,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "karsinskie"
+      ]
+    },
+    {
+      "id": "zbrzyca-mlosina-ksieze",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1110,
+      "mappedKm": 13.62,
+      "publishedKm": 14,
+      "snapKm": [
+        0.013,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "hancza-mackowa-fracki",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 513,
+      "mappedKm": 16.63,
+      "publishedKm": 18,
+      "snapKm": [
+        0.112,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "pilica-tomaszow-spala",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 145,
+      "mappedKm": 10.8,
+      "publishedKm": 10,
+      "snapKm": [
+        0.04,
+        0.043
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wkra-biezany-strzegowo",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 271,
+      "mappedKm": 12.67,
+      "publishedKm": 12,
+      "snapKm": [
+        0,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "drawa-barnimie-bogdanka",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 528,
+      "mappedKm": 12.88,
+      "publishedKm": 10,
+      "snapKm": [
+        0.006,
+        0.017
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "czarna-nida-morawica-ostrow",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 260,
+      "mappedKm": 10.72,
+      "publishedKm": 11,
+      "snapKm": [
+        0.014,
+        0.069
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "czarna-nida-kuby-morawica",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 349,
+      "mappedKm": 8.23,
+      "publishedKm": 8,
+      "snapKm": [
+        0.051,
+        0.014
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "piasnica-zarnowieckie-debki",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 439,
+      "mappedKm": 6.15,
+      "publishedKm": 6,
+      "snapKm": [
+        0.018,
+        0.108
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "reda-zamostne-reda",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1229,
+      "mappedKm": 26.58,
+      "publishedKm": 28,
+      "snapKm": [
+        0.004,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "czarna-wda-klanino-ostrowo",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 224,
+      "mappedKm": 13.02,
+      "publishedKm": 13,
+      "snapKm": [
+        0.005,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-bak-hydrostacja",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 929,
+      "mappedKm": 22.78,
+      "publishedKm": 23,
+      "snapKm": [
+        0.008,
+        0.003
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-wojtal-hydrostacja",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 512,
+      "mappedKm": 13.17,
+      "publishedKm": 14,
+      "snapKm": [
+        0.006,
+        0.003
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-hydrostacja-czarne",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 195,
+      "mappedKm": 11.35,
+      "publishedKm": 11,
+      "snapKm": [
+        0.003,
+        0.036
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-hydrostacja-osowo",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 340,
+      "mappedKm": 19.52,
+      "publishedKm": 21,
+      "snapKm": [
+        0.003,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-miedzno-hydrostacja",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 765,
+      "mappedKm": 18.86,
+      "publishedKm": 18,
+      "snapKm": [
+        0.004,
+        0.003
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-klonowice-hydrostacja",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 341,
+      "mappedKm": 9.16,
+      "publishedKm": 10,
+      "snapKm": [
+        0.004,
+        0.003
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-gorskie-mosty-hydrostacja",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1036,
+      "mappedKm": 26.32,
+      "publishedKm": 26.5,
+      "snapKm": [
+        0.035,
+        0.003
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-hydrostacja-mlynsk",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 250,
+      "mappedKm": 14.7,
+      "publishedKm": 15,
+      "snapKm": [
+        0.003,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-osowo-wdecki-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 438,
+      "mappedKm": 21.13,
+      "publishedKm": 21.6,
+      "snapKm": [
+        0.011,
+        0.026
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-hydrostacja-mlynki",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 488,
+      "mappedKm": 27.32,
+      "publishedKm": 28,
+      "snapKm": [
+        0.003,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "brda-rytel-woziwoda",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 745,
+      "mappedKm": 19.79,
+      "publishedKm": 21.6,
+      "snapKm": [
+        0.013,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-wdecki-mlyn-bledno",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 679,
+      "mappedKm": 25.18,
+      "publishedKm": 26,
+      "snapKm": [
+        0.026,
+        0.01
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-soszyca-golebia",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 336,
+      "mappedKm": 10.75,
+      "publishedKm": 11,
+      "snapKm": [
+        0.008,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "lupawa-lupawsko-kozin",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 220,
+      "mappedKm": 14.25,
+      "publishedKm": 14,
+      "snapKm": [
+        0.016,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": [
+        "jasien"
+      ]
+    },
+    {
+      "id": "slupia-kajlandia-bylina",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 478,
+      "mappedKm": 14.07,
+      "publishedKm": 14,
+      "snapKm": [
+        0.006,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "lupawa-kozin-lupawa",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 373,
+      "mappedKm": 19.65,
+      "publishedKm": 21,
+      "snapKm": [
+        0.023,
+        0.044
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-parchowo-bylina",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 150,
+      "mappedKm": 5.91,
+      "publishedKm": 6,
+      "snapKm": [
+        0.007,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "lupawa-lupawa-lebien",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 274,
+      "mappedKm": 14.6,
+      "publishedKm": 15,
+      "snapKm": [
+        0.044,
+        0.027
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "bukowina-siemirowice-kozin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 283,
+      "mappedKm": 12.73,
+      "publishedKm": 13,
+      "snapKm": [
+        0.055,
+        0.009
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "kamienica-kamienc-galaznia",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 566,
+      "mappedKm": 11.83,
+      "publishedKm": 14,
+      "snapKm": [
+        0.011,
+        0.015
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-wegorzyno-parchowo",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 434,
+      "mappedKm": 12.2,
+      "publishedKm": 13,
+      "snapKm": [
+        0.001,
+        0.007
+      ],
+      "gaps": [],
+      "lakes": [
+        "wegorzyno"
+      ]
+    },
+    {
+      "id": "wda-lipusz-wdzydze",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 685,
+      "mappedKm": 21.81,
+      "publishedKm": 22,
+      "snapKm": [
+        0.001,
+        0.006
+      ],
+      "gaps": [],
+      "lakes": [
+        "radolne",
+        "jelenie"
+      ]
+    },
+    {
+      "id": "trzebiocha-rybaki-wdzydze",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 405,
+      "mappedKm": 15.96,
+      "publishedKm": 16,
+      "snapKm": [
+        0.007,
+        0.006
+      ],
+      "gaps": [],
+      "lakes": [
+        "mielnica",
+        "radolne",
+        "jelenie"
+      ]
+    },
+    {
+      "id": "slupia-galaznia-krzynia",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 183,
+      "mappedKm": 10.14,
+      "publishedKm": 12,
+      "snapKm": [
+        0.015,
+        0.081
+      ],
+      "gaps": [
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": []
+    },
+    {
+      "id": "slupia-galaznia-lesny-dwor",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 373,
+      "mappedKm": 16.72,
+      "publishedKm": 17,
+      "snapKm": [
+        0.015,
+        0.011
+      ],
+      "gaps": [
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": []
+    },
+    {
+      "id": "bytowa-bytow-osieki",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 428,
+      "mappedKm": 14.21,
+      "publishedKm": 14,
+      "snapKm": [
+        0,
+        0.006
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-golebia-glebokie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 231,
+      "mappedKm": 8.1,
+      "publishedKm": 9,
+      "snapKm": [
+        0.008,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "skotawa-jawory-jamrzyno",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 257,
+      "mappedKm": 12.36,
+      "publishedKm": 12.5,
+      "snapKm": [
+        0.008,
+        0.006
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "skotawa-jamrzyno-debnica",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 368,
+      "mappedKm": 13.55,
+      "publishedKm": 16,
+      "snapKm": [
+        0.006,
+        0.014
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-wegorzyno-golebia",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 919,
+      "mappedKm": 28.85,
+      "publishedKm": 32,
+      "snapKm": [
+        0.001,
+        0.013,
+        0.008,
+        0.008
+      ],
+      "gaps": [
+        {
+          "kind": "transport",
+          "km": 2.079,
+          "from": [
+            17.6109968,
+            54.2467539
+          ],
+          "to": [
+            17.5794824,
+            54.2500184
+          ]
+        }
+      ],
+      "lakes": [
+        "wegorzyno"
+      ]
+    },
+    {
+      "id": "lupawa-kozin-lebien",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 646,
+      "mappedKm": 34.25,
+      "publishedKm": 33.5,
+      "snapKm": [
+        0.023,
+        0.027
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-kajlandia-glebokie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 1044,
+      "mappedKm": 32.91,
+      "publishedKm": 35.9,
+      "snapKm": [
+        0.006,
+        0.013,
+        0.008,
+        0.03
+      ],
+      "gaps": [
+        {
+          "kind": "transport",
+          "km": 2.079,
+          "from": [
+            17.6109968,
+            54.2467539
+          ],
+          "to": [
+            17.5794824,
+            54.2500184
+          ]
+        }
+      ],
+      "lakes": [
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "slupia-gowidlino-bylina",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 717,
+      "mappedKm": 27.89,
+      "publishedKm": 27.6,
+      "snapKm": [
+        0.042,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": [
+        "gowidlinskie"
+      ]
+    },
+    {
+      "id": "bukowina-siemirowice-lupawa",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 649,
+      "mappedKm": 31.97,
+      "publishedKm": 31.9,
+      "snapKm": [
+        0.055,
+        0.044
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "lupawa-lupawsko-lupawa",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 592,
+      "mappedKm": 33.9,
+      "publishedKm": 34.8,
+      "snapKm": [
+        0.016,
+        0.044
+      ],
+      "gaps": [],
+      "lakes": [
+        "jasien"
+      ]
+    },
+    {
+      "id": "kamienica-tuchomie-kamienc",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1010,
+      "mappedKm": 25.8,
+      "publishedKm": 25.2,
+      "snapKm": [
+        0.009,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": [
+        "tuchomskie"
+      ]
+    },
+    {
+      "id": "skotawa-jawory-debnica",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 623,
+      "mappedKm": 25.91,
+      "publishedKm": 26.2,
+      "snapKm": [
+        0.008,
+        0.014
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-galaznia-slupsk",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 1003,
+      "mappedKm": 39.55,
+      "publishedKm": 39.1,
+      "snapKm": [
+        0.015,
+        0.051
+      ],
+      "gaps": [
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": []
+    },
+    {
+      "id": "pokrzywna-glewnik-kepice",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1030,
+      "mappedKm": 33.89,
+      "publishedKm": 33.6,
+      "snapKm": [
+        0,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-gowidlino-ustka",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 4,
+      "points": 3386,
+      "mappedKm": 120.81,
+      "publishedKm": 135,
+      "snapKm": [
+        0.042,
+        0.013,
+        0.008,
+        0.03,
+        0.015,
+        0.017
+      ],
+      "gaps": [
+        {
+          "kind": "transport",
+          "km": 2.079,
+          "from": [
+            17.6109968,
+            54.2467539
+          ],
+          "to": [
+            17.5794824,
+            54.2500184
+          ]
+        },
+        {
+          "kind": "transport",
+          "km": 5.982,
+          "from": [
+            17.3931651,
+            54.27669140759476
+          ],
+          "to": [
+            17.303158,
+            54.288212
+          ]
+        },
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": [
+        "gowidlinskie",
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "bukowina-siemirowice-damno",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1165,
+      "mappedKm": 55.84,
+      "publishedKm": 55,
+      "snapKm": [
+        0.055,
+        0.027
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "kamienica-tuchomie-ustka",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 3674,
+      "mappedKm": 111.68,
+      "publishedKm": 107.5,
+      "snapKm": [
+        0.009,
+        0.017
+      ],
+      "gaps": [
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": [
+        "tuchomskie"
+      ]
+    },
+    {
+      "id": "radunia-stezyca-gdansk",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 3,
+      "points": 1800,
+      "mappedKm": 75.12,
+      "publishedKm": 97,
+      "snapKm": [
+        0.056,
+        0.019,
+        0.012,
+        0.02,
+        0.01,
+        0.107
+      ],
+      "gaps": [
+        {
+          "kind": "transport",
+          "km": 8.991,
+          "from": [
+            18.2251412,
+            54.284311
+          ],
+          "to": [
+            18.33645,
+            54.3324861
+          ]
+        },
+        {
+          "kind": "transport",
+          "km": 8.767,
+          "from": [
+            18.44640063579293,
+            54.2887214
+          ],
+          "to": [
+            18.5779654,
+            54.2709169
+          ]
+        }
+      ],
+      "lakes": [
+        "radunskie",
+        "lapino"
+      ]
+    },
+    {
+      "id": "brda-nowa-brda-gostycyn",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 4331,
+      "mappedKm": 148.34,
+      "publishedKm": 140,
+      "snapKm": [
+        0.014,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": [
+        "koronowskie"
+      ]
+    },
+    {
+      "id": "leba-sianowo-gac",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 2837,
+      "mappedKm": 101.98,
+      "publishedKm": 102,
+      "snapKm": [
+        0.013,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "sianowskie"
+      ]
+    },
+    {
+      "id": "bytowa-bytow-ustka",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 3,
+      "points": 2673,
+      "mappedKm": 96.81,
+      "publishedKm": 105,
+      "snapKm": [
+        0,
+        0.03,
+        0.015,
+        0.017
+      ],
+      "gaps": [
+        {
+          "kind": "transport",
+          "km": 5.982,
+          "from": [
+            17.3931651,
+            54.27669140759476
+          ],
+          "to": [
+            17.303158,
+            54.288212
+          ]
+        },
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": [
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "skotawa-jawory-ustka",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 2411,
+      "mappedKm": 84.84,
+      "publishedKm": 86,
+      "snapKm": [
+        0.008,
+        0.017
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wda-lipusz-tlen",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 3815,
+      "mappedKm": 145.22,
+      "publishedKm": 138,
+      "snapKm": [
+        0.001,
+        0.095
+      ],
+      "gaps": [],
+      "lakes": [
+        "radolne"
+      ]
+    },
+    {
+      "id": "wierzyca-wielki-podles-gniew",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 3806,
+      "mappedKm": 146.84,
+      "publishedKm": 142,
+      "snapKm": [
+        0.041,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "zagnanie",
+        "wisla-gniew"
+      ]
+    },
+    {
+      "id": "pokrzywna-glewnik-darlowko",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 2528,
+      "mappedKm": 110.04,
+      "publishedKm": 106,
+      "snapKm": [
+        0,
+        0.035
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-galaznia-ustka",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 2,
+      "points": 2101,
+      "mappedKm": 74.04,
+      "publishedKm": 74,
+      "snapKm": [
+        0.015,
+        0.017
+      ],
+      "gaps": [
+        {
+          "kind": "portage",
+          "km": 0.179,
+          "from": [
+            17.2223127,
+            54.3252422
+          ],
+          "to": [
+            17.225045,
+            54.3254571
+          ]
+        }
+      ],
+      "lakes": []
+    },
+    {
+      "id": "zbrzyca-kaszuba-mylof",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1866,
+      "mappedKm": 48.21,
+      "publishedKm": 46,
+      "snapKm": [
+        0.013,
+        0.033
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "radunia-ostrzyce-kielpino",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 405,
+      "mappedKm": 11.54,
+      "publishedKm": 14,
+      "snapKm": [
+        0.009,
+        0.019
+      ],
+      "gaps": [],
+      "lakes": [
+        "ostrzyckie"
+      ]
+    },
+    {
+      "id": "radunia-rutki-zukowo",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 123,
+      "mappedKm": 3.29,
+      "publishedKm": 3,
+      "snapKm": [
+        0.012,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "radunia-straszyn-krepiec",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 549,
+      "mappedKm": 16.51,
+      "publishedKm": 20,
+      "snapKm": [
+        0.01,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "kolko-radunskie-stezyca-golubie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 418,
+      "mappedKm": 33.7,
+      "publishedKm": 37,
+      "snapKm": [
+        0.056,
+        1.194,
+        1.194,
+        0.032,
+        0.032,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "radunskie",
+        "ostrzyckie",
+        "dabrowskie"
+      ]
+    },
+    {
+      "id": "reda-reda-mrzezino",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 136,
+      "mappedKm": 7.67,
+      "publishedKm": 9,
+      "snapKm": [
+        0.004,
+        0.017
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "chelst-stilo-leba",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 148,
+      "mappedKm": 12.84,
+      "publishedKm": 14.9,
+      "snapKm": [
+        0.001,
+        0.064
+      ],
+      "gaps": [],
+      "lakes": [
+        "sarbsko"
+      ]
+    },
+    {
+      "id": "kanal-wdy-borsk-cegielnia",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 198,
+      "mappedKm": 18.64,
+      "publishedKm": 22.5,
+      "snapKm": [
+        0.035,
+        0.017
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "mlosina-lesno-kaszuba",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 316,
+      "mappedKm": 4.09,
+      "publishedKm": 4,
+      "snapKm": [
+        0.019,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "niechwaszcz-chlopowy-czarna-woda",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 638,
+      "mappedKm": 29.01,
+      "publishedKm": 28,
+      "snapKm": [
+        0.001,
+        0.079
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "graniczna-wieprznica-rybaki",
+      "kind": "water-route",
+      "coverage": "partial",
+      "segments": 4,
+      "points": 172,
+      "mappedKm": 9.59,
+      "publishedKm": 8.4,
+      "snapKm": [
+        0.003,
+        0.001
+      ],
+      "gaps": [
+        {
+          "kind": "missing-data",
+          "km": 0.167,
+          "from": [
+            17.9177144,
+            54.1397044
+          ],
+          "to": [
+            17.919200785809252,
+            54.13848352278428
+          ]
+        },
+        {
+          "kind": "missing-data",
+          "km": 0.18,
+          "from": [
+            17.885709338035046,
+            54.11629942977201
+          ],
+          "to": [
+            17.882947729582813,
+            54.11629942977201
+          ]
+        },
+        {
+          "kind": "missing-data",
+          "km": 0.168,
+          "from": [
+            17.87558344037686,
+            54.11198268891137
+          ],
+          "to": [
+            17.8734086,
+            54.1111733
+          ]
+        }
+      ],
+      "lakes": [
+        "garczyn",
+        "graniczne",
+        "mielnica"
+      ]
+    },
+    {
+      "id": "pilica-kaszubska-korne-lubiana",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 178,
+      "mappedKm": 5.74,
+      "publishedKm": 7,
+      "snapKm": [
+        0.008,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "trzebiocha-rybaki-loryniec",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 170,
+      "mappedKm": 7.29,
+      "publishedKm": 8.1,
+      "snapKm": [
+        0.007,
+        0
+      ],
+      "gaps": [],
+      "lakes": [
+        "mielnica"
+      ]
+    },
+    {
+      "id": "wietcisa-wolny-dwor-czarnocin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 522,
+      "mappedKm": 12.1,
+      "publishedKm": 12,
+      "snapKm": [
+        0.003,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "bytowa-bytow-glebokie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 572,
+      "mappedKm": 22.77,
+      "publishedKm": 22.7,
+      "snapKm": [
+        0,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "studnica-miastko-kawka",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 1363,
+      "mappedKm": 37.44,
+      "publishedKm": 37,
+      "snapKm": [
+        0.01,
+        0.029
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "klonecznica-studzienice-laska",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 663,
+      "mappedKm": 27.9,
+      "publishedKm": 26,
+      "snapKm": [
+        0.014,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "studzieniczno",
+        "klaczno",
+        "rynskie",
+        "kielskie",
+        "ksieze",
+        "laska"
+      ]
+    },
+    {
+      "id": "brda-dolinka-przechlewo",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 127,
+      "mappedKm": 11.65,
+      "publishedKm": 12,
+      "snapKm": [
+        0.075,
+        0.016
+      ],
+      "gaps": [],
+      "lakes": [
+        "szczytno"
+      ]
+    },
+    {
+      "id": "brda-charzykowy-swornegacie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 158,
+      "mappedKm": 14.55,
+      "publishedKm": 15,
+      "snapKm": [
+        0.009,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "charzykowskie",
+        "karsinskie"
+      ]
+    },
+    {
+      "id": "zbrzyca-sominy-mlosina",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 484,
+      "mappedKm": 14.3,
+      "publishedKm": 14,
+      "snapKm": [
+        0.001,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": [
+        "sominskie"
+      ]
+    },
+    {
+      "id": "zbrzyca-ksieze-witoczno",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 390,
+      "mappedKm": 14.16,
+      "publishedKm": 14,
+      "snapKm": [
+        0.002,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "witoczno"
+      ]
+    },
+    {
+      "id": "lipczynka-lipczynek-sapolno",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 659,
+      "mappedKm": 18.07,
+      "publishedKm": 17.8,
+      "snapKm": [
+        0.003,
+        0.008
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "slupia-soszyca-glebokie",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 566,
+      "mappedKm": 18.85,
+      "publishedKm": 19,
+      "snapKm": [
+        0.008,
+        0.03
+      ],
+      "gaps": [],
+      "lakes": [
+        "glebokie-slupia"
+      ]
+    },
+    {
+      "id": "leba-leczyce-gac",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 996,
+      "mappedKm": 54.42,
+      "publishedKm": 55,
+      "snapKm": [
+        0.006,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-pogodki-czarnocin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 299,
+      "mappedKm": 10.91,
+      "publishedKm": 11,
+      "snapKm": [
+        0.035,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-czarnocin-kregski-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 273,
+      "mappedKm": 15.54,
+      "publishedKm": 15,
+      "snapKm": [
+        0.013,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-baczek-starogard",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 353,
+      "mappedKm": 16.7,
+      "publishedKm": 15,
+      "snapKm": [
+        0.023,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-starogard",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 228,
+      "mappedKm": 9.39,
+      "publishedKm": 8,
+      "snapKm": [
+        0.004,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-zabno",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 135,
+      "mappedKm": 6.46,
+      "publishedKm": 4,
+      "snapKm": [
+        0.004,
+        0.057,
+        0.057,
+        0.001,
+        0.001,
+        0.057
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-owidz-kolincki-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 238,
+      "mappedKm": 13.27,
+      "publishedKm": 14,
+      "snapKm": [
+        0.021,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-owidz-klonowka",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 307,
+      "mappedKm": 16.34,
+      "publishedKm": 17,
+      "snapKm": [
+        0.007,
+        0.043
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-kolincki-rajkowski-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 197,
+      "mappedKm": 8.95,
+      "publishedKm": 8,
+      "snapKm": [
+        0.002,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-klonowka-pelplin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 466,
+      "mappedKm": 17.52,
+      "publishedKm": 18,
+      "snapKm": [
+        0.04,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-klonowka-rajkowski-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 119,
+      "mappedKm": 5.21,
+      "publishedKm": 5,
+      "snapKm": [
+        0.021,
+        0.023
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-rajkowski-mlyn-pelplin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 349,
+      "mappedKm": 12.24,
+      "publishedKm": 13,
+      "snapKm": [
+        0.023,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-wielki-klincz-wielki-podles",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 500,
+      "mappedKm": 13.98,
+      "publishedKm": 13,
+      "snapKm": [
+        0.02,
+        0.041
+      ],
+      "gaps": [],
+      "lakes": [
+        "zagnanie"
+      ]
+    },
+    {
+      "id": "wierzyca-wielki-podles-bartoszylas",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 582,
+      "mappedKm": 18.18,
+      "publishedKm": 19,
+      "snapKm": [
+        0.041,
+        0.016
+      ],
+      "gaps": [],
+      "lakes": [
+        "zagnanie"
+      ]
+    },
+    {
+      "id": "wierzyca-bartoszylas-maliki",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 430,
+      "mappedKm": 15.63,
+      "publishedKm": 16,
+      "snapKm": [
+        0.016,
+        0.011
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-maliki-czarnocin",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 423,
+      "mappedKm": 16.54,
+      "publishedKm": 16,
+      "snapKm": [
+        0.011,
+        0.013
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-starogard-owidz",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 162,
+      "mappedKm": 6.5,
+      "publishedKm": 7,
+      "snapKm": [
+        0.023,
+        0.007
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-pelplin-stocki-mlyn",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 308,
+      "mappedKm": 9.93,
+      "publishedKm": 9,
+      "snapKm": [
+        0.011,
+        0.004
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-pelplin-brody",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 539,
+      "mappedKm": 17.87,
+      "publishedKm": 18,
+      "snapKm": [
+        0.011,
+        0.012
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-stocki-mlyn-gniew",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 646,
+      "mappedKm": 21.24,
+      "publishedKm": 20,
+      "snapKm": [
+        0.004,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "wisla-gniew"
+      ]
+    },
+    {
+      "id": "wierzyca-brody-gniew",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 408,
+      "mappedKm": 13.12,
+      "publishedKm": 10,
+      "snapKm": [
+        0.012,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "wisla-gniew"
+      ]
+    },
+    {
+      "id": "wierzyca-kregski-mlyn-owidz",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 388,
+      "mappedKm": 15.89,
+      "publishedKm": 15,
+      "snapKm": [
+        0.004,
+        0.007
+      ],
+      "gaps": [],
+      "lakes": []
+    },
+    {
+      "id": "wierzyca-pelplin-gniew",
+      "kind": "water-route",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 946,
+      "mappedKm": 30.99,
+      "publishedKm": 30,
+      "snapKm": [
+        0.011,
+        0.002
+      ],
+      "gaps": [],
+      "lakes": [
+        "wisla-gniew"
+      ]
+    },
+    {
+      "id": "wierzyca-stocki-mlyn-brody",
+      "kind": "osm-waterway",
+      "coverage": "complete",
+      "segments": 1,
+      "points": 239,
+      "mappedKm": 8.11,
+      "publishedKm": 9,
+      "snapKm": [
+        0.004,
+        0.012
+      ],
+      "gaps": [],
+      "lakes": []
+    }
+  ],
+  "errors": []
+}

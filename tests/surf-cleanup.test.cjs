@@ -98,7 +98,8 @@ test('buildForecast retains history for the first forecast hour but does not dis
 
 test('community import keeps all 30 surf points, merges 3 duplicates, excludes school and polygons', () => {
   assert.equal(community.length, 30);
-  assert.equal(spots.length, 71);
+  assert.equal(spots.length, 91);
+  assert.ok(!spots.some(s => s.id === 'gdynia'), 'city beach removed from forecast catalog');
   assert.equal(spots.filter(s => s.community).length, 30);
   for (const record of community) {
     const s = spots.find(s => s.id === (record.mergeInto || record.id));
