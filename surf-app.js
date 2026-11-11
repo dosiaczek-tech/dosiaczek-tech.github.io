@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const params = new URLSearchParams({ type: "map", location: "coordinates", lat: s.lat, lon: s.lon,
       detailLat: s.lat, detailLon: s.lon, zoom: 8, level: "surface", overlay: windyLayer,
-      product: windyLayer === "waves" ? "ecmwfWaves" : "ecmwf", marker: "true", metricWind: "m/s", metricTemp: "°C", metricRain: "mm" });
+      product: windyLayer === "waves" ? "ecmwfWaves" : "ecmwf", marker: "true", metricWind: "kt", metricTemp: "°C", metricRain: "mm" });
     const url = `https://embed.windy.com/embed.html?${params}`;
     if ($("windyFrame").getAttribute("src") !== url) $("windyFrame").src = url;
   }
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const s = currentSpot, body = $("surfLocalBody");
     $("surfLocalTitle").textContent = s.community ? `${s.town} — ${s.name}` : `Orientacja plaży dla spotu ${s.town}`;
     body.replaceChildren();
-    body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej 1,5 m/s wiatr jest słaby. Pod komórkami fal pokazujemy dodatkowo wiatr względem kierunku samej fali.`, "surf-small"));
+    body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej ok. 3 knts wiatr jest słaby. Pod komórkami fal pokazujemy dodatkowo wiatr względem kierunku samej fali.`, "surf-small"));
     const c = s.community;
     if (c) {
       const facts = node("div", undefined, "surf-spot-facts");
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const waveInfo = sequence.checkedModels ? `Utrzymanie odpowiedniej fali: ${sequence.waveSupport}/${row.members.length} modeli.` : "Utrzymanie fali nieocenione w tej fazie.";
       el.append(node("p", `Wcześniejszy onshore: ${sequence.buildingHours} h (${day(sequence.buildingStart)}, ${hour(sequence.buildingStart)} → ${day(sequence.buildingEnd)}, ${hour(sequence.buildingEnd)}). Kolejne godziny słabego offshore / ciszy: ${sequence.clearingHours}. ${waveInfo}`, "surf-small"));
     } else el.append(node("p", sequence?.state === "none" ? "W poprzednich 24 h nie wykryto co najmniej czterech kolejnych godzin mocniejszego onshore. Fala może jednak przyjść z dalszej części akwenu — brak tej sekwencji nie oznacza braku surfingu." : "Brak ciągłej historii lub kompletnych parametrów. Nie traktujemy luk w danych jak ciszy.", "surf-small"));
-    if (row?.wind) el.append(node("p", `Aktualnie: wiatr z ${compass(row.wind.direction)}, ${fmt(row.wind.speed)} m/s — ${M.windRelative(row.wind, currentSpot) || "kierunek niepewny"} względem tej plaży.`, "surf-small"));
+    if (row?.wind) el.append(node("p", `Aktualnie: wiatr z ${compass(row.wind.direction)}, ${windKnots(row.wind.speed)} — ${M.windRelative(row.wind, currentSpot) || "kierunek niepewny"} względem tej plaży.`, "surf-small"));
   }
 
   function renderConditionsStatus() {
@@ -610,7 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
     details.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
       : "Model nie wskazuje wyraźnej strefy załamania w rozpoznanych pierwszych 500 m.", "surf-small"));
     details.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
-    if (row.simulationWind) details.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 8.`, "surf-small"));
+    if (row.simulationWind) details.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${windKnots(row.simulationWind.speed)}${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 8.`, "surf-small"));
     const points = s.profile || [];
     const profileUntil = simulation.hourly?.[0]?.time + simulation.profileHours * 3600;
     if (points.length !== 11 && M.finite(profileUntil) && row.time > profileUntil) {
@@ -671,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const w = chosenSession, first = w.rows[0];
       box.append(node("strong", `${fmt(w.score)} / 10 · ${w.historical ? "Historia prognozy" : quality(w.score)}`),
         node("p", `${hour(w.start)}–${hour(w.end)} · pewność: ${w.confidence}`),
-        node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => r.period)))} s · wiatr ${fmt(M.median(w.rows.map(r => r.wind?.speed)))} m/s`),
+        node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => r.period)))} s · wiatr ${windKnots(M.median(w.rows.map(r => r.wind?.speed)))}`),
         node("p", `Wiatr na początku sesji: ${M.windRelative(first.wind, currentSpot) || "brak kierunku"}. Mapa i parametry poniżej pokazują wybraną godzinę.`));
       for (const flag of w.flags.filter(f => f.startsWith("Na "))) box.append(node("p", flag));
       if (w.historical) box.append(node("p", "Wcześniejsze okno — wynik modelowy, nie pomiar ani rekomendacja wyjazdu teraz."));
@@ -742,7 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : `Fale z ${compass(wave.direction)} → ku ${compass((wave.direction + 180) % 360)} · ~${fmt(wave.height)} m · okres ${fmt(wave.period)} s.`
       : "Fale: brak kierunku z prognozy przy brzegu — bez animacji.";
     const wind = now?.wind;
-    $("surfWindDescription").textContent = `${now ? `${day(now.time)} ${hour(now.time)} · ` : ""}${M.finite(wind?.direction) && M.finite(wind?.speed) && wind.speed >= .5 ? `Wiatr z ${compass(wind.direction)} → ku ${compass((wind.direction + 180) % 360)}, ${fmt(wind.speed)} m/s · ${M.windRelative(wind, currentSpot)}.` : M.finite(wind?.speed) && wind.speed < .5 ? "Cisza — bez strzałki kierunku." : "Brak pewnego kierunku wiatru — bez strzałki."}`;
+    $("surfWindDescription").textContent = `${now ? `${day(now.time)} ${hour(now.time)} · ` : ""}${M.finite(wind?.direction) && M.finite(wind?.speed) && wind.speed >= .5 ? `Wiatr z ${compass(wind.direction)} → ku ${compass((wind.direction + 180) % 360)}, ${windKnots(wind.speed)} · ${M.windRelative(wind, currentSpot)}.` : M.finite(wind?.speed) && wind.speed < .5 ? "Cisza — bez strzałki kierunku." : "Brak pewnego kierunku wiatru — bez strzałki."}`;
     const profileRows = rows.filter(r => r.simulation?.profile.length === 11);
     $("surfProfileTime").replaceChildren(...profileRows.map(r => {
       const option = node("option", `${day(r.time)} · ${date(r.time, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}`);
@@ -765,7 +765,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfModels").replaceChildren();
     const modelRow = (name, text) => { const el = node("div", undefined, "surf-model-row"); el.append(node("b", name), node("span", text)); $("surfModels").append(el); };
     modelRow("Fale przy spocie", now?.simulation ? `SWAN · ~${fmt(now.height)} m · ~${Math.round(now.simulation.shoreDistance)} m od brzegu` : "Brak potwierdzonej prognozy do 500 m");
-    for (const m of now?.wind?.members || []) modelRow(M.WIND_MODELS[m.model], `${fmt(m.speed)} m/s · z ${compass(m.direction)}`);
+    for (const m of now?.wind?.members || []) modelRow(M.WIND_MODELS[m.model], `${windKnots(m.speed)} · z ${compass(m.direction)}`);
     if (!now) modelRow("Bieżąca godzina", "Brak danych");
     renderBathymetry(now);
     $("surfCameras").replaceChildren(...currentSpot.cameras.filter(id => cameras.has(id)).map(id => link(`${cameras.get(id).name} · ${cameras.get(id).view} ↗`, `#${id}`)));
