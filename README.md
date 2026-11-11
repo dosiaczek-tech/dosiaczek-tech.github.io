@@ -237,8 +237,12 @@ log kolejnych zadań: `.dev-preview/swan-refresh.log`. Wyniki przetrwają restar
 Wybierany jest najświeższy poprawny wynik z pełnymi 24 godzinami historii. Starszy
 format publikacji z krótszą historią nie wypiera poprawnego kompletnego wyniku lokalnego.
 
-Jeżeli opublikowany wiatr jest niedostępny lub ma ponad 6 godzin, lokalny serwer
-pobiera aktualny BS Wind 3 z Open-Meteo partiami do 20 spotów. Współdzieli zapytania
+Jeżeli opublikowany wiatr jest niedostępny, ma ponad 6 godzin albo nie sięga tak daleko
+jak prognoza aplikacji (14 dni, z co najmniej dwoma modelami; tolerancja 12 godzin),
+lokalny serwer pobiera aktualny BS Wind 3 z Open-Meteo partiami do 20 spotów.
+Zabezpiecza to przed wersją strony online z krótszym horyzontem, która inaczej ucięłaby
+oceny (tak było, gdy online pobierano wiatr na 6 dni, a lokalnie na 16); gdy lokalne
+pobranie się nie uda, serwer nadal poda krótszy pakiet opublikowany. Współdzieli zapytania
 między rankingiem i szczegółami, zapisuje rzeczywisty czas pobrania i oznacza źródło
 jako „lokalne odświeżenie Open-Meteo”. Cache wiatru trwa 30 minut. Przy awarii może
 użyć ostatnio pobranych lokalnych danych do 6 godzin, z oryginalną datą i oznaczeniem

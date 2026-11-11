@@ -1,5 +1,5 @@
 // Refresh wind for local previews when the published bundle expires. SWAN stays independent.
-const { WIND_MODELS, windMatchesSpot } = require("../surf-model.js");
+const { WIND_MODELS, FORECAST_HOURS, windMatchesSpot } = require("../surf-model.js");
 const MODELS = Object.keys(WIND_MODELS);
 const MAX_AGE = 6 * 3600000;
 const CACHE_TTL = 30 * 60000;
@@ -16,6 +16,22 @@ function usableWind(bundle, id, now = Date.now(), spot = null) {
   const age = now - bundle?.fetchedAt;
   return bundle?.schema === 1 && bundle.spotId === id && Number.isFinite(bundle.fetchedAt)
     && age >= -300000 && age <= MAX_AGE && validWeather(bundle.data) && (!spot || windMatchesSpot(bundle, spot));
+}
+
+// The last hour for which at least two of the wind models give both speed and direction.
+function windHorizon(data) {
+  const hourly = data?.hourly, times = hourly?.time || [];
+  for (let i = times.length - 1; i >= 0; i--) {
+    const models = MODELS.filter(model => Number.isFinite(hourly[`wind_speed_10m_${model}`]?.[i]) && Number.isFinite(hourly[`wind_direction_10m_${model}`]?.[i]));
+    if (models.length >= 2) return times[i];
+  }
+  return null;
+}
+// A published bundle replaces the local refresh only if it reaches as far as the app's forecast (12 h of slack
+// for model runs and bundle age): a site still publishing a shorter forecast must not cut the scores short.
+function coversForecast(bundle, now = Date.now()) {
+  const until = windHorizon(bundle?.data);
+  return Number.isFinite(until) && until * 1000 >= now + (FORECAST_HOURS - 12) * 3600000;
 }
 
 function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, batchSize = 20,
@@ -69,7 +85,8 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
   async function get(id, published = null) {
     if (!batchFor.has(id)) throw new Error("Nieznany spot prognozy wiatru");
     const spot = byId.get(id);
-    if (usableWind(published, id, now(), spot)) return published;
+    // A shorter published forecast is still served (by the dev server) if the local refresh fails.
+    if (usableWind(published, id, now(), spot) && coversForecast(published, now())) return published;
     const old = cache.get(id), age = now() - old?.fetchedAt;
     if (usableWind(old, id, now(), spot) && age < CACHE_TTL) return old;
     try {
@@ -83,4 +100,4 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
   return { get, has: id => batchFor.has(id) };
 }
 
-module.exports = { createPreviewWind, usableWind };
+module.exports = { createPreviewWind, usableWind, coversForecast };

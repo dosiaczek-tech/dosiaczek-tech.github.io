@@ -1,7 +1,21 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createPreviewWind, usableWind } = require('../scripts/preview-wind.cjs');
+const { createPreviewWind, usableWind, coversForecast } = require('../scripts/preview-wind.cjs');
+const { FORECAST_HOURS } = require('../surf-model.js');
 const models = ['icon_seamless', 'gfs_seamless', 'ecmwf_ifs025'];
+// Hourly wind from two days back until each listed model's last hour ahead, like an Open-Meteo bundle;
+// by default ICON ends after a week while GFS and ECMWF reach past the two-week forecast.
+function forecast(now, ahead = {icon_seamless: 180, gfs_seamless: 380, ecmwf_ifs025: 348}) {
+  const start = Math.floor(now / 3600000) * 3600 - 48 * 3600;
+  const hourly = {time: Array.from({length: 48 + Math.max(...Object.values(ahead)) + 1}, (_, i) => start + i * 3600)};
+  for (const model of models) {
+    const last = model in ahead ? start + (48 + ahead[model]) * 3600 : -Infinity;
+    hourly[`wind_speed_10m_${model}`] = hourly.time.map(t => t <= last ? 5 : null);
+    hourly[`wind_direction_10m_${model}`] = hourly.time.map(t => t <= last ? 180 : null);
+    hourly[`is_day_${model}`] = hourly.time.map(() => 1);
+  }
+  return {hourly};
+}
 const spots = Array.from({length: 5}, (_, i) => ({id:`spot-${i}`, lat:54+i*.1, lon:15+i*.1}));
 function weather(value = 5) {
   const hourly = {time:[1792684800,1792688400,1792692000]};
@@ -25,9 +39,29 @@ function harness() {
   return {provider,calls,now:()=>now,advance:ms=>{now+=ms;},mode:value=>{mode=value;}};
 }
 test('fresh published wind keeps its original timestamp and never triggers local requests',async()=>{
-  const h=harness(), published={schema:1,spotId:spots[0].id,fetchedAt:h.now()-3600000,data:weather(),reusedInputs:true};
+  const h=harness(), published={schema:1,spotId:spots[0].id,fetchedAt:h.now()-3600000,data:forecast(h.now()),reusedInputs:true};
   assert.strictEqual(await h.provider.get(spots[0].id,published),published);
   assert.equal(h.calls.length,0);
+});
+test('fresh published wind shorter than the app forecast is replaced by the local fetch, so scores are not cut short',async()=>{
+  // An older site version published six days (forecast_days: 6) while the app scores two weeks.
+  const h=harness(), sixDays=Object.fromEntries(models.map(model=>[model,6*24-1]));
+  const published={schema:1,spotId:spots[0].id,fetchedAt:h.now()-3600000,data:forecast(h.now(),sixDays)};
+  assert.equal(usableWind(published,spots[0].id,h.now()),true);
+  const served=await h.provider.get(spots[0].id,published);
+  assert.notStrictEqual(served,published);
+  assert.equal(served.sourceType,'local');
+  assert.equal(h.calls.length,1);
+  assert.equal(h.calls[0].get('forecast_days'),'16');
+});
+test('published wind covers the forecast only while two models reach its last hour, give or take 12 hours',()=>{
+  const now=Date.parse('2026-11-11T07:00:00Z'), bundle=ahead=>({data:forecast(now,ahead)});
+  assert.equal(coversForecast(bundle({icon_seamless:180,gfs_seamless:380,ecmwf_ifs025:348}),now),true,'ICON ends after a week, GFS and ECMWF go on');
+  assert.equal(coversForecast(bundle({icon_seamless:180,gfs_seamless:380,ecmwf_ifs025:180}),now),false,'a single model for the second week');
+  assert.equal(coversForecast(bundle({icon_seamless:143,gfs_seamless:143,ecmwf_ifs025:143}),now),false,'six days');
+  assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-12,ecmwf_ifs025:FORECAST_HOURS-12}),now),true);
+  assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-13,ecmwf_ifs025:FORECAST_HOURS-13}),now),false);
+  assert.equal(coversForecast(null,now),false);
 });
 test('expired published wind is replaced by a real batched fetch shared between concurrent spot requests',async()=>{
   const h=harness(), expired={schema:1,spotId:spots[0].id,fetchedAt:h.now()-6*3600000-1,data:weather()};
