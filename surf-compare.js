@@ -830,12 +830,15 @@
           : "Brak trzygodzinnych okien dziennych z oceną w tym dniu. Wybierz inny dzień lub inne spoty."));
         $("compareRanking").append(empty);
       } else {
-        // A spot without a window still gets its tile, so it never looks ignored.
+        // A spot without a window still gets its tile, so it never looks ignored. Today it usually means
+        // its daylight windows have passed (other spots can still be in theirs), so it points to the next day.
+        const today = selectedDay === dayKey(now / 1000);
         $("compareRanking").append(...compared.filter(id => !bestTimes.some(w => w.id === id)).map(id => {
           const tile = el("div", undefined, "surf-window compare-card compare-empty-card");
           tile.setAttribute("role", "status");
-          tile.append(el("span", label(catalog.find(s => s.id === id))), el("strong", "Brak okna"),
-            el("small", "Ten spot nie ma w tym dniu przyszłego trzygodzinnego okna dziennego z oceną."));
+          tile.append(el("span", label(catalog.find(s => s.id === id))), el("strong", today ? "Wybierz kolejny dzień" : "Brak okna"),
+            el("small", today ? "Na dziś ten spot nie ma już przyszłego trzygodzinnego okna dziennego z oceną."
+              : "Ten spot nie ma w tym dniu trzygodzinnego okna dziennego z oceną."));
           return tile;
         }));
       }

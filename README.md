@@ -36,7 +36,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - **Gdzie warto jechać**: po jednym kafelku na każdy porównywany spot w dniu wybranym przyciskiem pod
   wykresem — jego najlepsze trzygodzinne okno dzienne, od najwyższej oceny. Okno zostaje na liście, dopóki
   nie minie jego górna godzina, także gdy już trwa; żadne nie przechodzi przez północ (dla minionego dnia
-  nie ma propozycji). Spot bez okna dostaje szary kafelek „Brak okna”. Przy „Pokaż najlepsze” są to spoty
+  nie ma propozycji). Spot bez okna dostaje szary kafelek „Brak okna”, a dziś — gdy jego okna już
+  minęły, choć inne spoty mogą być jeszcze w swoich — „Wybierz kolejny dzień”. Przy „Pokaż najlepsze” są to spoty
   dobrane na ten dzień, przy „Porównaj wybrane” — wskazane spoty, także dodane ponad pięć list. Karty prowadzą do sesji.
   Zmiana dnia korzysta z już pobranych danych; wybór spośród remisów pozostaje stały
   do odświeżenia. „Porównaj wybrane” zatwierdza własny zestaw do porównywania między dniami;
