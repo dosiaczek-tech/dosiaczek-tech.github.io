@@ -3,8 +3,11 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
-from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, HISTORY_HOURS, WIND_MODELS, calculation_grid, consensus, install_engine,
+import nearshore
+
+from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, HISTORY_HOURS, WAVE_MODELS, WIND_MODELS, available_end, calculation_grid, consensus, install_engine,
                        local_direction, offshore, parse_output, shoreline_reference, simulate, swan_time, wind_components)
 
 
@@ -53,8 +56,26 @@ class ModelUtilities(unittest.TestCase):
             "wave_period_dwd_ewam": [4]*len(times), "wave_direction_dwd_ewam": [0]*len(times)}}}
         winds = [{"data": {"hourly": {"time": times}}} for _ in range(3)]
         with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaisesRegex(ValueError, "Incomplete offshore boundary"):
+            with self.assertRaisesRegex(ValueError, "Insufficient actual forecast horizon"):
                 simulate({"id": "short-input"}, {}, marine, winds, Path("unused"), Path(directory), now, hours=6)
+
+    def test_horizon_stops_where_real_inputs_stop(self):
+        times = list(range(0, 20 * 3600, 3600))
+        def series(last):
+            return [1.0 if i <= last else None for i in range(len(times))]
+        # EWAM ends early, WAM later; the longest complete wave model defines the boundary.
+        marine = {"data": {"hourly": {"time": times,
+            **{f"{v}_{WAVE_MODELS[0]}": series(4) for v in ["wave_height", "wave_period", "wave_direction"]},
+            **{f"{v}_{WAVE_MODELS[1]}": series(15) for v in ["wave_height", "wave_period", "wave_direction"]}}}}
+        # ICON stops at hour 8; two wind models remain until 12, after that only one.
+        hourly = {"time": times}
+        for model, last in zip(WIND_MODELS, [8, 12, 17]):
+            hourly[f"wind_speed_10m_{model}"] = series(last)
+            hourly[f"wind_direction_10m_{model}"] = [None if v is None else 180 for v in series(last)]
+        winds = [{"data": {"hourly": hourly}} for _ in range(3)]
+        self.assertEqual(available_end(marine, winds, 0), 12 * 3600)
+        # Data must start exactly at the spin-up hour, without gaps.
+        self.assertEqual(available_end(marine, winds, -3600), -2 * 3600)
 
     def test_point_is_within_500_m_even_if_deeper_target_is_farther_away(self):
         self.check_coastal_selection(0)
@@ -140,9 +161,9 @@ class SwanPhysics(unittest.TestCase):
         result = simulate(spot, bath, marine, winds, executable, cache, now, hours=6)
         calm = simulate(spot, bath, marine, winds, executable, cache, now, hours=6, calm_test=True)
         self.assertEqual(len(result["hourly"]), 7)
-        self.assertEqual(result["historyHours"], 12)
-        self.assertEqual(len(result["history"]), 12)
-        self.assertEqual(result["history"][0]["time"], now - 12*3600)
+        self.assertEqual(result["historyHours"], 24)
+        self.assertEqual(len(result["history"]), 24)
+        self.assertEqual(result["history"][0]["time"], now - 24*3600)
         self.assertEqual(result["history"][-1]["time"], now - 3600)
         self.assertEqual(result["history"][0]["time"] - start, SPINUP_HOURS*3600)
         self.assertTrue(all(row["height"] > 0 and row["period"] > 0 and len(row["profile"]) == 11 for row in result["history"]))
@@ -160,6 +181,32 @@ class SwanPhysics(unittest.TestCase):
         self.assertEqual(result["grid"]["spacingM"],50)
         self.assertTrue((cache/"reproducibility/test.tar.gz").exists())
         print("SWAN physical check: onshore Hs=", row["height"], "no-wind Hs=", calm["hourly"][-1]["height"])
+
+    def test_split_run_matches_one_continuous_run(self):
+        """Horizons over 300 hours need several SWAN parts; joining them must not change any hour."""
+        now = 1792497600
+        start = now - (SPINUP_HOURS + HISTORY_HOURS)*3600
+        times = list(range(start, now + 12*3600 + 1, 3600))
+        count = len(times)
+        marine = {"fetchedAt": now, "data": {"hourly": {"time": times,
+            "wave_height_ecmwf_wam": [.4 + .02*(i % 15) for i in range(count)], "wave_period_ecmwf_wam": [4]*count,
+            "wave_direction_ecmwf_wam": [10*(i % 7) for i in range(count)]}}}
+        weather = {"time": times}
+        for model in WIND_MODELS:
+            weather[f"wind_speed_10m_{model}"] = [4 + (i % 9) for i in range(count)]
+            weather[f"wind_direction_10m_{model}"] = [(25*i) % 360 for i in range(count)]
+            weather[f"wind_gusts_10m_{model}"] = [None]*count
+        winds = [{"fetchedAt": now, "data": {"hourly": weather}} for _ in range(3)]
+        spot = {"id": "split-test", "lat": 54.8, "lon": 18.4, "normal": 0}
+        depths = [None] + [.2 + d*.003 for d in range(0, LENGTH+1, DX)]
+        bath = {"wetStart": 1, "depth": depths, "distances": list(range(-100,LENGTH+1,DX)),
+                "elevation": [1 if d is None else -d for d in depths]}
+        cache = Path(os.environ.get("SWAN_TEST_CACHE", ".forecast-cache"))
+        executable = install_engine(cache)
+        whole = simulate(spot, bath, marine, winds, executable, cache, now, hours=12)
+        with mock.patch.object(nearshore, "CHUNK_HOURS", 10):
+            split = simulate(spot, bath, marine, winds, executable, cache, now, hours=12)
+        self.assertEqual(split["history"] + split["hourly"], whole["history"] + whole["hourly"])
 
 
 if __name__ == "__main__":

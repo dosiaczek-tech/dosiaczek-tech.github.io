@@ -85,7 +85,7 @@ test('nearshore zero waves stay zero and missing wind does not produce a confide
 });
 
 test('heatmap can use available older hours without widening default history or accepting expired SWAN inputs',()=>{
-  const old = time - 20 * 3600;
+  const old = time - 30 * 3600;
   const hourly = {time:[old,time]};
   for(const model of Object.keys(M.WIND_MODELS)) {
     hourly[`wind_speed_10m_${model}`] = [3,3];
@@ -129,8 +129,8 @@ test('coastal recommendation uses past stability and keeps confidence separate f
   assert.equal(stable[0].time,time);
 });
 
-test('the default coastal forecast includes twelve previous hours without truncating the last future hour',()=>{
-  const times=Array.from({length:134},(_,i)=>time+(i-13)*3600),hourly={time:times};
+test('the default coastal forecast includes twenty-four previous hours without truncating the last future hour',()=>{
+  const times=Array.from({length:146},(_,i)=>time+(i-25)*3600),hourly={time:times};
   for(const model of Object.keys(M.WIND_MODELS)){
     hourly[`wind_speed_10m_${model}`]=times.map(()=>3);
     hourly[`wind_direction_10m_${model}`]=times.map(()=>180);
@@ -140,11 +140,24 @@ test('the default coastal forecast includes twelve previous hours without trunca
     hourly:times.filter(t=>t>=time).map(t=>({...result,time:t}))};
   const now=time*1000+37*60000;
   const forecast=M.buildCoastalForecast(spot,{hourly},input,now);
-  assert.equal(forecast.filter(r=>r.time<time).length,12);
-  assert.equal(forecast[0].time,time-12*3600);
-  assert.equal(forecast.length,133);
+  assert.equal(forecast.filter(r=>r.time<time).length,24);
+  assert.equal(forecast[0].time,time-24*3600);
+  assert.equal(forecast.length,145);
   assert.equal(forecast.at(-1).time,time+120*3600);
   assert.ok(forecast.every(r=>r.simulation));
   const future=M.buildCoastalForecast(spot,{hourly},input,now,{historyHours:0});
   assert.equal(future.length,121);assert.equal(future[0].time,time);assert.equal(future.at(-1).time,time+120*3600);
+});
+test('a fourteen-day coastal run reaches the table without being cut to the former five-day window',()=>{
+  const times=Array.from({length:M.FORECAST_HOURS+1},(_,i)=>time+i*3600),hourly={time:times};
+  for(const model of Object.keys(M.WIND_MODELS)){
+    hourly[`wind_speed_10m_${model}`]=times.map(()=>3);
+    hourly[`wind_direction_10m_${model}`]=times.map(()=>180);
+  }
+  const input={...document,history:[],hourly:times.map(t=>({...result,time:t}))};
+  const forecast=M.buildCoastalForecast(spot,{hourly},input,time*1000,{historyHours:0});
+  assert.equal(M.FORECAST_HOURS,336);
+  assert.equal(forecast.length,337);assert.equal(forecast.at(-1).time,time+14*86400);
+  assert.ok(forecast.every(r=>r.simulation));
+  assert.ok(forecast.at(-1).confidence.reasons.some(r=>r.includes('ponad 7 dni')));
 });

@@ -13,7 +13,7 @@
       zone: startClock.timeZoneName === endClock.timeZoneName ? startClock.timeZoneName : `${startClock.timeZoneName} → ${endClock.timeZoneName}` };
   }
   function hours(conditions, now = Date.now()) {
-    const from = Math.floor(now / 3600000) * 3600 - 12 * 3600;
+    const from = Math.floor(now / 3600000) * 3600 - 24 * 3600;
     return [...new Set([conditions?.weather, conditions?.sea].flatMap(source => source?.data?.hourly?.time || []))]
       .filter(time => finite(time) && time >= from).sort((a, b) => a - b);
   }

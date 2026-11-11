@@ -6,11 +6,18 @@ const start = Date.parse('2026-10-24T07:00:00Z') / 1000;
 const rows = Array.from({length: 6}, (_, i) => ({time: start + i * 3600, height: 1, score: i < 3 ? 6 : 9, daylight: true, simulation: {height: 1}}));
 
 test('session links retain the spot, Warsaw day and exact start; ordinary spot links still work', () => {
-  assert.deepEqual(S.parse(`#surf/sobieszewo?day=2026-10-24&start=${start}`), {spotId: 'sobieszewo', day: '2026-10-24', start});
-  assert.deepEqual(S.parse('#surf/sobieszewo'), {spotId: 'sobieszewo', day: null, start: null});
+  assert.deepEqual(S.parse(`#surf/sobieszewo?day=2026-10-24&start=${start}`), {spotId: 'sobieszewo', day: '2026-10-24', start, time: null});
+  assert.deepEqual(S.parse('#surf/sobieszewo'), {spotId: 'sobieszewo', day: null, start: null, time: null});
+  assert.deepEqual(S.parse('#surf'), {spotId: '', day: null, start: null, time: null}, 'the tab without a chosen spot');
   for (const day of ['2026-02-30', 'no-date']) assert.equal(S.parse(`#surf/sobieszewo?day=${day}`).day, null);
   for (const value of ['NaN', 'Infinity', '99999999999999999', String(start - 86400)])
     assert.equal(S.parse(`#surf/sobieszewo?day=2026-10-24&start=${value}`).start, null);
+});
+
+test('an hour link from the heatmap selects one whole forecast hour without opening a session', () => {
+  assert.deepEqual(S.parse(`#surf/jantar?time=${start}`), {spotId: 'jantar', day: null, start: null, time: start});
+  for (const value of ['NaN', '-3600', String(start + 60), '1e20', ''])
+    assert.equal(S.parse(`#surf/jantar?time=${value}`).time, null);
 });
 
 test('an exact requested session is not replaced by the better session later that day', () => {
@@ -21,6 +28,7 @@ test('an exact requested session is not replaced by the better session later tha
   assert.equal(result.rows.length, 3);
   assert.equal(result.historical, false);
   assert.equal(S.resolve(rows.slice(1), request, M, (start - 3600) * 1000), null);
+  assert.equal(S.resolve(rows, request, M, (start + 3600) * 1000).historical, false, 'a running session is not history yet');
   assert.equal(S.resolve(rows, request, M, (start + 4 * 3600) * 1000).historical, true);
 });
 

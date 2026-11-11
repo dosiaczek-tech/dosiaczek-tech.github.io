@@ -5,6 +5,8 @@
   "use strict";
   const VERSION = "Bałtyk Surf 1.3 / punkt od strony morza";
   const SIMULATION_VERSION = "BS-SWAN-1.3-seaward2m";
+  // Coastal SWAN runs cover 14 days (336 h); the current hour is the first forecast row.
+  const FORECAST_HOURS = 336;
   const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
@@ -354,7 +356,7 @@
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 12 } = {}) {
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 24 } = {}) {
     const lookback = finite(historyHours) ? clamp(historyHours, 0, 48) : 0;
     const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
       ...(Array.isArray(simulation?.hourly) ? simulation.hourly : []).map(r => r.time)])].filter(finite).sort((a, b) => a - b);
@@ -369,7 +371,9 @@
       if (!order.known) reasons.push("Niepełna historia uporządkowania fal");
       if (!row.wind || row.wind.count < 2) reasons.push("Ograniczona liczba modeli wiatru");
       if (row.wind && (row.wind.spread > 4 || row.wind.agreement < .7)) reasons.push("Rozbieżne prognozy wiatru");
-      if (row.time * 1000 - now > 72 * 3600000) reasons.push("Prognoza ponad 72 godziny naprzód");
+      const lead = row.time * 1000 - now;
+      if (lead > 7 * 86400000) reasons.push("Prognoza ponad 7 dni naprzód — orientacyjna; wiatr z dwóch modeli, fale z jednego");
+      else if (lead > 72 * 3600000) reasons.push("Prognoza ponad 72 godziny naprzód");
       if (now / 1000 - Math.min(simulation?.generatedAt, simulation?.windFetchedAt, simulation?.boundaryFetchedAt) > 12 * 3600) reasons.push("Dane starsze niż 12 godzin");
       if (row.simulation && (row.simulation.depth > 4 || row.simulation.depth < 1 || row.simulation.shoreDistance > 300)) reasons.push("Punkt może słabiej reprezentować strefę surfowania");
       if (row.simulationWind?.fallback) reasons.push("Wiatr zastępczy w symulacji");
@@ -379,8 +383,8 @@
         score: rating?.score ?? row.score,
         flags: rating ? [...rating.flags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })
-      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, 132 + lookback);
+      .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }
-  const api = { VERSION, SIMULATION_VERSION, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

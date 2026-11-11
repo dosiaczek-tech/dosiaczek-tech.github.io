@@ -1,275 +1,304 @@
-/* Hourly coastal ratings, ordered west to east. No interpolation or synthetic scores. */
+/* Hourly coastal ratings of every spot in one grid: rows west to east, columns hour by hour. No interpolation or synthetic scores. */
 (function (root) {
   "use strict";
   const zone = "Europe/Warsaw";
-  const dayFormat = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" });
   const clockFormat = new Intl.DateTimeFormat("pl-PL", { timeZone: zone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const zoneFormat = new Intl.DateTimeFormat("pl-PL", { timeZone: zone, timeZoneName: "short" });
-  const dayKey = time => dayFormat.format(new Date(time * 1000));
   const clock = time => clockFormat.format(new Date(time * 1000));
   const validScore = score => Number.isFinite(score) && score >= 0 && score <= 10;
   const tone = score => !validScore(score) ? "unknown" : score >= 9 ? "excellent" : score >= 8 ? "great"
     : score >= 6.5 ? "good" : score >= 5 ? "fair" : score >= 3 ? "weak" : score >= 1.5 ? "poor" : "bad";
   const orderedSpots = spots => [...spots].sort((a, b) => a.lon - b.lon || a.id.localeCompare(b.id));
-  function hoursForDay(day) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return [];
-    const midnight = Date.parse(`${day}T00:00:00Z`) / 1000;
-    if (!Number.isFinite(midnight)) return [];
-    // Enumerate real UTC hours: 23/25 columns on clock-change days, no lost or averaged hour.
-    const times = Array.from({ length: 30 }, (_, i) => midnight + (i - 3) * 3600).filter(time => dayKey(time) === day);
-    const labels = times.map(clock);
-    return times.map((time, i) => {
-      const repeated = labels.indexOf(labels[i]) !== labels.lastIndexOf(labels[i]);
-      const offset = repeated ? zoneFormat.formatToParts(new Date(time * 1000)).find(p => p.type === "timeZoneName").value : "";
-      return { time, end: time + 3600, label: `${labels[i]}–${clock(time + 3600)}`, offset,
-        nextDay: dayKey(time + 3600) !== day };
-    });
+  // Columns run from the current hour to the last hour any spot has a rating for; every real UTC hour gets one.
+  function timeline(entries, now = Date.now()) {
+    const first = Math.floor(now / 3600000) * 3600;
+    let last = first - 3600;
+    for (const scores of entries) for (const [time, score] of scores)
+      if (time > last && time % 3600 === 0 && validScore(score)) last = time;
+    return Array.from({ length: (last - first) / 3600 + 1 }, (_, i) => first + i * 3600);
   }
-  function cellsForDay(rows, day, now = Date.now(), slots = hoursForDay(day)) {
-    const byTime = new Map(rows.map(row => [row.time, row]));
-    const current = Math.floor(now / 3600000) * 3600;
-    return slots.map(slot => {
-      const row = byTime.get(slot.time);
-      const score = row?.simulation && validScore(row.score) ? row.score : null;
-      return { ...slot, score, tone: tone(score), historical: slot.time < current };
-    });
+  // A view is the visible part of the grid on each axis, as fractions of the whole (0–1).
+  const FULL = { x: { from: 0, to: 1 }, y: { from: 0, to: 1 } };
+  // The cell under a point of the grid in the given view; points on the outer edge belong to the outer cells.
+  function cellAt(x, y, width, height, columns, rows, view = FULL) {
+    const index = (value, size, count, axis) => Math.max(0, Math.min(count - 1, Math.floor((axis.from + value / size * (axis.to - axis.from)) * count)));
+    return { row: index(y, height, rows, view.y), column: index(x, width, columns, view.x) };
   }
-  function mergeHistory(rows, saved, now = Date.now()) {
-    const current = Math.floor(now / 3600000) * 3600;
-    const first = hoursForDay(dayKey(current - 7 * 86400))[0].time;
-    const byTime = new Map();
-    const valid = r => r && Number.isSafeInteger(r.time) && r.time % 3600 === 0 && r.time >= first && r.simulation && validScore(r.score);
-    // A saved forecast can fill a past hour only; never revive an outdated future rating.
-    for (const row of Array.isArray(saved) ? saved : []) {
-      if (valid(row) && row.time < current) byTime.set(row.time, { ...row, archived: true });
-    }
-    for (const row of rows) {
-      if (valid(row) || (row && Number.isFinite(row.time) && row.time >= first && !byTime.has(row.time))) byTime.set(row.time, row);
-    }
-    return [...byTime.values()].sort((a, b) => a.time - b.time);
+  // One axis of a zoom or drag: the grid point that was under `startAt` (0–1 of the box) moves to `at`,
+  // and the visible span shrinks by `factor`, never past `maxZoom` or the edges of the grid.
+  function viewAxis(axis, startAt, at, factor, maxZoom) {
+    const span = Math.min(1, Math.max(1 / maxZoom, (axis.to - axis.from) / factor));
+    const from = Math.min(1 - span, Math.max(0, axis.from + startAt * (axis.to - axis.from) - at * span));
+    return { from, to: from + span };
   }
-  function calendarDays(entries, now = Date.now()) {
-    const today = dayKey(now / 1000), noon = Date.parse(`${today}T12:00:00Z`) / 1000;
-    const days = new Set(Array.from({ length: 6 }, (_, i) => dayKey(noon + i * 86400)));
-    for (const rows of entries) for (const row of rows) {
-      if (row.simulation && validScore(row.score) && row.time < now / 1000) days.add(dayKey(row.time));
-    }
-    return [...days].sort();
+  // The smallest move of one axis that brings tile `index` fully into view.
+  function followAxis(axis, index, count) {
+    const span = axis.to - axis.from, from = Math.min(index / count, Math.max(axis.from, (index + 1) / count - span));
+    return from === axis.from ? axis : { from, to: from + span };
   }
-  // Small score snapshots have their own store, separate from large raw-forecast caches.
-  function historyStore(indexedDB) {
-    const memory = new Map();
-    const database = new Promise(resolve => {
-      if (!indexedDB) { resolve(null); return; }
-      try {
-        const request = indexedDB.open("nad-morzem:heatmap-history", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("spots");
-        request.onsuccess = () => { request.result.onversionchange = () => request.result.close(); resolve(request.result); };
-        request.onerror = request.onblocked = () => resolve(null);
-      } catch { resolve(null); }
-    });
-    async function access(key, value) {
-      const db = await database;
-      if (!db) return memory.get(key) || [];
-      return new Promise(resolve => {
-        try {
-          const transaction = db.transaction("spots", value === undefined ? "readonly" : "readwrite");
-          const store = transaction.objectStore("spots");
-          const request = value === undefined ? store.get(key) : store.put(value, key);
-          transaction.oncomplete = () => resolve(request.result || memory.get(key) || []);
-          transaction.onerror = transaction.onabort = () => resolve(memory.get(key) || []);
-        } catch { resolve(memory.get(key) || []); }
-      });
-    }
-    return {
-      read: async key => {
-        const data = await access(key);
-        return (Array.isArray(data) ? data : []).filter(r => Array.isArray(r) && r.length === 2)
-          .map(([time, score]) => ({ time, score, simulation: true }));
-      },
-      write: async (key, rows) => {
-        const data = rows.filter(r => r.simulation && validScore(r.score)).map(r => [r.time, r.score]);
-        memory.set(key, data); await access(key, data);
-      }
-    };
+  // The first and last tiles with their centre in view label the axis.
+  function visibleEnds(axis, count) {
+    const first = Math.min(count - 1, Math.max(0, Math.round(axis.from * count)));
+    return [first, Math.max(first, Math.min(count - 1, Math.round(axis.to * count) - 1))];
   }
-  const api = { dayKey, hoursForDay, cellsForDay, orderedSpots, tone, mergeHistory, calendarDays, historyStore };
+  // A selected cell keeps its colour, only in a darker shade.
+  function shade(color, factor = .75) {
+    const hex = /^#([\da-f]{6})$/i.exec(String(color).trim());
+    if (!hex) return color;
+    const value = parseInt(hex[1], 16);
+    return `#${[16, 8, 0].map(shift => Math.round((value >> shift & 255) * factor).toString(16).padStart(2, "0")).join("")}`;
+  }
+  // The zone is named only where the clock repeats an hour, e.g. 02:00–02:00 CEST at the autumn change.
+  function hourLabel(time) {
+    const from = clock(time), repeated = from === clock(time - 3600) || from === clock(time + 3600);
+    const name = repeated ? ` ${zoneFormat.formatToParts(new Date(time * 1000)).find(part => part.type === "timeZoneName").value}` : "";
+    return `${from}–${clock(time + 3600)}${name}`;
+  }
+  const api = { tone, orderedSpots, timeline, cellAt, viewAxis, followAxis, visibleEnds, shade, hourLabel };
   if (typeof module !== "undefined") module.exports = api;
   else root.SurfHeatmap = api;
   if (typeof document === "undefined") return;
   document.addEventListener("DOMContentLoaded", () => {
     const $ = id => document.getElementById(id);
     if (!$("heatmapPanel")) return;
-    const M = root.SurfModel, catalog = orderedSpots(root.SurfSpots);
-    const records = new Map(), rowNodes = new Map(), coverage = new Map();
-    let storage;
-    try { storage = root.indexedDB; } catch { /* Restricted browser: retain history in memory. */ }
-    const history = historyStore(storage);
-    let selectedDay = dayKey(Date.now() / 1000), generation = 0, loading = false, completed = 0, loadedAt = 0;
-    let snapshotTime = Date.now(), selectedCell = null, focusCell = null;
-    let slots = hoursForDay(selectedDay);
+    const M = root.SurfModel, catalog = orderedSpots(root.SurfSpots), canvas = $("heatmapCanvas");
+    const records = new Map(), colors = {};
+    let generation = 0, loading = false, completed = 0, loadedAt = 0, snapshotTime = Date.now();
+    let times = [], selected = null, view = FULL, drawnWidth = 0, pixelRatio = 1, frame = 0, fittedAxis = "";
     const active = () => location.hash.startsWith("#heatmap");
-    const name = spot => `${spot.town} — ${spot.name}`;
     const scoreText = score => score.toLocaleString("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    const dateText = day => new Intl.DateTimeFormat("pl-PL", { timeZone: zone, weekday: "short", day: "numeric", month: "short" }).format(new Date(`${day}T12:00:00Z`));
+    const dateFormat = new Intl.DateTimeFormat("pl-PL", { timeZone: zone, weekday: "short", day: "numeric", month: "short" });
+    const date = time => dateFormat.format(new Date(time * 1000));
+    const moment = time => `${date(time)} · ${clock(time)}`;
+    const position = cell => ({ row: catalog.findIndex(spot => spot.id === cell.id), column: times.indexOf(cell.time) });
+    // Rows stay a few pixels tall, so the whole coast fits on a phone screen; the hours share the full width.
+    const rowHeight = width => Math.max(4, Math.min(6, Math.floor(width / catalog.length)));
+    // Zooming stops once a tile is 44 px, a comfortable size for a finger.
+    const limits = () => ({ x: Math.max(1, 44 * times.length / canvas.clientWidth), y: Math.max(1, 44 * catalog.length / canvas.clientHeight) });
+    const edge = (index, count, axis, size) => Math.round((index / count - axis.from) / (axis.to - axis.from) * size);
     function el(tag, text, className) {
       const node = document.createElement(tag);
       if (text !== undefined) node.textContent = text;
       if (className) node.className = className;
       return node;
     }
-    function days() {
-      const available = [...new Set([...calendarDays([...records.values()].map(r => r.rows), snapshotTime), selectedDay])].sort();
-      const signature = available.join(",");
-      if ($("heatmapDays").dataset.days === signature) return;
-      $("heatmapDays").dataset.days = signature;
-      $("heatmapDays").replaceChildren(...available.map(day => {
-        const button = el("button", `${day === dayKey(snapshotTime / 1000) ? "Dzisiaj · " : ""}${dateText(day)}${day < dayKey(snapshotTime / 1000) ? " · historia" : ""}`, "filter");
-        button.type = "button"; button.dataset.day = day;
-        button.setAttribute("aria-pressed", String(day === selectedDay));
-        button.addEventListener("click", () => {
-          selectedDay = day; selectedCell = null; focusCell = null;
-          $("heatmapDays").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.day === day)));
-          render();
-        });
-        return button;
-      }));
+    function paint(row, column, context = canvas.getContext("2d")) {
+      const spot = catalog[row], time = times[column];
+      const color = colors[tone(records.get(spot.id)?.scores.get(time))];
+      const x = edge(column, times.length, view.x, canvas.width), y = edge(row, catalog.length, view.y, canvas.height);
+      const width = edge(column + 1, times.length, view.x, canvas.width) - x, height = edge(row + 1, catalog.length, view.y, canvas.height) - y;
+      // Tiles enlarged by zooming are separated by a thin gap, so each one can be told apart.
+      const gap = Math.round(pixelRatio);
+      context.fillStyle = selected?.id === spot.id && selected.time === time ? shade(color) : color;
+      context.fillRect(x, y, width >= 8 * pixelRatio ? width - gap : width, height >= 8 * pixelRatio ? height - gap : height);
     }
-    function cellDescription(spot, cell) {
-      return `${name(spot)} · ${dateText(selectedDay)} · ${cell.label}${cell.offset ? ` ${cell.offset}` : ""}${cell.nextDay ? " (do północy następnego dnia)" : ""} · ${cell.score === null ? "Brak oceny" : `${scoreText(cell.score)}/10 · ${M.scoreLabel(cell.score)}`}${cell.historical ? " · historia prognozy" : ""}`;
-    }
-    function showDetail(spot, cell) {
-      selectedCell = { id: spot.id, time: cell.time };
-      const detail = $("heatmapDetail");
-      detail.replaceChildren(el("strong", cellDescription(spot, cell)));
-      const issue = records.get(spot.id)?.issue;
-      if (issue) detail.append(el("span", issue));
-      const link = el("a", "Otwórz prognozę spotu →");
-      link.href = `#surf/${spot.id}?day=${selectedDay}`; detail.append(link);
-      $("heatmapTable").querySelectorAll("button[aria-pressed=true]").forEach(b => b.setAttribute("aria-pressed", "false"));
-      rowNodes.get(spot.id)?.querySelector(`button[data-time="${cell.time}"]`)?.setAttribute("aria-pressed", "true");
-    }
-    function renderRow(spot) {
-      const row = rowNodes.get(spot.id), record = records.get(spot.id);
-      const focusedTime = row.contains(document.activeElement) ? document.activeElement.dataset.time : null;
-      const head = el("th"); head.scope = "row";
-      const link = el("a", spot.town); link.href = `#surf/${spot.id}`;
-      head.append(link, el("small", spot.name));
-      const cells = cellsForDay(record?.rows || [], selectedDay, snapshotTime, slots);
-      coverage.set(spot.id, cells.some(c => c.score !== null));
-      row.replaceChildren(head, ...cells.map(cell => {
-        const td = el("td"); td.dataset.quality = cell.tone;
-        td.dataset.history = String(cell.historical);
-        const button = el("button");
-        button.type = "button"; button.dataset.time = cell.time;
-        if (cell.score !== null) button.dataset.score = cell.score;
-        button.title = cellDescription(spot, cell);
-        button.setAttribute("aria-label", button.title);
-        button.setAttribute("aria-pressed", String(selectedCell?.id === spot.id && selectedCell?.time === cell.time));
-        button.tabIndex = (focusCell ? focusCell.id === spot.id && focusCell.time === cell.time : spot.id === catalog[0].id && cell.time === cells[0]?.time) ? 0 : -1;
-        button.addEventListener("click", () => showDetail(spot, cell));
-        td.append(button); return td;
-      }));
-      if (selectedCell?.id === spot.id) {
-        const cell = cells.find(c => c.time === selectedCell.time);
-        if (cell) showDetail(spot, cell);
+    function draw() {
+      frame = 0;
+      if (!canvas.clientWidth || !times.length) return;
+      if (canvas.clientWidth !== drawnWidth) {
+        const width = canvas.clientWidth, height = rowHeight(width) * catalog.length;
+        drawnWidth = width; pixelRatio = root.devicePixelRatio || 1;
+        canvas.style.height = `${height}px`;
+        canvas.width = Math.round(width * pixelRatio); canvas.height = Math.round(height * pixelRatio);
       }
-      if (focusedTime) row.querySelector(`button[data-time="${focusedTime}"]`)?.focus({ preventScroll: true });
+      // The legend carries the colour of every score band.
+      for (const item of $("heatmapLegend").children) colors[item.dataset.quality] ||= getComputedStyle(item).getPropertyValue("--rating-bg").trim();
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const rows = [Math.floor(view.y.from * catalog.length), Math.min(catalog.length, Math.ceil(view.y.to * catalog.length))];
+      const columns = [Math.floor(view.x.from * times.length), Math.min(times.length, Math.ceil(view.x.to * times.length))];
+      for (let row = rows[0]; row < rows[1]; row++) for (let column = columns[0]; column < columns[1]; column++) paint(row, column, context);
+      // The axes name the first and last spot and hour in view.
+      const [top, bottom] = visibleEnds(view.y, catalog.length), [first, last] = visibleEnds(view.x, times.length);
+      for (const [id, spot] of [["heatmapWest", catalog[top]], ["heatmapEast", catalog[bottom]]]) {
+        const label = $(id);
+        label.title = `${spot.town} — ${spot.name}`;
+        // Each word is its own box: in a vertical name a space would leave a whole letter's height empty.
+        if (label.dataset.town !== spot.town) { label.dataset.town = spot.town; label.replaceChildren(...spot.town.split(" ").map(word => el("span", word))); }
+      }
+      $("heatmapStart").textContent = moment(times[first]); $("heatmapEnd").textContent = moment(times[last]);
+      fitSpotAxis();
     }
-    function status() {
-      const withScores = [...coverage.values()].filter(Boolean).length;
-      const warnings = [...records.values()].filter(record => record.issue).length;
-      $("heatmapStatus").textContent = `${loading ? `Pobieranie ${completed}/${catalog.length} spotów… ` : ""}${dateText(selectedDay)} · oceny dostępne dla ${withScores}/${catalog.length} spotów.${!loading && !withScores ? " Brak ocen na ten dzień — wybierz inną datę lub odśwież dane." : ""}${warnings ? ` Dla ${warnings} spotów są braki lub ostrzeżenia; dotknij pola, aby poznać szczegóły.` : ""}${!loading && loadedAt ? ` Sprawdzono o ${clock(loadedAt / 1000)}.` : ""}`;
-      $("heatmapProgress").max = catalog.length; $("heatmapProgress").value = completed;
-      $("heatmapProgress").hidden = !loading; $("heatmapRefresh").disabled = loading;
-      $("heatmapLoading").hidden = !loading;
-      $("heatmapResults").hidden = loading;
-      $("heatmapTable").setAttribute("aria-busy", String(loading));
+    // Names too long for the grid share one smaller font instead of being cut; a gap keeps the two apart.
+    // Measured on the device, so a larger system font or text size is taken into account.
+    function fitSpotAxis() {
+      const west = $("heatmapWest"), east = $("heatmapEast"), axis = west.parentElement, free = canvas.clientHeight - 16;
+      const key = `${west.dataset.town}|${east.dataset.town}|${free}`;
+      if (key === fittedAxis || free <= 0) return;
+      fittedAxis = key;
+      axis.style.fontSize = "";
+      const used = () => west.getBoundingClientRect().height + east.getBoundingClientRect().height;
+      let size = parseFloat(getComputedStyle(axis).fontSize);
+      for (let step = 0; step < 4 && used() > free; step++) {
+        size = Math.floor(size * free / used() * 10) / 10;
+        axis.style.fontSize = `${size}px`;
+      }
+    }
+    const redraw = () => { frame ||= requestAnimationFrame(draw); };
+    function setView(next) {
+      view = next.x.from <= 0 && next.x.to >= 1 && next.y.from <= 0 && next.y.to >= 1 ? FULL : next;
+      // The button keeps its place in the legend bar, so the grid below never jumps when it appears.
+      $("heatmapZoomReset").disabled = view === FULL;
+      redraw();
+    }
+    function showDetail() {
+      const detail = $("heatmapDetail"), spot = selected && catalog.find(item => item.id === selected.id);
+      if (!spot) { detail.replaceChildren(el("p", "Dotknij pola na mapie, aby zobaczyć ocenę, dzień i godzinę. Rozsuń na mapie dwa palce, aby ją przybliżyć.", "surf-small")); return; }
+      const record = records.get(spot.id), score = record?.scores.get(selected.time) ?? null;
+      const link = el("a", undefined, "surf-window heatmap-pick");
+      link.href = `#surf/${spot.id}?time=${selected.time}`;
+      link.dataset.quality = tone(score);
+      link.append(el("span", `${date(selected.time)} · ${hourLabel(selected.time)}`),
+        el("strong", score === null ? "Brak oceny" : `${scoreText(score)}/10 · ${M.scoreLabel(score)}`),
+        el("small", `${spot.town} — ${spot.name}`));
+      if (record?.issue) link.append(el("small", record.issue));
+      link.append(el("small", "Otwórz w prognozie godzinowej →", "heatmap-pick-action"));
+      detail.replaceChildren(link);
+    }
+    function select(row, column, follow = false) {
+      const previous = selected && position(selected);
+      selected = { id: catalog[row].id, time: times[column] };
+      // Keys may leave the zoomed part of the grid; the view then follows the selected tile.
+      const next = follow ? { x: followAxis(view.x, column, times.length), y: followAxis(view.y, row, catalog.length) } : view;
+      if (next.x !== view.x || next.y !== view.y) setView(next);
+      else {
+        if (previous && previous.row >= 0 && previous.column >= 0) paint(previous.row, previous.column);
+        paint(row, column);
+      }
+      showDetail();
     }
     function render() {
-      slots = hoursForDay(selectedDay); coverage.clear();
-      const table = $("heatmapTable"), head = el("thead"), titles = el("tr");
-      const spotHeading = el("th", "Spot"); spotHeading.scope = "col"; titles.append(spotHeading);
-      for (const slot of slots) {
-        const title = el("th"); title.scope = "col"; title.dataset.time = slot.time;
-        const [from, to] = slot.label.split("–");
-        title.append(document.createTextNode(`${from}–`), el("wbr"), document.createTextNode(to));
-        if (slot.offset) title.append(el("small", slot.offset));
-        if (slot.nextDay) title.title = "Koniec o północy następnego dnia; przedział obejmuje czas do 23:59.";
-        title.dataset.history = String(slot.time < Math.floor(snapshotTime / 3600000) * 3600);
-        titles.append(title);
+      if (selected && position(selected).column < 0) selected = null;
+      $("heatmapChart").hidden = !times.length;
+      if (times.length) {
+        const [west, east] = [catalog[0], catalog.at(-1)];
+        canvas.setAttribute("aria-label", `Mapa cieplna ocen. Wiersze: ${catalog.length} spotów od zachodu (${west.town}) do wschodu (${east.town}). Kolumny: godziny od ${moment(times[0])} do ${moment(times.at(-1))}. Strzałki wybierają pole, Enter otwiera prognozę godzinową.`);
       }
-      head.append(titles);
-      const body = el("tbody"); rowNodes.clear();
-      for (const spot of catalog) { const row = el("tr"); row.dataset.spot = spot.id; row.dataset.longitude = spot.lon; rowNodes.set(spot.id, row); body.append(row); }
-      table.replaceChildren(el("caption", `${dateText(selectedDay)} · ${catalog.length} spotów · ocena na początku każdej godziny`), head, body);
-      for (const spot of catalog) renderRow(spot);
-      if (!selectedCell) $("heatmapDetail").textContent = "Najedź na pole, aby zobaczyć ocenę. Dotknij lub kliknij, aby wyświetlić szczegóły i przejść do prognozy spotu. Klawiatura: użyj strzałek do poruszania się po polach.";
-      status();
+      draw();
+      showDetail();
+    }
+    function status() {
+      const withScores = [...records.values()].filter(record => record.scores.size).length;
+      const warnings = [...records.values()].filter(record => record.issue).length;
+      $("heatmapStatus").textContent = `${loading ? `Pobieranie ${completed}/${catalog.length} spotów… ` : ""}Oceny dostępne dla ${withScores}/${catalog.length} spotów.${!loading && !withScores ? " Brak ocen — przeładuj stronę za chwilę." : ""}${warnings ? ` Dla ${warnings} spotów są braki lub ostrzeżenia; dotknij pola, aby poznać szczegóły.` : ""}${!loading && loadedAt ? ` Sprawdzono o ${clock(loadedAt / 1000)}.` : ""}`;
+      $("heatmapProgress").max = catalog.length; $("heatmapProgress").value = completed;
+      $("heatmapProgress").hidden = !loading;
+      $("heatmapLoading").hidden = !loading;
+      $("heatmapResults").hidden = loading;
     }
     async function load(force = false) {
       const token = ++generation;
-      loading = true; completed = 0; loadedAt = 0; snapshotTime = Date.now(); records.clear();
-      days(); render();
+      loading = true; completed = 0; loadedAt = 0; snapshotTime = Date.now(); records.clear(); setView(FULL);
+      status();
       let index = 0;
       await Promise.all(Array.from({ length: 4 }, async () => {
         while (index < catalog.length && token === generation && active()) {
           const spot = catalog[index++];
-          const key = M.coastalHistoryKey(spot);
-          const saved = await history.read(key);
-          // Import earlier ratings already retained by the comparison view, for the same geometry.
-          try {
-            const previous = JSON.parse(localStorage.getItem(key));
-            if (Array.isArray(previous)) saved.push(...previous);
-          } catch { /* Browser storage is optional. */ }
-          if (token !== generation || !active()) return;
-          let rows = [], issue = "";
+          let scores = new Map(), issue = "";
           try {
             const [forecast, simulation] = await Promise.all([
               root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly: true }),
               root.SurfAPI.nearshore(spot, force)
             ]);
-            rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 48 });
+            const rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0 });
+            scores = new Map(rows.filter(row => row.simulation && validScore(row.score)).map(row => [row.time, row.score]));
             const issues = [];
             if (!forecast.weather) issues.push("Brak aktualnego wiatru.");
             if (!rows.some(row => row.simulation)) issues.push("Brak aktualnej prognozy fal dla tego punktu.");
             if (forecast.weather?.stale || simulation.stale) issues.push("Dane z pamięci; ostatnie pobranie nie powiodło się.");
-            if (simulation.refreshPending) issues.push("Trwa przeliczanie fal. Spróbuj odświeżyć oceny za chwilę.");
+            if (simulation.refreshPending) issues.push("Trwa przeliczanie fal. Przeładuj stronę za chwilę, aby zobaczyć nowsze oceny.");
             if (simulation.refreshError) issues.push(simulation.refreshError);
             issue = issues.join(" ");
-          } catch { issue = "Nie udało się pobrać prognozy. Użyj przycisku Odśwież oceny."; }
+          } catch { issue = "Nie udało się pobrać prognozy. Przeładuj stronę, aby spróbować ponownie."; }
           if (token !== generation || !active()) return;
-          rows = mergeHistory(rows, saved, snapshotTime);
-          await history.write(key, rows);
-          if (token !== generation || !active()) return;
-          records.set(spot.id, { rows, issue }); completed++;
-          days(); renderRow(spot); status();
+          records.set(spot.id, { scores, issue }); completed++;
+          status();
         }
       }));
       if (token !== generation || !active()) return;
-      loading = false; loadedAt = Date.now(); status();
+      loading = false; loadedAt = Date.now();
+      times = timeline([...records.values()].map(record => record.scores), snapshotTime);
+      status();
+      render();
     }
-    $("heatmapTable").addEventListener("focusin", event => {
-      const button = event.target.closest("button[data-time]"); if (!button) return;
-      $("heatmapTable").querySelectorAll("button[tabindex='0']").forEach(b => { b.tabIndex = -1; });
-      button.tabIndex = 0; focusCell = { id: button.closest("tr").dataset.spot, time: Number(button.dataset.time) };
+    // Two fingers zoom and move the grid, the mouse drags it. One finger taps a tile or scrolls the page;
+    // sideways it moves a zoomed grid through the hours.
+    const pointers = new Map();
+    let gesture = null, dragged = false;
+    function startGesture() {
+      const points = [...pointers.values()], box = canvas.getBoundingClientRect();
+      const x = points.reduce((sum, p) => sum + p.x, 0) / points.length, y = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+      gesture = { view, box, x, y, at: { x: (x - box.left) / box.width, y: (y - box.top) / box.height },
+        distance: points.length > 1 ? Math.max(20, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)) : null };
+    }
+    canvas.addEventListener("pointerdown", event => {
+      if (!times.length || (event.pointerType === "mouse" && event.button !== 0)) return;
+      if (!pointers.size) dragged = false;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      canvas.setPointerCapture?.(event.pointerId);
+      startGesture();
     });
-    $("heatmapTable").addEventListener("keydown", event => {
-      const button = event.target.closest("button[data-time]");
-      if (!button || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    canvas.addEventListener("pointermove", event => {
+      if (!gesture || !pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const points = [...pointers.values()], { box } = gesture;
+      const x = points.reduce((sum, p) => sum + p.x, 0) / points.length, y = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+      // A tap may wobble a little; only a real move drags the grid.
+      if (!dragged && points.length < 2 && Math.hypot(x - gesture.x, y - gesture.y) < 8) return;
+      dragged = true;
+      const factor = gesture.distance && points.length > 1 ? Math.max(20, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)) / gesture.distance : 1;
+      const limit = limits(), vertical = points.length > 1 || event.pointerType === "mouse";
+      setView({ x: viewAxis(gesture.view.x, gesture.at.x, (x - box.left) / box.width, factor, limit.x),
+        y: vertical ? viewAxis(gesture.view.y, gesture.at.y, (y - box.top) / box.height, factor, limit.y) : gesture.view.y });
+    });
+    const endPointer = event => {
+      if (!pointers.delete(event.pointerId)) return;
+      if (pointers.size) startGesture(); else gesture = null;
+    };
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => canvas.addEventListener(type, endPointer));
+    // Two fingers belong to the grid: the page must not scroll or zoom under them.
+    for (const type of ["touchstart", "touchmove"]) canvas.addEventListener(type, event => { if (event.touches.length > 1) event.preventDefault(); }, { passive: false });
+    // The wheel zooms around the pointer, with or without Ctrl (a touchpad pinch is Ctrl + wheel); a sideways
+    // swipe moves a zoomed grid through the hours. Scrolling down over the whole grid still scrolls the page past it.
+    canvas.addEventListener("wheel", event => {
+      if (!times.length) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
+      const dx = event.deltaX * unit, dy = event.deltaY * unit;
+      const box = canvas.getBoundingClientRect(), limit = limits();
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (view === FULL) return;
+        event.preventDefault();
+        setView({ x: viewAxis(view.x, dx / box.width, 0, 1, limit.x), y: view.y });
+        return;
+      }
+      if (dy > 0 && view === FULL) return;
       event.preventDefault();
-      const rows = [...$("heatmapTable").tBodies[0].rows], row = button.closest("tr");
-      let r = rows.indexOf(row), c = button.closest("td").cellIndex - 1;
-      if (event.key === "ArrowUp") r--; if (event.key === "ArrowDown") r++;
-      if (event.key === "ArrowLeft") c--; if (event.key === "ArrowRight") c++;
-      if (event.key === "Home") c = 0; if (event.key === "End") c = row.cells.length - 2;
-      const target = rows[Math.max(0, Math.min(rows.length - 1, r))].cells[Math.max(0, Math.min(row.cells.length - 2, c)) + 1].querySelector("button");
-      target.focus();
+      const x = (event.clientX - box.left) / box.width, y = (event.clientY - box.top) / box.height, factor = Math.exp(-dy / 300);
+      setView({ x: viewAxis(view.x, x, x, factor, limit.x), y: viewAxis(view.y, y, y, factor, limit.y) });
+    }, { passive: false });
+    canvas.addEventListener("click", event => {
+      if (!times.length || dragged) return;
+      const box = canvas.getBoundingClientRect();
+      const cell = cellAt(event.clientX - box.left, event.clientY - box.top, box.width, box.height, times.length, catalog.length, view);
+      select(cell.row, cell.column);
     });
+    $("heatmapZoomReset").addEventListener("click", () => { setView(FULL); canvas.focus({ preventScroll: true }); });
+    canvas.addEventListener("keydown", event => {
+      if (!times.length) return;
+      if (event.key === "Enter" && selected) { event.preventDefault(); $("heatmapDetail").querySelector("a").click(); return; }
+      // Page keys move by a day; without a selection the first key picks the top-left cell.
+      const steps = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1], PageUp: [0, -24], PageDown: [0, 24], Home: [0, -Infinity], End: [0, Infinity] };
+      const step = steps[event.key];
+      if (!step) return;
+      event.preventDefault();
+      const at = selected ? position(selected) : { row: 0, column: 0 }, move = selected ? step : [0, 0];
+      const clamp = (value, count) => Math.max(0, Math.min(count - 1, value));
+      select(clamp(at.row + move[0], catalog.length), clamp(at.column + move[1], times.length), true);
+    });
+    if (root.ResizeObserver) new ResizeObserver(() => { if (canvas.clientWidth && canvas.clientWidth !== drawnWidth) redraw(); }).observe(canvas);
     for (const [value, label] of [[0, "0–1,4"], [1.5, "1,5–2,9"], [3, "3–4,9"], [5, "5–6,4"], [6.5, "6,5–7,9"], [8, "8–8,9"], [9, "9–10"], [null, "Brak danych"]]) {
       const item = el("span", label); item.dataset.quality = tone(value); $("heatmapLegend").append(item);
     }
-    $("heatmapRefresh").addEventListener("click", () => load(true));
     function route() {
       if (!active()) { ++generation; if (loading) loadedAt = 0; loading = false; return; }
       document.title = "Mapa cieplna spotów | Bałtyk Surf";

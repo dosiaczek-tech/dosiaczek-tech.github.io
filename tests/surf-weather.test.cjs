@@ -101,13 +101,13 @@ test('repeated Warsaw hours in autumn remain separate observations', () => {
   assert.equal(W.atTime(data, late).cloudLabel, 'Częściowe zachmurzenie');
 });
 
-test('day/hour selection keeps explicit sessions, chooses the requested day and limits historical options to twelve hours', () => {
+test('day/hour selection keeps explicit sessions, chooses the requested day and limits historical options to twenty-four hours', () => {
   const data = conditions();
   const now = first * 1000 + 1800000;
-  data.weather.data.hourly.time.push(first - 13 * 3600, first - 12 * 3600, first, null);
+  data.weather.data.hourly.time.push(first - 25 * 3600, first - 24 * 3600, first, null);
   const times = W.hours(data, now);
-  assert.equal(times.includes(first - 13 * 3600), false);
-  assert.equal(times.includes(first - 12 * 3600), true);
+  assert.equal(times.includes(first - 25 * 3600), false);
+  assert.equal(times.includes(first - 24 * 3600), true);
   assert.equal(times.filter(t => t === first).length, 1);
   assert.equal(W.selectTime(times, null, null, now), first);
   assert.equal(W.selectTime(times, first, '2026-10-26', now), second);

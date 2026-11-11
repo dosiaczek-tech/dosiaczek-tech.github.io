@@ -250,28 +250,31 @@
       *, *::before, *::after { transition: none !important; animation: none !important; }
     }
   </style>
+  <!-- A refreshed page always opens at the top instead of the browser restoring the old scroll position. -->
+  <script>if ("scrollRestoration" in history) history.scrollRestoration = "manual";</script>
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=compare-recent-spot-v15">
+  <link rel="stylesheet" href="surf.css?v=heatmap-word-gap-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js?v=stegna-location-v5"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=seaward2m-v1"></script>
-  <script defer src="surf-wind-map.js?v=map-referrer-v1"></script>
-  <script defer src="surf-api.js?v=seaward2m-v1"></script>
-  <script defer src="surf-weather.js?v=day-weather-icons-v1"></script>
-  <script defer src="surf-hourly.js?v=history-default-v1"></script>
+  <script defer src="surf-model.js?v=daylight-windows-v1"></script>
+  <script defer src="surf-map-gestures.js?v=two-fingers-v1"></script>
+  <script defer src="surf-wind-map.js?v=two-fingers-v1"></script>
+  <script defer src="surf-api.js?v=offline-profile-v1"></script>
+  <script defer src="surf-weather.js?v=horizon-14d-v1"></script>
+  <script defer src="surf-hourly.js?v=horizon-14d-v1"></script>
   <script defer src="surf-directions.js?v=direction-minis-v1"></script>
-  <script defer src="surf-profile-picker.js?v=content-height-v1"></script>
+  <script defer src="surf-profile-picker.js?v=day-tiles-v1"></script>
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
-  <script defer src="surf-map.js?v=map-referrer-v1"></script>
-  <script defer src="surf-session.js?v=session-detail-v1"></script>
-  <script defer src="surf-app.js?v=seaward2m-v1"></script>
-  <script defer src="surf-compare.js?v=seaward2m-v1"></script>
-  <script defer src="surf-heatmap.js?v=seaward2m-v1"></script>
+  <script defer src="surf-map.js?v=no-default-spot-v1"></script>
+  <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
+  <script defer src="surf-app.js?v=no-default-spot-v2"></script>
+  <script defer src="surf-compare.js?v=day-labels-v2"></script>
+  <script defer src="surf-heatmap.js?v=word-gap-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -314,7 +317,7 @@
     <div class="shell">
       <nav class="section-nav" aria-label="Sekcje strony">
         <a id="camerasTab" href="#kamery" aria-current="page">Kamery</a>
-        <a id="surfTab" href="#surf/wladyslawowo">Prognozy surf <span>Bałtyk Surf</span></a>
+        <a id="surfTab" href="#surf">Prognozy surf <span>Bałtyk Surf</span></a>
         <a id="heatmapTab" href="#heatmap">Heat map spotów</a>
       </nav>
     </div>
@@ -338,9 +341,14 @@
       <p id="compareSpotLimit" class="surf-small">Maksymalnie 15 spotów.</p>
       <p id="compareStatus" class="surf-small" role="status"></p>
       <div id="compareContent" aria-busy="false" data-mode="idle">
+        <div id="compareZoom" class="compare-zoom" role="group" aria-label="Przybliżenie wykresu" hidden>
+          <button id="compareZoomOut" type="button" class="filter" aria-label="Oddal wykres" disabled>−</button>
+          <button id="compareZoomIn" type="button" class="filter" aria-label="Przybliż wykres">+</button>
+          <button id="compareZoomReset" type="button" class="filter" disabled>Resetuj widok</button>
+          <span class="surf-small">Rozsuń dwa palce, aby przybliżyć; przesuwaj palcem w bok. Na komputerze: Ctrl + kółko lub dwuklik.</span>
+        </div>
         <div id="compareChart" class="compare-chart"></div>
         <div id="compareLegend" class="compare-legend" role="list" aria-label="Kolory i wzory linii spotów"></div>
-        <p id="compareExplanation" class="surf-small" hidden>Wykres pokazuje dostępne godzinowe oceny spotów z ostatnich 12 godzin oraz dalszą prognozę. Każdy spot ma własny kolor i wzór linii pokazany w legendzie. Zacienione tło oznacza historię modelową, a linia „Teraz” — bieżącą godzinę w chwili pobrania danych. Historia nie jest pomiarem. Przerwa w linii oznacza brak danych; pojedynczą dostępną ocenę oznacza krótka kreska. Najedź na linię, aby odczytać ocenę godziny. Ranking wskazuje najlepsze 3-godzinne okno dzienne, a gdy takiego okna brakuje — średnią z dostępnych ocen historycznych, także nocnych. Tabela pokazuje godziny z wykresu dla wybranego dnia. Zakres danych zależy od ostatniego obliczenia SWAN.</p>
         <div id="compareDays" class="surf-days" role="group" aria-label="Wybierz dzień porównania"></div>
         <h2 id="compareRankingTitle" hidden>Ranking spotów</h2>
         <div id="compareRanking" class="compare-ranking"></div>
@@ -352,12 +360,11 @@
       <div class="heatmap-heading">
         <div class="surf-section-heading"><p class="eyebrow">CAŁE WYBRZEŻE · GODZINA PO GODZINIE</p>
           <h1 id="heatmapTitle">Gdzie i kiedy na fale?</h1></div>
-        <button id="heatmapRefresh" type="button" class="filter">Odśwież oceny</button>
       </div>
-      <div id="heatmapDays" class="surf-days" role="group" aria-label="Dzień mapy cieplnej"></div>
       <div class="heatmap-key">
         <p>Ocena warunków <strong>0–10</strong></p>
         <div id="heatmapLegend" class="heatmap-legend" aria-label="Skala kolorów ocen"></div>
+        <button id="heatmapZoomReset" type="button" class="filter heatmap-zoom-reset" disabled>Pokaż całą mapę</button>
       </div>
       <p id="heatmapStatus" class="surf-small" role="status" aria-live="polite"></p>
       <progress id="heatmapProgress" aria-label="Pobieranie ocen spotów" value="0" max="1" hidden></progress>
@@ -366,12 +373,13 @@
         <p>Pobieram oceny wszystkich spotów…</p>
       </div>
       <div id="heatmapResults" hidden>
-      <div class="heatmap-axis"><span>↓ Spoty · zachód → wschód</span><span>Czas polski → 00:00–23:59</span></div>
-      <div id="heatmapScroll" class="heatmap-scroll" role="region" aria-label="Mapa cieplna wszystkich spotów. Przewijaj w bok i w dół." tabindex="0">
-        <table id="heatmapTable" class="heatmap-table" aria-describedby="heatmapExplanation"><caption>Godzinowe oceny warunków surfingowych</caption></table>
+      <div id="heatmapChart" class="heatmap-chart">
+        <div class="heatmap-spot-axis" aria-hidden="true"><span id="heatmapWest"></span><span id="heatmapEast"></span></div>
+        <canvas id="heatmapCanvas" class="heatmap-canvas" tabindex="0" role="application" aria-roledescription="mapa cieplna" aria-describedby="heatmapExplanation"></canvas>
+        <div class="heatmap-time-axis" aria-hidden="true"><span id="heatmapStart"></span><span id="heatmapEnd"></span></div>
       </div>
-      <div id="heatmapDetail" class="heatmap-detail" aria-live="polite">Najedź na pole, aby zobaczyć ocenę. Dotknij lub kliknij, aby wyświetlić szczegóły i przejść do prognozy spotu. Klawiatura: użyj strzałek do poruszania się po polach.</div>
-      <p id="heatmapExplanation" class="surf-small">Każde pole pokazuje istniejącą ocenę z godziny rozpoczynającej przedział, bez uśredniania. Ostatni przedział 23:00–00:00 kończy się o północy następnego dnia i obejmuje czas do 23:59. Wiersze są uporządkowane według długości geograficznej; odstępy między nimi nie oznaczają odległości. Niebieskofioletowy kolor oznacza rzeczywisty brak oceny. Dostępna historia ma zwykłe kolory ocen; po najechaniu lub dotknięciu pola zobaczysz informację, że to historia prognozy, nie pomiar. Mapa zachowuje pobrane oceny historyczne z ostatnich 7 dni w tej przeglądarce. Nocne oceny opisują warunki falowe, nie rekomendację pływania po zmroku.</p>
+      <div id="heatmapDetail" class="heatmap-detail" aria-live="polite"></div>
+      <p id="heatmapExplanation" class="surf-small">Każdy wiersz to jeden spot: u góry najdalej wysunięty na zachód, na dole najdalej na wschód. Kolejność wynika z długości geograficznej; odstępy między wierszami nie oznaczają odległości. Każda kolumna to jedna godzina, od bieżącej do ostatniej z prognozą fal. Kolor pokazuje ocenę z początku godziny, bez uśredniania; niebieskofioletowy oznacza brak oceny. Rozsunięcie dwóch palców przybliża mapę, a przesuwanie dwoma palcami ją przesuwa; po przybliżeniu jeden palec przesuwa ją też w bok. Na komputerze kółko myszy przybliża i oddala mapę wokół kursora, a przeciąganie ją przesuwa; gdy widać całą mapę, kręcenie w dół przewija stronę. Podpisy osi pokazują wtedy pierwszy i ostatni widoczny spot oraz godzinę. Klawiatura: strzałki wybierają pole, Page Up i Page Down przesuwają o dobę, Enter otwiera prognozę godzinową. Nocne oceny opisują warunki falowe, nie rekomendację pływania po zmroku.</p>
       </div>
     </section>
     <div id="cameraPanel">
@@ -419,7 +427,7 @@
           <button id="reloadButton" class="icon-button reload-button" type="button" aria-label="Połącz ponownie z wybraną kamerą" title="Połącz ponownie"><svg class="icon" aria-hidden="true"><use href="#i-reload"/></svg></button>
         </div>
         <div class="source-links"><a id="sourceLink" href="https://kolobrzeg.webcamera.pl/" target="_blank" rel="noopener noreferrer">Strona kamery ↗</a><button id="playlistButton" class="text-button" type="button" title="Pobierz plik .m3u i otwórz go w VLC">Pobierz do VLC ↓</button></div>
-        <a id="cameraSurfLink" class="camera-surf-link" href="#surf/wladyslawowo" hidden>Prognoza fal dla tej plaży →</a>
+        <a id="cameraSurfLink" class="camera-surf-link" href="#surf" hidden>Prognoza fal dla tej plaży →</a>
       </div>
     </section>
 
@@ -468,11 +476,12 @@
         <p id="surfSpotMapSelected" class="surf-small" role="status" aria-live="polite"></p>
       </section>
       <p id="surfStatus" class="surf-status" role="status" aria-live="polite">Wybierz plażę, aby pobrać prognozę.</p>
-      <section class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
+      <div id="surfSpotHeading" class="surf-spot-heading" hidden><div><h2 id="surfSpotTitle"></h2><p id="surfSpotMeta"></p></div><a id="surfMapLink" target="_blank" rel="noopener noreferrer">Położenie plaży ↗</a></div>
+      <section id="surfLocalSection" class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
       <div id="surfContent" hidden>
-        <div class="surf-spot-heading"><div><h2 id="surfSpotTitle"></h2><p id="surfSpotMeta"></p></div><a id="surfMapLink" target="_blank" rel="noopener noreferrer">Położenie plaży ↗</a></div>
         <section id="surfSession" class="surf-metric surf-session" aria-label="Wybrana sesja" tabindex="-1" hidden></section>
         <section id="surfSimulation" class="surf-box" aria-labelledby="surfSimulationTitle">
+          <span class="surf-spot-label"></span>
           <h3 id="surfSimulationTitle">Fale od brzegu do 500 m</h3>
           <p class="surf-small">Pełny przekrój: 0, 50, 100, 150, …, 500 m. Wybierz dzień, a następnie godzinę, aby zobaczyć, jak zmienia się wysokość fal na całym tym odcinku.</p>
           <div class="surf-profile-layout">
@@ -480,36 +489,51 @@
             <div id="surfSimulationProfile" class="surf-chart"></div>
           </div>
           <div id="surfSimulationInfo" role="status" aria-live="polite"></div>
-          <p class="surf-small">Siatka obliczeniowa SWAN ma krok 50 m. Mapa dna ma rozdzielczość około 100 m i jest interpolowana do siatki — nie są to pomiary dna co 50 m. Odległość 0 m to linia brzegu przyjęta w modelu, z granicznym zerem na lądzie. Rzeczywiste położenie linii wody i napływ fali na piasek mogą się różnić.</p>
+          <details class="surf-info">
+            <summary>Dodatkowe informacje</summary>
+            <div id="surfSimulationDetails"></div>
+            <p class="surf-small">Siatka obliczeniowa SWAN ma krok 50 m. Mapa dna ma rozdzielczość około 100 m i jest interpolowana do siatki — nie są to pomiary dna co 50 m. Odległość 0 m to linia brzegu przyjęta w modelu, z granicznym zerem na lądzie. Rzeczywiste położenie linii wody i napływ fali na piasek mogą się różnić.</p>
+          </details>
         </section>
+        <span class="surf-spot-label"></span>
         <div id="surfNow" class="surf-metrics"></div>
         <section class="surf-wind-inset" aria-labelledby="surfWindTitle">
+          <span class="surf-spot-label"></span>
           <h3 id="surfWindTitle">Wiatr i fale przy brzegu</h3>
           <p id="surfWindDescription" aria-live="polite"></p>
           <p id="surfWaveDescription" aria-live="polite"></p>
           <div id="surfWindMap" aria-label="Mapa satelitarna z kierunkiem wiatru i ruchem fal" aria-describedby="surfWindDescription surfWaveDescription"></div>
           <button id="surfWindCenter" type="button" class="text-button">Wycentruj brzeg</button>
-          <p class="surf-small">Niebieskie ruchome linie to grzbiety fal — przemieszczają się w kierunku ich propagacji. Ruch jest schematyczny: jego tempo i odstępy linii nie odwzorowują prędkości ani długości fal. Pokazujemy średni kierunek fal z prognozy SWAN dla wybranej godziny.</p>
           <p id="surfWindMapStatus" class="surf-small" role="status"></p>
-          <p class="surf-small">Biała strzałka na obwodzie wieje w stronę środka; żółty wycinek wskazuje, skąd nadchodzi wiatr. 0° = północ, 90° = wschód, 180° = południe, 270° = zachód. Środek koła to brzeg przyjęty w modelu, a przy braku jego współrzędnych — punkt spotu. Zdjęcie satelitarne jest podkładem orientacyjnym, nie bieżącym obrazem fal.</p>
         </section>
-        <p class="surf-small"><strong>Wysokość fal (m)</strong> opisuje ich rozmiar od doliny do grzbietu. W prognozie używamy wysokości znaczącej (Hs): w przybliżeniu średniej wysokości jednej trzeciej najwyższych fal. Pojedyncze fale mogą być większe, a przy brzegu ich rozmiar się zmienia — to nie jest dokładna wysokość fali, na której będziesz surfować.</p>
-        <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. <strong>Czy warto jechać? 0–10</strong> łączy potencjał wysokości i okresu z jakością wiatru i przybliżonym uporządkowaniem fal. Profil: średniozaawansowany surfer na desce do bałtyckich fal. Czysta fala poniżej 1 m może dać dobrą sesję; sam wiatr nie wystarczy. Okna trzygodzinne premiują stabilność: 70% średniej i 30% najsłabszej godziny. Pewność podajemy osobno. To heurystyka wymagająca kalibracji, nie ocena bezpieczeństwa.</p>
-        <p class="surf-small"><strong>Energia fal (kJ/m²)</strong> oznacza ilość energii na metr kwadratowy powierzchni morza. <strong>Moc fal (kW/m)</strong> opisuje jej przepływ w ciągu sekundy na metr szerokości grzbietu. Wyższa fala niesie więcej energii: przy podwojeniu wysokości energia rośnie około czterokrotnie. To nie jest siła uderzenia fali ani energia jednej konkretnej fali. Większa moc nie musi oznaczać lepszych warunków do surfingu.</p>
-        <p class="surf-small">Wysokość, czas między falami, kierunek, moc i energia dotyczą tego samego punktu przy spocie — do 500 m od oszacowanego brzegu. Moc pochodzi z obliczonego widma fal SWAN. Jeśli brakuje poprawnej prognozy przy brzegu, wyświetlamy brak danych, a nie wartości z dalszego morza.</p>
+        <details class="surf-info">
+          <summary>Dodatkowe informacje</summary>
+          <p class="surf-small">Niebieskie ruchome linie to grzbiety fal — przemieszczają się w kierunku ich propagacji. Ruch jest schematyczny: jego tempo i odstępy linii nie odwzorowują prędkości ani długości fal. Pokazujemy średni kierunek fal z prognozy SWAN dla wybranej godziny.</p>
+          <p class="surf-small">Biała strzałka na obwodzie wieje w stronę środka; żółty wycinek wskazuje, skąd nadchodzi wiatr. 0° = północ, 90° = wschód, 180° = południe, 270° = zachód. Środek koła to brzeg przyjęty w modelu, a przy braku jego współrzędnych — punkt spotu. Zdjęcie satelitarne jest podkładem orientacyjnym, nie bieżącym obrazem fal.</p>
+          <p class="surf-small"><strong>Wysokość fal (m)</strong> opisuje ich rozmiar od doliny do grzbietu. W prognozie używamy wysokości znaczącej (Hs): w przybliżeniu średniej wysokości jednej trzeciej najwyższych fal. Pojedyncze fale mogą być większe, a przy brzegu ich rozmiar się zmienia — to nie jest dokładna wysokość fali, na której będziesz surfować.</p>
+          <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. <strong>Czy warto jechać? 0–10</strong> łączy potencjał wysokości i okresu z jakością wiatru i przybliżonym uporządkowaniem fal. Profil: średniozaawansowany surfer na desce do bałtyckich fal. Czysta fala poniżej 1 m może dać dobrą sesję; sam wiatr nie wystarczy. Okna trzygodzinne premiują stabilność: 70% średniej i 30% najsłabszej godziny. Pewność podajemy osobno. To heurystyka wymagająca kalibracji, nie ocena bezpieczeństwa.</p>
+          <p class="surf-small"><strong>Energia fal (kJ/m²)</strong> oznacza ilość energii na metr kwadratowy powierzchni morza. <strong>Moc fal (kW/m)</strong> opisuje jej przepływ w ciągu sekundy na metr szerokości grzbietu. Wyższa fala niesie więcej energii: przy podwojeniu wysokości energia rośnie około czterokrotnie. To nie jest siła uderzenia fali ani energia jednej konkretnej fali. Większa moc nie musi oznaczać lepszych warunków do surfingu.</p>
+          <p class="surf-small">Wysokość, czas między falami, kierunek, moc i energia dotyczą tego samego punktu przy spocie — do 500 m od oszacowanego brzegu. Moc pochodzi z obliczonego widma fal SWAN. Jeśli brakuje poprawnej prognozy przy brzegu, wyświetlamy brak danych, a nie wartości z dalszego morza.</p>
+        </details>
         <div id="surfFlags" class="surf-flags"></div>
         <section class="surf-box"><h3>Po nawianiu: czy nadchodzi wywiewka?</h3><div id="surfSequence" aria-live="polite"></div><p class="surf-small">Analiza poprzednich 24 godzin modelowych, nie pomiarów. Szukamy dłuższego onshore, później słabego offshore lub ciszy oraz utrzymującej się fali. Zmiana wiatru nie gwarantuje wygładzenia fali ani sesji następnego dnia.</p></section>
-        <section class="surf-box"><div class="surf-table-heading"><h3>Najlepsze trzygodzinne okna</h3><label><input id="surfCleanupOnly" type="checkbox"> Tylko wywiewka po nawianiu</label></div><p class="surf-small">Tylko godziny dzienne. Ranking dotyczy wybranej plaży; także najlepsze okno może mieć słabe warunki. Filtr wywiewki wymaga potwierdzenia sekwencji przez wszystkie trzy godziny.</p><div id="surfWindows" class="surf-windows"></div></section>
-        <details class="surf-box"><summary>Zmiany w kolejnych dniach w punkcie podsumowania</summary><div id="surfChart" class="surf-chart"></div><p class="surf-small">To dodatkowy wykres czasowy dla punktu podsumowania (jego odległość jest podana przy wysokości fali). Pełny przekrój od brzegu do 500 m znajduje się powyżej. Oś pozioma tutaj oznacza dzień i godzinę, a nie odległość. Przerwa w linii oznacza brak danych.</p></details>
+        <section class="surf-box"><span class="surf-spot-label"></span><div class="surf-table-heading"><h3>Najlepsze trzygodzinne okna</h3><label><input id="surfCleanupOnly" type="checkbox"> Tylko wywiewka po nawianiu</label></div><p class="surf-small">Tylko godziny dzienne. Ranking dotyczy wybranej plaży; także najlepsze okno może mieć słabe warunki. Filtr wywiewki wymaga potwierdzenia sekwencji przez wszystkie trzy godziny.</p><div id="surfWindows" class="surf-windows"></div></section>
+        <details class="surf-box"><summary>Zmiany w kolejnych dniach w punkcie podsumowania<span class="surf-spot-label"></span></summary><div id="surfChart" class="surf-chart"></div><p class="surf-small">To dodatkowy wykres czasowy dla punktu podsumowania (jego odległość jest podana przy wysokości fali). Pełny przekrój od brzegu do 500 m znajduje się powyżej. Oś pozioma tutaj oznacza dzień i godzinę, a nie odległość. Przerwa w linii oznacza brak danych.</p></details>
       </div>
         <section id="surfHourlySection" class="surf-box" aria-labelledby="surfHourlyTitle" aria-busy="true">
-          <div class="surf-table-heading"><div><h3 id="surfHourlyTitle">Prognoza godzinowa</h3><p id="surfHourlyContext" class="surf-small" aria-live="polite"></p></div><div class="surf-hourly-controls"><div class="surf-hour-navigation" role="group" aria-label="Przewijanie prognozy godzinowej"><button id="surfHoursNow" class="filter" type="button">Teraz</button><button id="surfHoursPrevious" class="filter" type="button" aria-label="Przewiń do wcześniejszych godzin prognozy" aria-controls="surfHoursScroll" disabled>←</button><button id="surfHoursNext" class="filter" type="button" aria-label="Przewiń do późniejszych godzin prognozy" aria-controls="surfHoursScroll" disabled>→</button></div></div></div>
+          <span class="surf-spot-label"></span>
+          <h3 id="surfHourlyTitle">Prognoza godzinowa</h3>
+          <p id="surfHourlyContext" class="surf-small" aria-live="polite"></p>
           <p id="surfForecastPoint" class="surf-small surf-point-summary" aria-live="polite" hidden></p>
           <div class="surf-daylight-legend" aria-label="Kolory pory dnia"><span><i class="is-day" aria-hidden="true"></i>Dzień</span><span><i class="is-night" aria-hidden="true"></i>Noc</span><small>Na początku przedziału. Wiersz ocen ma własne kolory jakości warunków; turkusowa obwódka oznacza wybraną godzinę.</small></div>
-          <p id="surfHoursHint" class="surf-small">Przesuwaj tabelę w bok myszką lub palcem. Obejmuje ostatnie 12 godzin modelowych oraz prognozę; wcześniejsze godziny są oznaczone jako historia. Pokazujemy tylko godziny i dni z dostępną wysokością fal. Każda kolumna to jedna godzina; wartości dotyczą jej początku. Data jest nad godziną. Podświetlenie dnia zmienia się, gdy jego ostatnia kolumna zniknie z widoku. Kliknij godzinę, aby zobaczyć przekrój fal do 500 m od brzegu.</p>
-          <p class="surf-small">Pod wartościami fal: najnowszy BS Wind 3 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
-          <p id="surfDirectionHint" class="surf-small"><strong>Miniaturki kierunków:</strong> widok z plaży w stronę morza — morze u góry, ląd na dole. Strzałka biegnie od kropki do grotu: pokazuje ruch fal (niebieski) lub wiatru (fioletowy), względem brzegu tego spotu.</p>
+          <details class="surf-info">
+            <summary>Informacje</summary>
+            <p id="surfHoursHint" class="surf-small">Przesuwaj tabelę w bok myszką lub palcem. Obejmuje ostatnie 24 godziny modelowe oraz prognozę na 14 dni; godziny po 7. dniu są oznaczone jako orientacyjne, bo trafność prognozy spada, wiatr pochodzi wtedy z dwóch modeli, a fale z jednego; wcześniejsze godziny są oznaczone jako historia. Pokazujemy tylko godziny i dni z dostępną wysokością fal. Każda kolumna to jedna godzina; wartości dotyczą jej początku. Data jest nad godziną. Podświetlenie dnia zmienia się, gdy jego ostatnia kolumna zniknie z widoku. Kliknij godzinę, aby zobaczyć przekrój fal do 500 m od brzegu.</p>
+            <p class="surf-small">Pod wartościami fal: najnowszy BS Wind 3 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
+            <p id="surfDirectionHint" class="surf-small"><strong>Miniaturki kierunków:</strong> widok z plaży w stronę morza — morze u góry, ląd na dole. Strzałka biegnie od kropki do grotu: pokazuje ruch fal (niebieski) lub wiatru (fioletowy), względem brzegu tego spotu.</p>
+          </details>
           <div id="surfDays" class="surf-days" role="group" aria-label="Przewiń prognozę godzinową do dnia"></div>
+          <div id="surfDayPages" class="surf-profile-pages surf-day-pages" hidden><button id="surfDaysLess" class="filter" type="button">Pokaż mniej</button><button id="surfDaysMore" class="filter" type="button">Pokaż kolejne 5 dni</button></div>
           <div id="surfDayParts" class="surf-day-parts" role="group" aria-label="Przewiń do pory wybranego dnia" hidden></div>
           <p id="surfHoursEmpty" class="surf-small" role="status" hidden>Pobieram prognozę fal…</p>
           <div id="surfHoursScroll" class="surf-table-scroll" tabindex="0" role="region" aria-label="Przewijana poziomo prognoza fal i pogody: godziny w kolumnach" aria-describedby="surfForecastPoint surfHoursHint surfDirectionHint"><table id="surfHoursTable" class="surf-table" aria-label="Parametry surfingu i pogoda na spocie w kolejnych przedziałach godzinowych"><thead id="surfHoursHead"></thead><tbody id="surfHours"></tbody></table></div>
@@ -518,12 +542,13 @@
         </section>
       <div id="surfDetailContent" hidden>
         <div class="surf-detail-grid">
-          <section class="surf-box"><h3>Źródła prognozy przy spocie</h3><div id="surfModels"></div><p class="surf-small">Fale są wynikiem SWAN dla punktu przy brzegu. Poniżej porównujemy modele wiatru; ich zgodność nie jest gwarancją trafności prognozy.</p></section>
-          <section class="surf-box"><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>
+          <section class="surf-box"><span class="surf-spot-label"></span><h3>Źródła prognozy przy spocie</h3><div id="surfModels"></div><p class="surf-small">Fale są wynikiem SWAN dla punktu przy brzegu. Poniżej porównujemy modele wiatru; ich zgodność nie jest gwarancją trafności prognozy.</p></section>
+          <section class="surf-box"><span class="surf-spot-label"></span><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>
         </div>
-        <section class="surf-box"><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
+        <section class="surf-box"><span class="surf-spot-label"></span><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
       </div>
       <section id="surfWindy" class="surf-box" aria-labelledby="windyTitle">
+        <span class="surf-spot-label"></span>
         <div class="surf-table-heading"><h3 id="windyTitle">Mapa fal — Windy</h3><a id="windyLink" target="_blank" rel="noopener noreferrer">Otwórz Windy ↗</a></div>
         <p class="surf-small">Mapa Windy to niezależny podgląd. Jej wartości nie są pobierane do naszego wyniku.</p>
         <div id="windyTabs" class="windy-tabs" role="tablist" aria-label="Warstwa mapy Windy">
@@ -767,7 +792,7 @@
     let recoveryTimer;
     let toastTimer;
     let hasPlayed = false;
-    let cameraActive = !location.hash.startsWith("#surf/") && !location.hash.startsWith("#heatmap");
+    let cameraActive = !location.hash.startsWith("#surf") && !location.hash.startsWith("#heatmap");
 
     const normalize = value => value.toLocaleLowerCase("pl").normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/ł/g, "l");
     const favoriteLabel = camera => `${favorites.has(camera.id) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${camera.name}, ${camera.view}`;
@@ -1061,7 +1086,7 @@
       $("search").focus();
     });
     window.addEventListener("hashchange", () => {
-      cameraActive = !location.hash.startsWith("#surf/") && !location.hash.startsWith("#heatmap");
+      cameraActive = !location.hash.startsWith("#surf") && !location.hash.startsWith("#heatmap");
       const camera = byId.get(location.hash.slice(1));
       if (camera && camera.id !== selected?.id) selectCamera(camera);
     });

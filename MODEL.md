@@ -29,8 +29,22 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   płytszej niż 4 m, wynik jest niedostępny zamiast fikcyjnej prognozy surfbreaku.
 - 36 kierunków (co 10°), 32 częstotliwości logarytmicznych 0,05–1 Hz.
 - Niestacjonarny krok 10 minut, schemat BSBT; 12 godzin rozbiegu modelu,
-  następnie 12 godzin historii i 120 godzin prognozy. Symulacja zaczyna się
-  24 godziny przed bieżącą godziną, żeby także historia miała pełny rozbieg.
+  następnie 24 godziny historii i do 336 godzin (14 dni) prognozy. Symulacja zaczyna się
+  36 godzin przed bieżącą godziną, żeby także historia miała pełny rozbieg.
+- Koniec prognozy wyznaczają rzeczywiste dane wejściowe, nie ich dopełnienie pustymi
+  wartościami: Open-Meteo zwraca 16 dni, ale DWD EWAM kończy się po ok. 3 dniach,
+  ICON po ok. 7, a ECMWF WAM i ECMWF IFS po ok. 14,5. Brzeg fali wyznacza najdłuższy
+  kompletny model fal (w praktyce ECMWF WAM), a wiatr wymaga co najmniej dwóch modeli,
+  więc po 7. dniu konsensus tworzą GFS i ECMWF. Godziny po 7. dniu są oznaczone
+  w tabeli jako orientacyjne, a ich pewność jako niska.
+- SWAN przyjmuje najwyżej 300 poleceń COMPUTE w jednym uruchomieniu, a wymuszenie
+  zmienia się co godzinę. Dłuższy okres liczymy w częściach po 240 godzin połączonych
+  binarnym plikiem stanu (HOTFILE / INIT HOTSTART). Pierwsza godzina kolejnej części
+  pochodzi z poprzedniej, bo przy wznowieniu granica nie ma jeszcze nałożonego
+  wymuszenia. Test integracyjny porównuje wynik dzielony z ciągłym — są identyczne.
+- Pełny przekrój 0–500 m (`profile`) publikujemy dla całego okresu prognozy
+  (`profileHours`). Kopia offline w pamięci przeglądarki zachowuje go tylko
+  dla pierwszych 120 godzin, bo `localStorage` mieści niewiele pełnych plików.
 
 ### Granica od morza
 
@@ -146,13 +160,14 @@ Niepełny profil nie jest sztucznie przedłużany na wykresie. Publikacja wymaga
 wersji pakietu danych, dzięki czemu awaryjne przywrócenie starego artefaktu
 nie podmieni nowych wyników na dawne wartości z innego zakresu przestrzennego.
 Frontend przyjmuje wyłącznie `BS-SWAN-1.3-seaward2m`. Cache prognoz oraz historia
-ocen tabeli porównawczej i heat mapy są rozdzielone według wersji metody i geometrii.
+ocen tabeli porównawczej są rozdzielone według wersji metody i geometrii.
+Heat mapa nie przechowuje historii — pokazuje godziny od bieżącej do końca prognozy.
 Stare oceny nie są domieszane do poprawionych wyników; archiwalny kolor pojawi się
 tylko dla godzin dostępnych w zgodnych obliczeniach lub zapisanej historii tej wersji.
-Udostępniamy 12 godzin historii modelowej po zakończeniu pełnego rozbiegu.
-Wynik zawiera `historyHours: 12`, 12 próbek w `history` oraz osobne `hourly`
+Udostępniamy 24 godziny historii modelowej po zakończeniu pełnego rozbiegu.
+Wynik zawiera `historyHours: 24`, 24 próbki w `history` oraz osobne `hourly`
 z bieżącą godziną i prognozą. Tabela, przekrój i wykres czasowy domyślnie obejmują
-ostatnie 12 godzin liczone od początku bieżącej godziny oraz przyszłość.
+ostatnie 24 godziny liczone od początku bieżącej godziny oraz przyszłość.
 Historia jest wcześniejszym wynikiem modelowym, nie pomiarem.
 
 ## Backend i publikacja
@@ -213,7 +228,7 @@ python3 -m http.server 8000 --directory dist
 ```
 
 Bez `--spots` liczone są wszystkie spoty. `--hours 6` służy wyłącznie do krótkich
-testów; publiczny workflow używa 120 h. Numeryczna geometria i wszystkie dane
+testów; domyślnie i w publicznym workflow liczone jest 336 h (14 dni). Numeryczna geometria i wszystkie dane
 wejściowe są w archiwach. `inputHash`, hash rastra, SHA256 paczki solvera i SHA
 commitu umożliwiają sprawdzenie pochodzenia wyniku. Niedokończony plik wyjściowy,
 błąd solvera, niepełny wiatr lub granica nie są publikowane jako nowa prognoza.

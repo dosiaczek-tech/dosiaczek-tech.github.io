@@ -20,6 +20,7 @@
     const status = document.getElementById("surfWindMapStatus");
     if (!root.L) { status.textContent = "Mapa nie mogła się załadować. Kierunek i prędkość wiatru są nadal podane liczbowo."; return null; }
     const L = root.L, map = L.map(container, { scrollWheelZoom: true, minZoom: 10, maxZoom: 17 });
+    root.SurfMapGestures?.attach(map);
     const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 17,
       referrerPolicy: "origin",
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>' });

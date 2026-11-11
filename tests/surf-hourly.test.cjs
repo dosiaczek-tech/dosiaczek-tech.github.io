@@ -108,15 +108,15 @@ test('weather alone never creates table columns but available waves remain visib
   assert.equal(H.combine(rows,null,{now:t*1000})[0].daylight,null);
 });
 
-test('merging includes twelve hours of history by default and never substitutes nearby temperatures for gaps', () => {
+test('merging includes twenty-four hours of history by default and never substitutes nearby temperatures for gaps', () => {
   const t=time('2026-10-22T10:00:00Z'), data=weatherInputs(t);
-  const rows=[t-13*3600,t-12*3600,t,t+2*3600].map(time=>({time,simulation:{height:.6}}));
+  const rows=[t-25*3600,t-24*3600,t,t+2*3600].map(time=>({time,simulation:{height:.6}}));
   const current=H.combine(rows,data,{now:t*1000,historyHours:0});
   assert.deepEqual(current.map(r=>r.time),[t,t+2*3600]);
   assert.equal(current[1].weather.airTemperature,null);
   const history=H.combine(rows,data,{now:t*1000+37*60000});
-  assert.ok(history.some(r=>r.time===t-12*3600));
-  assert.ok(!history.some(r=>r.time===t-13*3600));
+  assert.ok(history.some(r=>r.time===t-24*3600));
+  assert.ok(!history.some(r=>r.time===t-25*3600));
   assert.ok(!history.some(r=>r.time===t-3600));
 });
 

@@ -55,6 +55,11 @@
       throw failure;
     }
   }
+  // localStorage fits only a few full files, so the offline copy keeps cross-sections for the first five days.
+  function offlineCopy(value, hours = 120) {
+    const until = value.hourly[0]?.time + hours * 3600;
+    return { ...value, profileHours: hours, hourly: value.hourly.map(row => row.time > until ? { ...row, profile: [] } : row) };
+  }
   async function nearshore(spot, force = false) {
     const key = `swan-${M.SIMULATION_VERSION}-${spotKey(spot)}`, previous = memory.get(key);
     const age = M.simulationAge(previous?.value, Date.now());
@@ -68,7 +73,7 @@
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");
       memory.set(key, { loadedAt: Date.now(), value });
       const valueAge = M.simulationAge(value, Date.now());
-      if (value.status === "ready" && M.finite(valueAge) && valueAge <= 18) write(`${key}-saved`, value);
+      if (value.status === "ready" && M.finite(valueAge) && valueAge <= 18) write(`${key}-saved`, offlineCopy(value));
       return value;
     } catch (error) {
       const saved = read(`${key}-saved`), savedAge = M.simulationAge(saved, Date.now());
@@ -99,7 +104,7 @@
   }
   function forecasts(spot, force = false, { coastalOnly = false, publishedOnly = false } = {}) {
     const sea = M.offshore(spot);
-    const common = { past_days: 2, forecast_days: 6, timeformat: "unixtime", timezone: "GMT" };
+    const common = { past_days: 2, forecast_days: 16, timeformat: "unixtime", timezone: "GMT" };
     const marineURL = endpoint("https://marine-api.open-meteo.com/v1/marine", { ...common,
       latitude: sea.lat.toFixed(5), longitude: sea.lon.toFixed(5), cell_selection: "sea",
       hourly: "wave_height,wave_direction,wave_period", models: Object.keys(M.WAVE_MODELS).join(",") });
@@ -114,7 +119,7 @@
   }
   function conditions(spot, force = false) {
     // Only the open spot requests these extras; the coast-wide ranking uses published wind/SWAN.
-    const common = { latitude: spot.lat, longitude: spot.lon, past_days: 1, forecast_days: 6,
+    const common = { latitude: spot.lat, longitude: spot.lon, past_days: 1, forecast_days: 16,
       timeformat: "unixtime", timezone: "Europe/Warsaw" };
     const weatherURL = endpoint("https://api.open-meteo.com/v1/forecast", { ...common,
       hourly: "temperature_2m,cloud_cover,weather_code", daily: "sunrise,sunset", temperature_unit: "celsius", cell_selection: "nearest" });

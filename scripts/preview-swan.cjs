@@ -19,7 +19,7 @@ function usableSwan(bundle, spot, now = Date.now()) {
 }
 function historyCoverage(bundle, spot, now) {
   const current = Math.floor(now / 3600000) * 3600;
-  const rows = Array.from({ length: 12 }, (_, i) => ({ time: current - (12 - i) * 3600 }));
+  const rows = Array.from({ length: 24 }, (_, i) => ({ time: current - (24 - i) * 3600 }));
   return M.applySimulation(rows, bundle, spot, now).filter(row => row.simulation).length;
 }
 async function runSolver() {
@@ -73,12 +73,12 @@ function createPreviewSwan({ spots, now = Date.now, run = runSolver,
     const local = await readResult(id);
     const candidates = [published, local].filter(value => usableSwan(value, spot, now()))
       .map(value => ({ value, history: historyCoverage(value, spot, now()) }));
-    // Older published formats contain only six history samples. Keep a valid complete local run.
-    candidates.sort((a, b) => Number(b.history === 12) - Number(a.history === 12) ||
+    // Older formats contain six or twelve history samples. Keep a valid complete local run.
+    candidates.sort((a, b) => Number(b.history === 24) - Number(a.history === 24) ||
       M.simulationAge(a.value, now()) - M.simulationAge(b.value, now()) || b.value.generatedAt - a.value.generatedAt);
     const chosen = candidates[0]?.value;
     // Start before the 18 h cutoff, leaving time to fetch inputs and calculate the coast.
-    if (!chosen || candidates[0].history < 12 || M.simulationAge(chosen, now()) >= 12) refresh();
+    if (!chosen || candidates[0].history < 24 || M.simulationAge(chosen, now()) >= 12) refresh();
     const value = chosen || published || local || { schema: 2, status: "unavailable", spot: { id }, error: "Oczekiwanie na obliczenia SWAN." };
     return { ...value, ...(value === local ? { sourceType: "local" } : {}),
       refreshPending: Boolean(pending), refreshError: failure?.message,

@@ -41,7 +41,7 @@ test('expired published wind is replaced by a real batched fetch shared between 
   assert.equal(h.calls[0].get('models'),models.join(','));
   assert.equal(h.calls[0].get('wind_speed_unit'),'ms');
   assert.equal(h.calls[0].get('past_days'),'2');
-  assert.equal(h.calls[0].get('forecast_days'),'6');
+  assert.equal(h.calls[0].get('forecast_days'),'16');
   await h.provider.get(spots[0].id);
   assert.equal(h.calls.length,1);
 });

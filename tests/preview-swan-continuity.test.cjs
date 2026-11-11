@@ -14,7 +14,7 @@ function forecast(clock, location = spot) {
   return { schema: 2, version: M.SIMULATION_VERSION, status: 'ready', spot: location,
     generatedAt: clock / 1000, windFetchedAt: clock / 1000, boundaryFetchedAt: clock / 1000,
     maxShoreDistanceM: 500, shoreline: { landDistance: 0, waterDistance: 100, distance: 50 },
-    history: Array.from({ length: 12 }, (_, i) => row(current - (12 - i) * 3600)),
+    history: Array.from({ length: 24 }, (_, i) => row(current - (24 - i) * 3600)),
     hourly: Array.from({ length: 121 }, (_, i) => row(current + i * 3600)) };
 }
 function scored(bundle, clock) {
@@ -48,7 +48,7 @@ test('Sobieszewo regains its score on unattended startup using its current coord
   assert.equal(result.refreshPending, false);
 });
 
-test('twelve scored historical hours survive days without page requests, including the DST change', async () => {
+test('twenty-four scored historical hours survive days without page requests, including the DST change', async () => {
   let clock = start, local = forecast(clock), runs = 0;
   const provider = createPreviewSwan({ spots: [spot], now: () => clock,
     readStatus: async () => ({ version: M.SIMULATION_VERSION, spots: 1, available: 1, generatedAt: start / 1000 }),
@@ -62,7 +62,7 @@ test('twelve scored historical hours survive days without page requests, includi
     const rows = scored(local, clock);
     const history = rows.filter(row => row.time < clock / 1000);
     assert.deepEqual(history.map(row => row.time),
-      Array.from({ length: 12 }, (_, i) => clock / 1000 - (12 - i) * 3600));
+      Array.from({ length: 24 }, (_, i) => clock / 1000 - (24 - i) * 3600));
     assert.ok(history.every(row => Number.isFinite(row.score) && row.scoreSource === 'swan'));
     assert.ok(rows.some(row => row.time === clock / 1000 && Number.isFinite(row.score)));
     assert.ok(M.simulationAge(local, clock) < 6);

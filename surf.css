@@ -32,9 +32,6 @@
 .surf-metric strong { display: block; font-size: 30px; line-height: 1.5; font-weight: 650; letter-spacing: -.8px; }
 .surf-metric p { margin: 2px 0 0; font-size: 11px; opacity: .8; }
 .surf-small { font-size: 11px; color: var(--muted); line-height: 1.8; }
-.surf-hour-navigation { display: flex; gap: 7px; flex: none; }
-.surf-hour-navigation .filter { min-width: 42px; min-height: 40px; }
-.surf-hour-navigation button:disabled { opacity: .4; cursor: default; }
 @media (hover: hover) and (pointer: fine) { .surf-table, .surf-table .surf-hour-interval { cursor: grab; } }
 .surf-table-scroll.is-dragging { scroll-behavior: auto; }
 .surf-table-scroll.is-dragging, .surf-table-scroll.is-dragging * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
@@ -50,6 +47,9 @@
 .surf-flags span { border-radius: 6px; background: #f1e9d9; color: #806139; font-size: 11px; padding: 5px 9px; }
 .surf-box { padding: 23px; margin: 18px 0; border: 1px solid var(--line); border-radius: 17px; background: #ffffffc9; min-width: 0; }
 .surf-box h3 { margin: 0 0 10px; font-size: 17px; font-weight: 650; }
+.surf-spot-label { display: block; width: fit-content; max-width: 100%; margin: 0 0 10px; padding: 4px 11px; border-radius: 12px; background: var(--mint); color: var(--sea-dark); font-size: 13px; font-weight: 700; line-height: 1.4; }
+.surf-spot-label:empty { display: none; }
+.surf-box summary .surf-spot-label { margin: 8px 0 0; }
 .surf-box summary { font-weight: 650; cursor: pointer; font-size: 14px; }
 .surf-box > p, .surf-box li { font-size: 12px; }
 .surf-box a { color: var(--sea); text-underline-offset: 3px; }
@@ -67,15 +67,13 @@
 .surf-profile-selector select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; }
 .surf-profile-selector > label { font-size: 11px; color: var(--muted); }
 .surf-profile-picker { position: relative; min-width: 0; }
-.surf-profile-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; text-align: left; }
-.surf-profile-trigger > span:first-child { flex: 1; min-width: 0; }
-.surf-profile-toggle-text { flex: none; font-size: 10px; color: var(--muted); }
-.surf-profile-trigger:hover, .surf-profile-trigger[aria-expanded="true"] { border-color: var(--sea); }
-.surf-profile-trigger:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
 .surf-profile-chevron { flex: none; width: 7px; height: 7px; margin: -3px 2px 0; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
-.surf-profile-trigger[aria-expanded="true"] .surf-profile-chevron { margin-top: 3px; transform: rotate(225deg); }
-.surf-profile-options { position: relative; height: auto; max-height: min(320px, 55vh); margin-top: 6px; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.surf-profile-announce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.surf-profile-options { position: relative; height: auto; max-height: min(320px, 55vh); margin-top: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: white; }
 .surf-profile-options > .surf-small { margin: 6px; }
+.surf-profile-pages { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.surf-profile-pages .filter { min-height: 40px; border-style: dashed; font-size: 13px; font-weight: 700; }
+.surf-profile-pages .filter:disabled { opacity: .45; cursor: default; }
 .surf-profile-day-button, .surf-profile-hour { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 40px; padding: 10px; border: 0; border-radius: 6px; background: white; color: var(--ink); font: inherit; font-size: 12px; line-height: 1.4; text-align: left; cursor: pointer; }
 .surf-profile-day-button { font-weight: 650; border-bottom: 1px solid var(--line); }
 .surf-profile-day-button[data-selected="true"] { color: var(--sea-dark); }
@@ -92,7 +90,7 @@
 .surf-profile-value strong { font-size: 13px; }
 #surfSimulation .surf-table-heading { flex-wrap: wrap; }
 @media (max-width: 760px) { .surf-profile-layout { display: flex; flex-direction: column; } .surf-profile-selector, #surfSimulationProfile { width: 100%; } }
-@media (max-width: 640px) { .surf-profile-selector select { font-size: 16px; } .surf-profile-trigger, .surf-profile-day-button, .surf-profile-hour { min-height: 44px; font-size: 14px; } }
+@media (max-width: 640px) { .surf-profile-selector select { font-size: 16px; } .surf-profile-day-button, .surf-profile-hour { min-height: 44px; font-size: 14px; } .surf-profile-pages .filter { flex: auto; min-height: 44px; } }
 .surf-days { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
 #surfDays { gap: 10px; align-items: flex-start; }
 .surf-day-card { flex: 0 0 148px; min-width: 0; }
@@ -102,13 +100,12 @@
 .surf-day-sun .icon { flex: none; width: 16px; height: 16px; color: #b07926; }
 .surf-day-sun strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) { .surf-day-card { flex-basis: calc((100% - 10px) / 2); } }
+.surf-day-pages { margin: -6px 0 14px; }
 .surf-day-parts { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 14px; }
 .surf-day-part { min-height: 34px; padding: 7px 12px; font-size: 11px; }
 .surf-day-part[aria-pressed="true"] { background: var(--sea); border-color: var(--sea); color: white; }
 .surf-day-part:disabled { opacity: .4; cursor: default; }
 @media (max-width: 640px) { .surf-day-part { flex: 1; min-height: 40px; padding: 7px 8px; } }
-.surf-hourly-controls { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-#surfHourlySection > .surf-table-heading { align-items: center; flex-wrap: wrap; }
 #surfHourlyContext { margin: 0; }
 .surf-point-summary { margin: 12px 0 0; color: var(--ink); }
 .surf-daylight-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0; font-size: 11px; }
@@ -117,6 +114,7 @@
 .surf-daylight-legend .is-day { background: #fffbed; border-color: #e7d9ad; }
 .surf-daylight-legend .is-night { background: #e0efff; border-color: #96bde9; }
 .surf-daylight-legend small { color: var(--muted); font-size: 10px; }
+.surf-info summary { padding: 10px 0; font-size: 14px; font-weight: 650; cursor: pointer; }
 .surf-table-scroll { --hourly-label-width: 100px; --hourly-column-width: 150px; max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; scrollbar-color: #80aaa0 #eef3ef; }
 .surf-table-scroll::-webkit-scrollbar { height: 12px; }
 .surf-table-scroll::-webkit-scrollbar-track { background: #eef3ef; }
@@ -205,6 +203,11 @@
 #surfSpotMap { height: 390px; width: 100%; border-radius: 12px; background: #e0e9e5; isolation: isolate; z-index: 0; }
 #surfSpotMap .leaflet-control-attribution { font-size: 10px; }
 #surfSpotMap .leaflet-control-zoom a { color: var(--ink); text-decoration: none; }
+/* Over a map on a touch screen when one finger tries to move it. */
+.surf-map-gesture-hint { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: #12312fd9; color: white; font: 650 16px / 1.4 Inter, "Segoe UI", system-ui, sans-serif; text-align: center; text-shadow: 0 1px 3px #0008;
+  pointer-events: none; opacity: 0; transition: opacity .2s; }
+.surf-map-gesture-hint.is-visible { opacity: 1; }
 .surf-map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; font-size: 10px; color: var(--muted); }
 .surf-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .surf-map-legend i { width: 10px; height: 10px; border-radius: 50%; }
@@ -271,30 +274,48 @@
 .compare-picker-button[data-empty="true"] { color: var(--muted); }
 .compare-picker-button[aria-expanded="true"] { border-color: var(--sea); }
 .compare-picker-button:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
-.compare-picker-list { position: fixed; z-index: 1700; overflow-y: auto; overscroll-behavior: contain; padding: 5px; border: 1px solid #bacbd2; border-radius: 10px; background: white; box-shadow: 0 10px 30px #183d4933; color: var(--ink); font-size: 13px; text-align: left; }
+.compare-picker-list { position: fixed; z-index: 1700; display: flex; flex-direction: column; overflow: hidden; padding: 5px; border: 1px solid #bacbd2; border-radius: 10px; background: white; box-shadow: 0 10px 30px #183d4933; color: var(--ink); font-size: 13px; text-align: left; }
+.compare-picker-list[hidden] { display: none; }
+.compare-picker-search { flex: none; width: 100%; min-height: 40px; margin-bottom: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; font: inherit; font-size: 16px; color: var(--ink); background: white; }
+.compare-picker-search:focus { outline: 2px solid var(--sea); outline-offset: -1px; border-color: var(--sea); }
+.compare-picker-hint { flex: none; margin: 2px 6px 6px; color: var(--muted); font-size: 12px; }
+.compare-picker-options { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.compare-picker-options:has(.is-recent) { scroll-padding-top: 66px; }
 .compare-picker-option { position: relative; padding: 10px 24px 10px 10px; border-radius: 5px; overflow-wrap: anywhere; cursor: pointer; }
 .compare-picker-option[aria-selected="true"]::after { content: "✓"; position: absolute; right: 8px; top: 10px; color: var(--sea); font-weight: 700; }
 .compare-picker-option[data-active="true"] { background: #edf3ef; box-shadow: inset 3px 0 var(--sea); }
 .compare-picker-option[aria-disabled="true"] { color: #718087; cursor: default; }
-.compare-picker-option.is-recent { margin-bottom: 5px; padding-top: 11px; padding-bottom: 11px; border-top: 1px dashed #719cc9; border-bottom: 1px dashed #719cc9; border-radius: 0; background: #e3efff; color: #173f6b; }
+.compare-picker-option.is-recent { position: sticky; top: 0; z-index: 1; margin-bottom: 5px; padding-top: 11px; padding-bottom: 11px; border-top: 1px dashed #719cc9; border-bottom: 1px dashed #719cc9; border-radius: 0; background: #e3efff; color: #173f6b; }
 .compare-picker-option.is-recent[data-active="true"] { background: #cfe3ff; }
 .compare-recent-caption, .compare-recent-note { display: block; font-size: 11px; }
 .compare-recent-caption { margin-bottom: 4px; color: #295b90; font-weight: 700; }
 .compare-recent-note { margin-top: 4px; color: #526d89; }
-.compare-chart { overflow-x: auto; }
-.compare-chart svg { display: block; width: 100%; min-width: 620px; }
+.compare-chart { overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; }
+.compare-chart:active { cursor: grabbing; }
+.compare-chart svg { display: block; width: 100%; height: auto; }
+.compare-zoom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.compare-zoom[hidden] { display: none; }
+.compare-zoom .filter { min-width: 44px; min-height: 40px; font-size: 15px; }
+.compare-zoom .filter:disabled { opacity: .45; }
+.compare-zoom .surf-small { flex: 1 1 220px; margin: 0; }
 .compare-chart-state { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; border: 1px dashed var(--line); border-radius: 14px; background: #f6f9f5; text-align: center; }
 .compare-chart-state strong { font-size: 20px; color: var(--sea-dark); }
 .compare-chart-state p { margin: 0; color: var(--muted); font-size: 13px; }
-.compare-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 12px; }
+.compare-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 14px; }
 .compare-legend-item { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
 .compare-legend-item svg { width: 76px; height: 14px; flex: none; }
 .compare-legend-item > span { min-width: 0; overflow-wrap: anywhere; }
 .compare-card { display: block; text-decoration: none; }
+.compare-empty-card { background: #f1f3f4; border-color: #d8dde0; color: var(--ink); }
+.compare-empty-card strong { margin-top: 0; }
+.compare-empty-card small { display: block; margin-top: 7px; font-size: 13px; color: var(--ink); }
 .compare-card strong { font-size: 26px; }
 .compare-card .compare-spot-link { color: var(--spot-color); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .compare-card:hover .compare-spot-link, .compare-card:focus-visible .compare-spot-link { text-decoration-thickness: 2px; }
 #compareDays [aria-pressed="true"] { background: var(--sea-dark); color: white; }
+#compareDays button[hidden] { display: none; }
+#compareDays .compare-page-days { border-style: dashed; font-weight: 700; }
+#compareDays .compare-page-days:disabled { opacity: .45; cursor: default; }
 #compareRankingTitle { font-size: 20px; }
 @media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .compare-body { padding: 16px; } .compare-actions { width: 100%; } .compare-actions .filter { flex: 1; min-height: 44px; } .compare-manual-actions { width: 100%; } .compare-picker-button { min-height: 44px; font-size: 16px; } .compare-picker-option { min-height: 44px; } .compare-ranking { grid-template-columns: 1fr; } }
@@ -309,6 +330,8 @@
 .compare-hourly-table caption { text-align: left; font-weight: 700; padding: 10px; }
 .compare-hourly-table th, .compare-hourly-table td { padding: 10px; border-bottom: 1px solid #dce4df; text-align: left; }
 .compare-hourly-table thead th { position: sticky; top: 0; background: #edf3ef; }
+.compare-hourly-table thead a { display: block; margin: -10px; padding: 10px; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.compare-hourly-table thead a:hover, .compare-hourly-table thead a:focus-visible { text-decoration-thickness: 2px; }
 .compare-hourly-table tbody th { white-space: nowrap; }
 .compare-hourly-table tr[data-history="true"] { background: #f1f5f9; }
 .compare-hourly-table td[data-quality] { background: var(--rating-bg); color: #000; font-weight: 650; }
@@ -318,11 +341,10 @@
 .heatmap-panel { padding: 30px 0 36px; min-width: 0; }
 .heatmap-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .heatmap-heading p:not(.eyebrow) { font-size: 13px; color: var(--muted); }
-.heatmap-heading button { min-height: 44px; flex: none; }
 .heatmap-badge { display: inline-block; margin-left: 6px; padding: 3px 7px; background: var(--mint); border-radius: 5px; color: var(--sea-dark); font: 700 9px/1.4 sans-serif; vertical-align: middle; letter-spacing: .08em; }
-#heatmapDays { margin: 16px 0; }
-#heatmapDays [aria-pressed="true"] { background: var(--sea-dark); color: white; }
-.heatmap-key { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; padding: 14px 16px; background: white; border: 1px solid var(--line); border-radius: 12px; }
+/* No text selection in the bar: a double click on "Pokaż całą mapę" hides the button with the first click,
+   and the second would otherwise select its text, which then shows greyed when the button returns. */
+.heatmap-key { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; margin-top: 16px; padding: 14px 16px; background: white; border: 1px solid var(--line); border-radius: 12px; user-select: none; -webkit-user-select: none; }
 .heatmap-key p { margin: 0; font-size: 12px; }
 .heatmap-key strong { padding-left: 4px; }
 .heatmap-legend { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -335,7 +357,6 @@
 .heatmap-panel [data-quality="great"] { --rating-bg: #93d4a5; }
 .heatmap-panel [data-quality="excellent"] { --rating-bg: #70c49b; }
 .heatmap-panel [data-quality="unknown"] { --rating-bg: #a9aedb; }
-.heatmap-axis { display: flex; justify-content: space-between; gap: 12px; margin: 16px 0 8px; font-size: 11px; color: var(--muted); }
 #heatmapProgress { display: block; width: 100%; height: 5px; accent-color: var(--sea); }
 .heatmap-loading { display: flex; min-height: 360px; margin-top: 16px; padding: 30px; flex-direction: column; align-items: center; justify-content: center; gap: 0; border: 1px solid var(--line); border-radius: 12px; background: #f6f9f5; text-align: center; }
 .heatmap-loading strong { font-size: clamp(48px, 8vw, 76px); line-height: 1.2; color: var(--sea-dark); }
@@ -352,36 +373,38 @@
 @media (prefers-reduced-motion: reduce) {
   .heatmap-loading-dots span { animation: none; opacity: 1; transform: none; }
 }
-.heatmap-scroll { overflow: auto; max-height: min(70vh, 820px); border: 1px solid #cfd9d1; border-radius: 12px; background: white; overscroll-behavior: contain; }
-.heatmap-table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1260px; table-layout: fixed; font-size: 11px; font-variant-numeric: tabular-nums; }
-.heatmap-table caption { text-align: left; padding: 10px 14px; color: var(--muted); font-size: 11px; }
-.heatmap-table th { border-right: 2px solid white; border-bottom: 2px solid white; }
-.heatmap-table thead th { position: sticky; top: 0; z-index: 3; padding: 12px 2px; background: #e6ede7; color: #304c43; text-align: center; font-size: 10px; font-weight: 650; line-height: 1.6; box-shadow: 0 1px 0 #cbd8cf; }
-.heatmap-table thead th:first-child { z-index: 4; left: 0; width: 214px; text-align: left; padding-left: 14px; }
-.heatmap-table tbody th { position: sticky; left: 0; z-index: 2; padding: 5px 12px; background: #f5f7f2; text-align: left; border-right-color: #ced9d0; border-bottom: 1px solid white; line-height: 1.3; }
-.heatmap-table tbody th a { display: block; color: var(--sea-dark); font-size: 12px; text-decoration: none; }
-.heatmap-table tbody th a:hover { text-decoration: underline; }
-.heatmap-table tbody th small { display: block; color: var(--muted); font-size: 10px; font-weight: 400; line-height: 1.25; }
-.heatmap-table td { padding: 0; border: 0; border-right: 1px solid white; border-bottom: 1px solid white; background: var(--rating-bg); position: relative; }
-.heatmap-table td button { display: block; width: 100%; min-height: 40px; padding: 6px 0; border: 0; border-radius: 0; background: var(--rating-bg); color: #18312b; font: 650 11px/1.3 sans-serif; cursor: pointer; }
-.heatmap-table td button:hover { filter: brightness(.94); }
-.heatmap-table td button[aria-pressed="true"] { filter: brightness(.65); }
-.heatmap-table td button:focus-visible { outline: 3px solid #18383e; outline-offset: -3px; }
-.heatmap-table thead small { display: block; font-size: 9px; }
-.heatmap-detail { display: flex; gap: 6px 18px; align-items: center; flex-wrap: wrap; min-height: 70px; margin-top: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: white; font-size: 12px; line-height: 1.6; }
-.heatmap-detail span { flex-basis: 100%; color: var(--muted); }
-.heatmap-detail a { color: var(--sea-dark); text-underline-offset: 3px; }
+/* One grid for the whole coast: spots top to bottom (west to east), hours left to right; only the ends are labelled. */
+/* The spot axis column has a fixed width, so a smaller font for long names never changes the grid's width. */
+.heatmap-chart { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 6px; margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.2; }
+/* The axis is as tall as the grid and never stretches it (height 0, at least the whole row). */
+.heatmap-spot-axis { display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 0; min-height: 100%; font-size: 13px; }
+/* Town names stand letter by letter, one under another, all in small capitals of one height (an initial capital
+   would stick out of the column). Names too long for the grid get a smaller font (surf-heatmap.js), never an ellipsis. */
+.heatmap-spot-axis > span { flex: none; white-space: nowrap; writing-mode: vertical-rl; text-orientation: upright; font-variant-caps: all-small-caps; letter-spacing: .05em; line-height: 1; }
+/* Words of a name (e.g. Krynica Morska) are apart by about half a letter, not by a whole empty letter. */
+.heatmap-spot-axis > span > span + span { margin-inline-start: .4em; }
+/* One finger keeps scrolling the page; two fingers zoom and move the grid (surf-heatmap.js). */
+.heatmap-canvas { display: block; width: 100%; height: 364px; border-radius: 3px; cursor: pointer; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.heatmap-canvas:focus-visible { outline: 3px solid #18383e; outline-offset: 3px; }
+.heatmap-time-axis { grid-column: 2; display: flex; justify-content: space-between; gap: 12px; }
+/* At the end of the legend bar. Without a zoom it is only invisible, keeping its place, so the grid never jumps. */
+.heatmap-zoom-reset { margin-left: auto; min-height: 40px; }
+.heatmap-zoom-reset:disabled { visibility: hidden; }
+.heatmap-detail { margin-top: 14px; }
+.heatmap-detail > p { margin: 0; }
+.heatmap-pick { display: block; text-decoration: none; }
+.heatmap-pick-action { font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
 #heatmapExplanation { max-width: 1000px; }
 @media (max-width: 640px) {
   .heatmap-panel { padding-top: 22px; }
   .heatmap-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .heatmap-heading button { width: 100%; }
-  .heatmap-axis { flex-direction: column; gap: 4px; }
-  .heatmap-table { min-width: 1330px; }
-  .heatmap-table thead th:first-child { width: 154px; }
-  .heatmap-table tbody th { padding: 5px 8px; }
-  .heatmap-table td button { min-height: 44px; }
-  .heatmap-scroll { max-height: 65vh; }
   .heatmap-key { padding: 12px; }
   .heatmap-legend span { padding: 6px 8px; }
+  /* The colours wrap below; the button takes the free space to the right of "Ocena warunków". */
+  .heatmap-zoom-reset { order: 1; }
+  .heatmap-legend { order: 2; flex-basis: 100%; }
 }
+/* The comparison chart, its controls, legend, note and day tiles share one text size (the chart's SVG labels use the same values). */
+#compareContent { --compare-font: 14px; }
+@media (max-width: 599px) { #compareContent { --compare-font: 13px; } }
+.compare-zoom .filter, .compare-zoom .surf-small, .compare-legend, #compareDays .filter { font-size: var(--compare-font); }

@@ -83,7 +83,8 @@ test('all surf camera IDs exist; gulf, port and city cameras are not mapped by t
   const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
   const context = { document: { addEventListener() {} } };
   vm.createContext(context);
-  vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1] + ';globalThis.ids = CAMERAS.map(c=>c.id)', context);
+  const catalog = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(script => script.includes('const CAMERAS'));
+  vm.runInContext(catalog + ';globalThis.ids = CAMERAS.map(c=>c.id)', context);
   const ids = spots.flatMap(s => s.cameras);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(new Set(spots.map(s => s.id)).size, spots.length);

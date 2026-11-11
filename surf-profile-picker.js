@@ -1,4 +1,4 @@
-/* Persistent day/hour panel. Selection scrolls into view without reordering dates. */
+/* Always-visible day list, five days at a time; each day opens or closes its hours. Selection scrolls into view without reordering dates. */
 (function (root) {
   "use strict";
   const W = typeof module !== "undefined" ? require("./surf-weather.js") : root.SurfWeather;
@@ -19,31 +19,43 @@
     }
     return [...groups.values()];
   }
+  const PAGE_DAYS = 5, LIST_DAYS = 14;
+  // The same paging as the day tiles under "Gdzie warto jechać": five days from today, then five more at a time, fourteen at most.
+  function dayPage(groups, today, pages, selectedDay) {
+    const first = Math.max(0, groups.findIndex(group => group.day === today));
+    const end = Math.min(groups.length, first + LIST_DAYS);
+    const count = Math.max(1, Math.ceil((end - first) / PAGE_DAYS));
+    const selected = groups.findIndex(group => group.day === selectedDay);
+    // An hour chosen elsewhere (e.g. in the hourly table) keeps its day visible, also when it is before today.
+    const shown = Math.min(count, Math.max(1, pages, Math.floor((selected - first) / PAGE_DAYS) + 1));
+    const until = Math.min(end, first + shown * PAGE_DAYS);
+    return { first, count, pages: shown, remaining: end - until,
+      visible: groups.filter((group, index) => (index >= first && index < until) || index === selected) };
+  }
+  // The "Pokaż mniej" and "Pokaż kolejne…" buttons under a paged day list, worded as under the comparison chart.
+  function updatePaging(view, paging, less, more) {
+    const next = Math.min(PAGE_DAYS, view.remaining);
+    paging.hidden = view.count < 2; less.disabled = view.pages === 1; more.disabled = next <= 0;
+    more.textContent = next <= 0 ? "Pokaż kolejne dni" : next === 1 ? "Pokaż kolejny dzień" : `Pokaż kolejne ${next} dni`;
+  }
   function attach(select) {
     const label = document.querySelector(`label[for="${select.id}"]`);
     const wrapper = document.createElement("div"); wrapper.className = "surf-profile-picker";
-    const button = document.createElement("button"); button.type = "button";
-    button.id = `${select.id}Button`; button.className = "surf-profile-trigger";
-    const value = document.createElement("span"); value.id = `${select.id}Value`; value.setAttribute("aria-live", "polite");
-    const action = document.createElement("span"); action.className = "surf-profile-toggle-text";
-    const chevron = document.createElement("span"); chevron.className = "surf-profile-chevron"; chevron.setAttribute("aria-hidden", "true");
-    button.append(value, action, chevron);
+    // The day list itself is the control: it is always shown and cannot be collapsed.
+    const value = document.createElement("span"); value.id = `${select.id}Value`; value.className = "surf-profile-announce";
+    value.setAttribute("aria-live", "polite");
     const panel = document.createElement("div"); panel.id = `${select.id}Options`; panel.className = "surf-profile-options";
     panel.setAttribute("role", "region");
-    label.id ||= `${select.id}Label`; label.htmlFor = button.id;
-    button.setAttribute("aria-labelledby", `${label.id} ${value.id}`);
-    button.setAttribute("aria-controls", panel.id); panel.setAttribute("aria-labelledby", label.id);
-    wrapper.append(button, panel); select.after(wrapper); select.hidden = true;
-    let groups = [], expandedDay = null, selectedValue = "", signature = "";
-    function setOpen(open, focus = false) {
-      panel.hidden = !open; button.setAttribute("aria-expanded", String(open));
-      action.textContent = open ? "Zwiń" : "Rozwiń";
-      button.title = open ? "Zminimalizuj wybór pory" : "Rozwiń wybór pory";
-      if (open) revealSelection();
-      if (focus) button.focus({ preventScroll: true });
-    }
+    label.id ||= `${select.id}Label`; label.removeAttribute("for");
+    panel.setAttribute("aria-labelledby", label.id); panel.setAttribute("aria-describedby", value.id);
+    const less = document.createElement("button"); less.type = "button"; less.className = "filter"; less.textContent = "Pokaż mniej";
+    const more = document.createElement("button"); more.type = "button"; more.className = "filter";
+    const paging = document.createElement("div"); paging.className = "surf-profile-pages"; paging.append(less, more);
+    wrapper.append(value, panel, paging); select.after(wrapper); select.hidden = true;
+    let groups = [], expandedDay = null, selectedValue = "", signature = "", pages = 1;
+    const today = () => W.dayKey(Date.now() / 1000);
     function revealSelection() {
-      if (panel.hidden || !expandedDay || !panel.clientHeight) return;
+      if (!expandedDay || !panel.clientHeight) return;
       const section = Array.from(panel.children).find(item => item.dataset.day === expandedDay);
       if (!section) return;
       const target = section.querySelector('.surf-profile-hour[aria-pressed="true"]') || section.querySelector(".surf-profile-hour");
@@ -57,7 +69,9 @@
       const focused = panel.contains(document.activeElement) ? document.activeElement : null;
       const focusedValue = focused?.dataset.value, focusedDay = focused?.dataset.day, previousScroll = panel.scrollTop;
       const selectedDay = selectedValue ? W.dayKey(Number(selectedValue)) : null;
-      panel.replaceChildren(...groups.map(group => {
+      const view = dayPage(groups, today(), pages, selectedDay);
+      pages = view.pages;
+      panel.replaceChildren(...view.visible.map(group => {
         const section = document.createElement("section"); section.className = "surf-profile-day"; section.dataset.day = group.day;
         const open = group.day === expandedDay; section.classList.toggle("is-open", open);
         const dayButton = document.createElement("button"); dayButton.type = "button";
@@ -90,7 +104,21 @@
       }
       panel.scrollTop = previousScroll;
       const restore = focusedValue ? panel.querySelector(`[data-value="${focusedValue}"]`) : focusedDay ? panel.querySelector(`button[data-day="${focusedDay}"]`) : null;
-      if (!panel.hidden && restore && !restore.closest("[hidden]")) restore.focus({ preventScroll: true });
+      if (restore && !restore.closest("[hidden]")) restore.focus({ preventScroll: true });
+      updatePaging(view, paging, less, more);
+    }
+    function showPages(requested) {
+      const view = dayPage(groups, today(), requested, null);
+      pages = view.pages;
+      // Removing days never leaves the selected hour on a day that is no longer shown.
+      const selectedDay = selectedValue ? W.dayKey(Number(selectedValue)) : null;
+      if (groups.findIndex(group => group.day === selectedDay) >= view.first + pages * PAGE_DAYS) {
+        const current = Math.floor(Date.now() / 3600000) * 3600, options = groups[view.first].options;
+        select.value = (options.find(option => option.time >= current) || options[0]).value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        sync();
+      }
+      renderGroups();
     }
     function sync() {
       const next = groupOptions(Array.from(select.options)), selected = select.selectedOptions[0];
@@ -105,7 +133,8 @@
       renderGroups();
       if (changed) revealSelection();
     }
-    button.addEventListener("click", () => setOpen(panel.hidden));
+    less.addEventListener("click", () => showPages(pages - 1));
+    more.addEventListener("click", () => showPages(pages + 1));
     panel.addEventListener("click", event => {
       const hour = event.target.closest("button[data-value]");
       if (hour && panel.contains(hour)) {
@@ -120,7 +149,6 @@
       }
     });
     panel.addEventListener("keydown", event => {
-      if (event.key === "Escape") { event.preventDefault(); setOpen(false, true); return; }
       if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
       const buttons = Array.from(panel.querySelectorAll("button")).filter(item => !item.closest("[hidden]"));
       const index = buttons.indexOf(document.activeElement);
@@ -133,8 +161,8 @@
     select.addEventListener("change", () => queueMicrotask(sync));
     new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled", "label", "selected", "value"] });
     root.addEventListener("resize", revealSelection);
-    sync(); setOpen(true);
+    sync(); revealSelection();
   }
-  const api = { groupOptions, attach };
+  const api = { groupOptions, dayPage, updatePaging, attach };
   if (typeof module !== "undefined") module.exports = api; else root.SurfProfilePicker = api;
 })(globalThis);

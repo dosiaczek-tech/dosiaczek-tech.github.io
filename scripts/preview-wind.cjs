@@ -37,7 +37,7 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
       try {
         const params = new URLSearchParams({ latitude: batch.map(s => s.lat).join(","), longitude: batch.map(s => s.lon).join(","),
           hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day", models: MODELS.join(","),
-          wind_speed_unit: "ms", cell_selection: "nearest", past_days: 2, forecast_days: 6, timeformat: "unixtime", timezone: "GMT" });
+          wind_speed_unit: "ms", cell_selection: "nearest", past_days: 2, forecast_days: 16, timeformat: "unixtime", timezone: "GMT" });
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.timeout(10000) });
         if (!response.ok) {
           const error = new Error(`Open-Meteo: HTTP ${response.status}`);

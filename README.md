@@ -18,7 +18,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Układ dostosowany do komputera i telefonu.
 - Ponawianie połączenia po utracie internetu.
 - Osobna zakładka **Prognozy surfingowe**: 91 spotów / odcinków w 59 miejscowościach,
-  69 powiązanych kamer morskich, pięć dni prognozy, ranking okien dziennych.
+  69 powiązanych kamer morskich, 14 dni prognozy (dni 8–14 orientacyjne), ranking okien dziennych.
   Katalog obejmuje również miejsca bez kamery, m.in. Górki Zachodnie i Sztutowo.
   Zakres uzupełnienia i kontrola punktów: [SPOTY.md](SPOTY.md).
 - **Porównanie uruchamiane na żądanie**: po wejściu pięć list pokazuje „Wybierz”,
@@ -30,10 +30,14 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   Podczas pobierania w miejscu wykresu pojawia się duży napis **Loading** i wskaźnik ładowania.
 - **Pięć najlepszych spotów na wybrany dzień**: w trybie automatycznym każda data dobiera własną piątkę
   z całego katalogu według oceny pełnego trzygodzinnego okna dziennego.
-  Wykres porównuje te wybrane spoty w kolejnych dniach, a karty prowadzą do sesji z wybranej daty.
-  Przyszłe okna mają pierwszeństwo przed oznaczoną historią z ostatnich 12 godzin.
-  Gdy ta historia obejmuje poprzedni dzień, jego data jest również dostępna w porównaniu.
-  Gdy ocen jest mniej niż pięć, ranking pokazuje tylko dostępne wyniki.
+  Wykres porównuje te wybrane spoty w kolejnych dniach; wybrany dzień obramowują czarne przerywane linie.
+  Podpisy dni pod wykresem stoją na środku całego dnia i przesuwają się razem z wykresem; przy krawędzi
+  chowają się pod nią, zamiast przesuwać się wolniej i nagle znikać.
+- **Gdzie warto jechać**: po jednym kafelku na każdy porównywany spot w dniu wybranym przyciskiem pod
+  wykresem — jego najlepsze trzygodzinne okno dzienne, od najwyższej oceny. Okno zostaje na liście, dopóki
+  nie minie jego górna godzina, także gdy już trwa; żadne nie przechodzi przez północ (dla minionego dnia
+  nie ma propozycji). Spot bez okna dostaje szary kafelek „Brak okna”. Przy „Pokaż najlepsze” są to spoty
+  dobrane na ten dzień, przy „Porównaj wybrane” — wskazane spoty, także dodane ponad pięć list. Karty prowadzą do sesji.
   Zmiana dnia korzysta z już pobranych danych; wybór spośród remisów pozostaje stały
   do odświeżenia. „Porównaj wybrane” zatwierdza własny zestaw do porównywania między dniami;
   „Pokaż najlepsze” uruchamia ranking automatyczny dla aktualnie wskazanej daty.
@@ -42,11 +46,13 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   i zachmurzenie, dopasowane do tych samych godzin. Punkt prognozy (odległość od brzegu
   i głębokość) jest opisany raz nad tabelą; gdy zmienia się w czasie, opis podaje zakres
   wartości. Przy braku poprawnych danych punktu opis jest ukryty. Większe kafelki dni mają pod sobą
-  godziny wschodu i zachodu słońca dla danej daty. Ikony przy zachmurzeniu korzystają
+  godziny wschodu i zachodu słońca dla danej daty; na start widać 5 dni od dzisiaj, a „Pokaż kolejne…”
+  i „Pokaż mniej” działają jak pod wykresem porównania. Dzień przewinięty w tabeli zawsze ma swój kafelek.
+  Ikony przy zachmurzeniu korzystają
   z kodu pogody WMO Open-Meteo: rozróżniają pogodę, chmury, deszcz, śnieg i burze;
   uwzględniają również noc. Samo duże zachmurzenie nie jest oznaczane jako deszcz.
-  Domyślnie dostępne są **ostatnie 12 godzin oraz prognoza**. Początek tabeli pokazuje
-  wcześniejsze dostępne godziny z oznaczeniem „historia”; „Teraz” przewija do bieżącej godziny.
+  Domyślnie dostępne są **ostatnie 24 godziny oraz prognoza**. Początek tabeli pokazuje
+  wcześniejsze dostępne godziny z oznaczeniem „historia”.
   To historia modelowa, a nie pomiary. SWAN oblicza ją po osobnym 12-godzinnym rozbiegu,
   więc nowy spot otrzymuje cały wcześniejszy zakres przy pierwszym przeliczeniu.
   Kolejne dni tworzą jedną ciągłą tabelę: kolumny mają
@@ -58,7 +64,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   wybrany dzień od 06:00, 12:00 lub 18:00. Gdy brakuje początku danej pory, używana
   jest jej pierwsza dostępna godzina. Pory bez prognozy są nieaktywne. Przewijanie
   ręczne aktualizuje wyróżnienie pory dnia. Każda dostępna godzina ma własną kolumnę,
-  z nagłówkiem „Godzina” po lewej. Dostępny jest przycisk „Teraz” oraz wyróżnienie godzin wybranej sesji.
+  z nagłówkiem „Godzina” po lewej. Godziny wybranej sesji są wyróżnione.
   **Bladożółte tło danych oznacza dzień, niebieskie noc**, według początku przedziału; zachmurzenie
   jest osobnym parametrem. Turkusowa obwódka wyróżnia wybraną godzinę. Godziny są podawane
   w czasie polskim, także przy zmianie czasu.
@@ -78,6 +84,32 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   Przy ciszy i zerowej fali nie ma strzałki; brak kierunku nie jest zastępowany domyślnym.
   Dane Open-Meteo są pobierane tylko dla otwartego spotu. Temperatura wody pochodzi
   z morskiej siatki około 8 km. Przy braku poprawnej prognozy fal tabela jest ukryta.
+- **Heat map spotów** (`#heatmap`) to jedna siatka dla całego wybrzeża: wiersz to spot (u góry
+  najdalej na zachód, na dole najdalej na wschód), kolumna to godzina — od bieżącej do ostatniej
+  z oceną któregokolwiek spotu. Kolor oznacza ocenę z początku godziny, bez uśredniania. Pola są tak
+  małe, że cała siatka mieści się na ekranie telefonu; podpisane są tylko końce osi (pierwszy
+  i ostatni spot, pierwsza i ostatnia godzina z datą). Nazwy miejscowości na osi spotów są pisane
+  kapitalikami i stoją pionowo, litera pod literą. Nazwy nigdy nie są ucinane: gdy obie nie mieszczą się
+  przy mapie (np. przy większej czcionce systemowej telefonu), dostają wspólny, mniejszy rozmiar liter,
+  dobrany na urządzeniu. Kliknięte pole ciemnieje, a pod siatką
+  pojawia się jego ocena, dzień, godzina i spot. Kliknięcie tej informacji otwiera spot
+  (`#surf/<spot>?time=<unix>`) z wybraną godziną i przewija do „Prognozy godzinowej”.
+  Rozsunięcie dwóch palców przybliża mapę wokół palców, a przesuwanie dwoma palcami ją przesuwa
+  (jak mapy spotów); jeden palec nadal przewija stronę i wybiera pole, a po przybliżeniu przesuwa mapę w bok.
+  Kafelki rosną najwyżej do 44 px i dostają cienkie odstępy; podpisy osi pokazują wtedy pierwszy i ostatni
+  widoczny spot oraz godzinę, a przycisk „Pokaż całą mapę” na końcu paska z legendą (na telefonie obok
+  „Ocena warunków”) wraca do całości. Bez przybliżenia przycisk jest niewidoczny, ale zachowuje swoje
+  miejsce, więc mapa nie przesuwa się, gdy się pojawia. Na komputerze samo kółko
+  myszy (bez Ctrl; także szczypanie na touchpadzie) przybliża i oddala wokół kursora, a przeciąganie
+  myszą lub przesunięcie w bok na touchpadzie przesuwa mapę. Gdy widać całą mapę, kręcenie w dół
+  przewija stronę, więc da się ją minąć bez zatrzymywania na mapie.
+  Klawiatura: strzałki wybierają pole, Page Up/Page Down przesuwają o dobę, Enter otwiera prognozę;
+  przybliżony widok podąża za wybranym polem.
+- Zakładka „Prognozy surf” (`#surf`) otwiera się bez wybranego spotu: widać porównanie spotów,
+  wyszukiwarkę, listę („Wybierz spot…”) i mapę bez zaznaczenia, a prognoza spotu pojawia się dopiero
+  po wyborze. Odświeżenie strony zawsze zaczyna od `#surf`, także gdy wcześniej był wybrany spot;
+  otwarcie linku do spotu (np. z heat mapy, porównania lub zakładki) nadal go pokazuje.
+  Nieznany adres spotu również prowadzi do `#surf`, zamiast otwierać spot domyślny.
 - Wyszukiwarka miejscowości i spotów po lewej, lista plaż po prawej i przycisk
   „Pokaż prognozę”. Wyszukiwanie toleruje literówki, przestawione litery i brak
   polskich znaków. Podpowiedzi działają też z klawiatury.
@@ -90,6 +122,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
   jest zaznaczeniem na całej krzywej, nie początkiem wykresu.
   Panel **„Wybierz porę”** najpierw pokazuje dni, a po rozwinięciu dnia — jego godziny.
+  Na start widać 5 dni od dzisiaj, łącznie do 14; „Pokaż kolejne…” i „Pokaż mniej” działają jak pod wykresem porównania.
   Jest otwarty do użycia „Zwiń” lub Escape; wybranie godziny i kliknięcie poza panelem
   go nie zamykają. Można przewijać zawartość pionowo kółkiem myszy lub dotykiem.
   Dni i godziny pozostają chronologiczne. Wybrana godzina jest turkusowa, oznaczona ✓
@@ -112,6 +145,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   wiatru znajduje się w osobnej sekcji.
 - Interaktywna mapa wyboru wszystkich spotów: kliknięcie znacznika otwiera
   prognozę, pobliskie punkty są grupowane, a mapa synchronizuje się z listą.
+  Na ekranie dotykowym tę mapę i mapę wiatru przesuwa się i przybliża dwoma palcami; jeden palec
+  przewija stronę, a próba przesunięcia nim mapy pokazuje podpowiedź.
   Znaczniki mają stałe nazwy; grupy pokazują miejscowość, a po przybliżeniu
   widać nazwy poszczególnych spotów. Kolory odróżniają spoty z kamerą od pozostałych.
   Wybrany spot jest większy i pomarańczowy; ten sam kolor wyróżnia jego grupę po oddaleniu mapy.
@@ -125,7 +160,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   poprzedniej lokalizacji nie są ponownie używane. Pakiety wiatru dla przeniesionego
   spotu muszą zawierać zgodne współrzędne, a nie tylko ten sam identyfikator.
 
-Prognozy: https://dosiaczek-tech.github.io/#surf/wladyslawowo
+Prognozy: https://dosiaczek-tech.github.io/#surf
 Przykładowe nowe spoty: `#surf/sobieszewo`, `#surf/kolobrzeg-palikpoint`,
 `#surf/darlowko-zachod`.
 
@@ -199,7 +234,7 @@ Obliczenia są współdzielone przez wszystkie żądania. Po ukończonej aktuali
 obowiązuje sześciogodzinna przerwa między zadaniami, a po błędzie — 15 minut.
 Cache, wyniki i archiwa wejść są w `.dev-preview/swan-cache/` i `.dev-preview/swan-data/`;
 log kolejnych zadań: `.dev-preview/swan-refresh.log`. Wyniki przetrwają restart serwera.
-Wybierany jest najświeższy poprawny wynik z pełnymi 12 godzinami historii. Starszy
+Wybierany jest najświeższy poprawny wynik z pełnymi 24 godzinami historii. Starszy
 format publikacji z krótszą historią nie wypiera poprawnego kompletnego wyniku lokalnego.
 
 Jeżeli opublikowany wiatr jest niedostępny lub ma ponad 6 godzin, lokalny serwer

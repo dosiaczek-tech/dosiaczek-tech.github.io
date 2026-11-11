@@ -21,6 +21,7 @@
     let currentId = selectedId, currentRegion = region, revision = 0, mapClickId = null;
     let tileError = false;
     const map = L.map(container, { scrollWheelZoom: true, maxZoom: 19, minZoom: 6, zoomControl: false });
+    root.SurfMapGestures?.attach(map);
     L.control.zoom({ zoomInTitle: "Przybliż mapę", zoomOutTitle: "Oddal mapę" }).addTo(map);
     const tile = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       // OSM requires the page's real origin, including when cameras use a stricter document policy.
@@ -80,7 +81,7 @@
       const action = document.createElement("a"); action.href = `#surf/${s.id}`; action.textContent = "Przejdź do prognozy ↓";
       action.addEventListener("click", () => {
         onSelect(s.id);
-        document.getElementById("surfLocalTitle").scrollIntoView({ behavior: root.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+        document.getElementById("surfStatus").scrollIntoView({ behavior: root.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       });
       content.append(title, description, action);
       const marker = L.marker([s.lat, s.lon], { icon: markerIcon(s), title: `${s.town} — ${s.name}`, keyboard: true, spotId: s.id });
@@ -123,16 +124,17 @@
       updateStatus();
       fitRegion();
     }
+    // An id outside the catalogue (e.g. null) clears the selection: no marker is highlighted.
     function select(id, { revealSelection = true } = {}) {
-      if (!byId.has(id)) return;
-      const changed = currentId !== id, previous = currentId;
-      currentId = id;
-      const s = byId.get(id);
-      selected.textContent = `Wybrany spot: ${s.town} — ${s.name}`;
+      const s = byId.get(id) || null, previous = currentId;
+      const changed = currentId !== (s && s.id);
+      currentId = s && s.id;
+      selected.textContent = s ? `Wybrany spot: ${s.town} — ${s.name}` : "";
+      locate.disabled = !s;
       if (byId.has(previous)) paintMarker(byId.get(previous));
-      paintMarker(s);
+      if (s) paintMarker(s);
       cluster.refreshClusters();
-      if (changed && revealSelection && mapClickId !== id) reveal();
+      if (s && changed && revealSelection && mapClickId !== id) reveal();
       mapClickId = null;
     }
     overview.addEventListener("click", fitRegion);

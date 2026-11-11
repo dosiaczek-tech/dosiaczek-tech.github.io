@@ -61,6 +61,18 @@ test('reopening offline retains a valid saved SWAN bundle with its original age,
   assert.equal((await reopened.api.nearshore(spot)).status, 'unavailable');
 });
 
+test('the offline copy keeps five days of cross-sections while the app gets all of them', async () => {
+  const first = harness(), stamp = first.now() / 1000, profile = [{ height: 1 }];
+  first.setSwan({ schema: 2, version: model.SIMULATION_VERSION, status: 'ready', spot, generatedAt: stamp, windFetchedAt: stamp,
+    boundaryFetchedAt: stamp, profileHours: 336, hourly: [0, 120, 121].map(hours => ({ time: stamp + hours * 3600, profile })) });
+  assert.equal((await first.api.nearshore(spot)).hourly.map(row => row.profile.length).join(), '1,1,1');
+  const reopened = harness(first.storage);
+  reopened.mode('offline');
+  const saved = await reopened.api.nearshore(spot);
+  assert.equal(saved.profileHours, 120);
+  assert.equal(saved.hourly.map(row => row.profile.length).join(), '1,1,0');
+});
+
 test('published wind survives reopening and an unavailable server within its six hour validity', async () => {
   const first = harness();
   const bundle = { schema: 1, spotId: spot.id, spot, fetchedAt: first.now(), data: { hourly: { time: [first.now() / 1000] } } };
@@ -245,7 +257,7 @@ test('spot conditions request sea temperature, air, clouds and sun for the chose
     assert.equal(params.get('longitude'), String(spot.lon));
     assert.equal(params.get('timezone'), 'Europe/Warsaw');
     assert.equal(params.get('timeformat'), 'unixtime');
-    assert.equal(params.get('forecast_days'), '6');
+    assert.equal(params.get('forecast_days'), '16');
     assert.equal(params.get('past_days'), '1');
   }
   assert.equal(urls[0].searchParams.get('daily'), 'sunrise,sunset');

@@ -6,12 +6,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const byId = new Map(spots.map(s => [s.id, s]));
   const cameras = new Map(CAMERAS.map(c => [c.id, c]));
   const cameraSpot = new Map(spots.flatMap(s => s.cameras.map(id => [id, s])));
-  const fmt = (v, digits = 1) => M.finite(v) ? v.toLocaleString("pl-PL", { maximumFractionDigits: digits, minimumFractionDigits: digits }) : "—";
+  // One number formatter per precision; toLocaleString would build a new one for every table cell.
+  const numberFormats = new Map();
+  const fmt = (v, digits = 1) => {
+    if (!M.finite(v)) return "—";
+    if (!numberFormats.has(digits)) numberFormats.set(digits, new Intl.NumberFormat("pl-PL", { maximumFractionDigits: digits, minimumFractionDigits: digits }));
+    return numberFormats.get(digits).format(v);
+  };
   const windKnots = speed => `${fmt(M.finite(speed) ? speed * 3600 / 1852 : null)} knts`;
-  const date = (t, options) => new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", ...options }).format(new Date(t * 1000));
+  // Formatters are costly to build and the hourly table formats hundreds of columns: create each one once.
+  const formats = new Map();
+  const date = (t, options) => {
+    const key = JSON.stringify(options);
+    if (!formats.has(key)) formats.set(key, new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", ...options }));
+    return formats.get(key).format(new Date(t * 1000));
+  };
   const hour = t => date(t, { hour: "2-digit", minute: "2-digit" });
   const day = t => date(t, { day: "numeric", month: "short", weekday: "short" });
-  const dayKey = t => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(t * 1000));
+  const dayKeyFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit" });
+  const dayKey = t => dayKeyFormat.format(new Date(t * 1000));
   const compass = d => M.finite(d) ? `${["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(d / 45) % 8]} ${Math.round(d)}°` : "—";
   function node(tag, text, className) {
     const el = document.createElement(tag);
@@ -30,14 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let spotMap = null, windMap = null;
   let windyLayer = "waves";
   const windyTabs = Array.from($("windyTabs").querySelectorAll("[data-layer]"));
-  let simulation = null, simulationTime = null;
+  let simulation = null, simulationTime = null, profileRow = null;
   let simulationRefreshTimer = null;
   let conditions = null;
-  let sessionRequest = null, chosenSession = null, sessionScroll = false;
+  let sessionRequest = null, chosenSession = null, sessionScroll = false, hourScroll = false;
   let searchResults = [], searchIndex = -1, searchEditing = false, acceptedSearchId = null;
   const hoursViewport = $("surfHoursScroll"), hoursTable = $("surfHoursTable");
-  let hoursViewKey = null, hoursSelectedTime = null;
-  let hoursColumns = [], hoursVisibleDay = null;
+  let hoursViewKey = null, hoursSelectedTime = null, hoursDataKey = null;
+  let hoursColumns = [], hoursVisibleDay = null, hoursDayPages = 1;
   let hoursVisibleTime = null, hoursVisiblePart = null;
   const hoursDayButtons = new Map();
   const hoursDayPartTargets = new Map(), hoursPartButtons = new Map();
@@ -58,11 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
   SurfProfilePicker.attach($("surfProfileTime"));
 
   function populateSpots() {
-    $("surfSpot").replaceChildren(...SurfSearch.groupWestToEast(spots).map(group => {
+    // Nothing is preselected: the empty option stays until a spot is chosen.
+    const prompt = node("option", "Wybierz spot…"); prompt.value = ""; prompt.disabled = true; prompt.hidden = true;
+    $("surfSpot").replaceChildren(prompt, ...SurfSearch.groupWestToEast(spots).map(group => {
       const el = document.createElement("optgroup"); el.label = group.town;
       el.append(...group.spots.map(s => { const option = node("option", `${s.town} — ${s.name}`); option.value = s.id; return option; }));
       return el;
     }));
+    $("surfSpot").value = "";
   }
   function closeSuggestions() {
     $("surfSuggestions").hidden = true;
@@ -169,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderSpotNotes() {
     const s = currentSpot, body = $("surfLocalBody");
-    $("surfLocalTitle").textContent = `${s.town} — ${s.community ? s.name : "orientacja plaży"}`;
+    $("surfLocalTitle").textContent = s.community ? `${s.town} — ${s.name}` : `Orientacja plaży dla spotu ${s.town}`;
     body.replaceChildren();
     body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej 1,5 m/s wiatr jest słaby. Pod komórkami fal pokazujemy dodatkowo wiatr względem kierunku samej fali.`, "surf-small"));
     const c = s.community;
@@ -221,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("viewBox", "0 0 1000 210"); svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Wysokość fal przy spocie: ostatnie 12 godzin modelowych i prognoza na pięć dni, do 500 metrów od brzegu");
+    svg.setAttribute("aria-label", "Wysokość fal przy spocie: ostatnie 24 godziny modelowe i prognoza na 14 dni, do 500 metrów od brzegu");
     const values = rows.map(r => r.simulation?.height).filter(M.finite);
     if (!values.length) { $("surfChart").replaceChildren(node("p", "Brak potwierdzonej prognozy dla strefy do 500 m od brzegu. Wykres pojawi się po poprawnym przeliczeniu tego spotu.", "surf-small")); return; }
     const max = Math.max(1, Math.ceil(Math.max(0, ...values) * 2) / 2);
@@ -260,8 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateHoursNavigation() {
-    $("surfHoursPrevious").disabled = hoursViewport.scrollLeft < 2;
-    $("surfHoursNext").disabled = hoursViewport.scrollLeft >= hoursViewport.scrollWidth - hoursViewport.clientWidth - 2;
     if (!hoursViewport.clientWidth || !hoursColumns.length) return;
     // Ignore a subpixel strip left behind by scroll rounding (e.g. browser zoom).
     const edge = hoursTable.querySelector(".surf-hourly-label").getBoundingClientRect().right + 1;
@@ -279,10 +293,25 @@ document.addEventListener("DOMContentLoaded", () => {
       hoursVisibleDay = visible;
       $("surfDays").dataset.visibleDay = visible;
       for (const [key, button] of hoursDayButtons) button.setAttribute("aria-pressed", String(key === visible));
+      updateDayPages();
     }
     if (dayChanged || part !== hoursVisiblePart) {
       hoursVisiblePart = part; updateDayPartControls();
     }
+  }
+
+  // Day tiles are paged like those under the comparison chart; the day the table is scrolled to always keeps its tile,
+  // without opening more pages, so scrolling the table never makes the tiles above it jump.
+  function updateDayPages() {
+    const cards = [...$("surfDays").children];
+    const view = SurfProfilePicker.dayPage(cards.map(card => ({ day: card.dataset.day })), dayKey(Date.now() / 1000), hoursDayPages, null);
+    hoursDayPages = view.pages;
+    const shown = new Set(view.visible.map(group => group.day));
+    for (const card of cards) {
+      const hidden = !shown.has(card.dataset.day) && card.dataset.day !== hoursVisibleDay;
+      if (card.hidden !== hidden) card.hidden = hidden;
+    }
+    SurfProfilePicker.updatePaging(view, $("surfDayPages"), $("surfDaysLess"), $("surfDaysMore"));
   }
 
   function updateHoursLayout() {
@@ -304,6 +333,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (force || rect.left < edge || rect.right > frame.right - 2)
       hoursViewport.scrollTo({ left: Math.max(0, hoursViewport.scrollLeft + rect.left - edge), behavior: "instant" });
     updateHoursNavigation();
+  }
+
+  // A link to one hour (from the heatmap) shows it in the hourly table once the waves and the content above it are in.
+  function showRequestedHour(time) {
+    if (!hourScroll || !hoursColumns.length || simulation === null || (loading && !loaded)) return;
+    hourScroll = false;
+    revealHoursTime(time, true);
+    $("surfDays").scrollIntoView({ behavior: "instant", block: "start" });
   }
 
   function waveRefreshMessage() {
@@ -365,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const awaitingWaves = simulation === null || Boolean(simulation?.refreshPending) || (loading && loaded === null);
     section.dataset.spot = currentSpot.id; section.dataset.time = String(focusTime);
     section.setAttribute("aria-busy", String(conditions === null || awaitingWaves));
-    $("surfHourlyContext").textContent = `${currentSpot.town} — ${currentSpot.name} · wybrana godzina: ${day(focusTime)}, ${hour(focusTime)}`;
+    $("surfHourlyContext").textContent = `Wybrana godzina: ${day(focusTime)}, ${hour(focusTime)}`;
     // Summarize the forecast point across all displayed hours.
     const point = SurfHourly.pointSummary(combined), pointNote = $("surfForecastPoint");
     pointNote.hidden = !point;
@@ -379,6 +416,20 @@ document.addEventListener("DOMContentLoaded", () => {
       pointNote.textContent = `Fale liczone ok. ${range(point.shoreDistance, 0)} m od brzegu, przy głębokości ${range(point.depth, 1)} m.${varies ? " Punkt prognozy zmienia się zależnie od godziny." : ""}`;
     }
     renderConditionsStatus();
+    // Choosing another hour changes only the selection; the hundreds of columns stay as they are.
+    const dataKey = [loaded, simulation, conditions, currentSpot.id, currentHour, chosenSession?.start, chosenSession?.end, loading, awaitingWaves];
+    if (hoursColumns.length && hoursDataKey?.every((value, i) => value === dataKey[i])) {
+      for (const cell of hoursTable.querySelectorAll("[data-time][data-end]"))
+        cell.dataset.selected = String(Number(cell.dataset.time) <= focusTime && focusTime < Number(cell.dataset.end));
+      for (const button of hoursTable.querySelectorAll("button.surf-hour-interval"))
+        button.setAttribute("aria-pressed", button.parentElement.dataset.selected);
+      if ((simulationTime !== null || sessionRequest?.day) && hoursSelectedTime !== focusTime) revealHoursTime(focusTime);
+      hoursSelectedTime = focusTime;
+      updateHoursNavigation();
+      showRequestedHour(focusTime);
+      return;
+    }
+    hoursDataKey = dataKey;
     const windValue = (wind, withFrom = false) => [
       M.finite(wind?.direction) ? `${withFrom ? "z " : ""}${compass(wind.direction)}` : null,
       M.finite(wind?.speed) ? windKnots(wind.speed) : null
@@ -400,6 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["height", "Wysokość fal przy spocie", r => M.finite(r.simulation?.height) ? `~${fmt(r.simulation.height)} m` : null, true],
       ["period", "Czas między falami", r => M.finite(r.period) ? `${fmt(r.period)} s` : null, true],
       ["energy", "Energia fal · kJ/m²", r => M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : null, true],
+      ["power", "Moc fal · kW/m", r => M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : null, true],
       ["direction", "Fale nadchodzą z", r => {
         const motion = SurfDirections.wave(r.simulation, currentSpot);
         return directionCell(motion, motion?.state === "calm" ? null : M.finite(r.direction) ? compass(r.direction) : null);
@@ -458,6 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (times.childElementCount) card.append(times);
       return card;
     }));
+    updateDayPages();
     $("surfDayParts").hidden = !periods.length;
     updateDayPartControls();
     hoursTable.style.setProperty("--hourly-column-count", periods.length);
@@ -478,12 +531,14 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const period of periods) {
       const r = period.row, cell = decorate(node("th"), period); cell.scope = "col";
       const content = node("button", undefined, "surf-hour-interval");
-      const timeState = r.time < currentHour ? " · historia" : r.time === currentHour ? " · teraz" : "";
-      content.append(node("small", day(r.time), "surf-hour-date"), node("strong", period.label), node("small", `${period.zone}${timeState}`, "surf-hour-zone"));
+      const timeState = r.time < currentHour ? "historia" : r.time === currentHour ? "teraz" : r.time - currentHour > 7 * 86400 ? "orientacyjnie" : "";
+      // The time zone is named only where the clock changes within the column, e.g. 02:00–02:00 CEST → CET.
+      const zone = period.zone.includes("→") ? period.zone : "";
+      content.append(node("small", day(r.time), "surf-hour-date"), node("strong", period.label), node("small", [zone, timeState].filter(Boolean).join(" · "), "surf-hour-zone"));
       if (period.inSession) content.append(node("small", "Wybrana sesja", "surf-hour-session"));
       content.type = "button"; content.dataset.time = r.time;
       content.title = r.simulation ? "Wybierz godzinę i pokaż przekrój fal" : "Wybierz godzinę prognozy";
-      content.setAttribute("aria-label", `${day(r.time)}, ${period.label}, ${period.zone}${period.inSession ? ", wybrana sesja" : ""}. ${content.title}`);
+      content.setAttribute("aria-label", `${day(r.time)}, ${period.label}${zone ? `, ${zone}` : ""}${period.inSession ? ", wybrana sesja" : ""}. ${content.title}`);
       content.setAttribute("aria-pressed", String(period.selected));
       content.addEventListener("focus", () => { if (content.matches(":focus-visible")) revealHoursTime(r.time); });
       content.addEventListener("click", () => {
@@ -520,11 +575,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if ((simulationTime !== null || sessionRequest?.day) && (!hadColumns || hoursViewKey !== viewKey || hoursSelectedTime !== focusTime)) revealHoursTime(focusTime);
     hoursViewKey = viewKey; hoursSelectedTime = focusTime;
     updateHoursNavigation();
+    showRequestedHour(focusTime);
   }
 
   function renderSimulation(row) {
-    const info = $("surfSimulationInfo"), plot = $("surfSimulationProfile");
-    info.replaceChildren(); plot.replaceChildren();
+    profileRow = row;
+    const info = $("surfSimulationInfo"), details = $("surfSimulationDetails"), plot = $("surfSimulationProfile");
+    info.replaceChildren(); details.replaceChildren(); plot.replaceChildren();
     $("surfProfileTime").value = "";
     if (!simulation) { info.append(node("p", "Wczytywanie wyników SWAN…", "surf-small")); return; }
     const refreshMessage = waveRefreshMessage();
@@ -534,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (simulation.error) info.append(node("p", `Powód: ${simulation.error}`, "surf-small"));
       return;
     }
-    info.append(node("p", `Prognoza ${simulation.engine}${simulation.sourceType === "local" ? " · obliczenia lokalne" : ""} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)}.`, "surf-small"));
+    details.append(node("p", `Prognoza ${simulation.engine}${simulation.sourceType === "local" ? " · obliczenia lokalne" : ""} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)}.`, "surf-small"));
     if (simulation.reusedInputs) info.append(node("p", `Obliczono nowy profil na ostatnim poprawnie pobranym zestawie prognoz. Dane wejściowe fal pobrano ${day(simulation.boundaryFetchedAt)} ${hour(simulation.boundaryFetchedAt)}. Daty pozostają oryginalne; pobieranie nowszych danych było chwilowo niedostępne.`, "surf-small"));
     if (!row?.simulation) {
       info.append(node("p", "Brak aktualnego wyniku z potwierdzoną odległością do 500 m od brzegu na tę godzinę. Nie wystawiamy oceny sesji na podstawie dalszego morza.", "surf-small")); return;
@@ -543,13 +600,17 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfProfileTime").value = String(row.time);
     const summary = node("p");
     summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy spocie ~${fmt(s.height)} m`), document.createTextNode(` · około ${Math.round(s.shoreDistance)} m od brzegu · głębokość ${fmt(s.depth)} m · czas między falami ${fmt(s.period)} s · moc ${fmt(s.powerKWm, 2)} kW/m.`));
-    info.append(summary);
-    info.append(node("p", "Punkt do oceny wybieramy od strony morza, przy pierwszym dojściu profilu dna do głębokości około 2 m, w strefie do 500 m od brzegu. Wysokość znacząca z modelu nie jest pomiarem ściany łamiącej się fali.", "surf-small"));
-    info.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
+    details.append(summary);
+    details.append(node("p", "Punkt do oceny wybieramy od strony morza, przy pierwszym dojściu profilu dna do głębokości około 2 m, w strefie do 500 m od brzegu. Wysokość znacząca z modelu nie jest pomiarem ściany łamiącej się fali.", "surf-small"));
+    details.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
       : "Model nie wskazuje wyraźnej strefy załamania w rozpoznanych pierwszych 500 m.", "surf-small"));
-    info.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
-    if (row.simulationWind) info.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 3.`, "surf-small"));
+    details.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
+    if (row.simulationWind) details.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 3.`, "surf-small"));
     const points = s.profile || [];
+    const profileUntil = simulation.hourly?.[0]?.time + simulation.profileHours * 3600;
+    if (points.length !== 11 && M.finite(profileUntil) && row.time > profileUntil) {
+      plot.append(node("p", `Pełny przekrój 0–500 m pokazujemy dla pierwszych ${Math.round(simulation.profileHours / 24)} dni prognozy. Dla tej godziny podajemy wartości w punkcie przy spocie — powyżej.`, "surf-small")); return;
+    }
     if (points.length !== 11) { plot.append(node("p", "Pełny profil 0–500 m co 50 m wymaga przeliczenia. Nie przedłużamy krótszej krzywej wymyślonymi wartościami.", "surf-small")); return; }
     const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
     const width = Math.max(300, Math.min(900, plot.clientWidth || 900));
@@ -574,7 +635,8 @@ document.addEventListener("DOMContentLoaded", () => {
       value.append(node("small",`${p.shoreDistance} m od brzegu`),node("strong",p.shoreDistance===0?"brzeg":p.kind==="dry-model-node"?"płytko / sucho":`~${heightLabel} m`));
       values.append(value);
     });
-    plot.append(svg, values, node("p", "Cały przekrój: 0, 50, 100, …, 500 m od brzegu przyjętego w modelu. Zielone punkty: wyniki SWAN. Szare: granica lądu albo komórki uznane za suche / zbyt płytkie (warunek modelu, nie pomiar napływu fali). Grubsza kropka zaznacza punkt podsumowania — nie początek wykresu. Położenie rzeczywistej linii wody jest przybliżone.", "surf-small"));
+    plot.append(svg, values);
+    details.prepend(node("p", "Cały przekrój: 0, 50, 100, …, 500 m od brzegu przyjętego w modelu. Zielone punkty: wyniki SWAN. Szare: granica lądu albo komórki uznane za suche / zbyt płytkie (warunek modelu, nie pomiar napływu fali). Grubsza kropka zaznacza punkt podsumowania — nie początek wykresu. Położenie rzeczywistej linii wody jest przybliżone.", "surf-small"));
   }
 
   function renderBathymetry(now) {
@@ -622,6 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chosenSession = SurfSession.resolve(rows, sessionRequest, M);
     if (chosenSession && simulationTime === null) simulationTime = chosenSession.start;
     $("surfContent").hidden = false;
+    $("surfSpotHeading").hidden = false;
     $("surfDetailContent").hidden = false;
     renderSession();
     const now = simulationTime !== null ? rows.find(r => r.time === simulationTime)
@@ -722,11 +785,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function showSpotMap(selectedId) {
+    if (!spotMap && window.SurfSpotMap) {
+      spotMap = SurfSpotMap.create({ spots, region: "all", selectedId,
+        onSelect: id => { clearSpotSearch(); $("surfSpot").value = id; updateChoice(); location.hash = `surf/${id}`; } });
+    } else if (spotMap) {
+      spotMap.resize();
+      spotMap.select(selectedId);
+    }
+  }
+
+  // Without a chosen spot the tab offers only the ways to choose one; no spot is ever preselected.
+  function showNoSpot() {
+    ++generation;
+    clearTimeout(simulationRefreshTimer);
+    currentSpot = null; loaded = null; rows = []; simulation = null; simulationTime = null; chosenSession = null;
+    conditions = null; loading = false;
+    $("surfSpot").value = "";
+    $("surfTab").href = "#surf";
+    for (const id of ["surfSpotHeading", "surfLocalSection", "surfContent", "surfHourlySection", "surfDetailContent", "surfWindy"]) $(id).hidden = true;
+    delete $("surfStatus").dataset.state;
+    $("surfStatus").textContent = "Nie wybrano spotu. Wybierz plażę w wyszukiwarce, na liście albo na mapie, aby zobaczyć prognozę.";
+    document.title = "Prognozy surfingu | Nad morzem";
+    showSpotMap(null);
+    updateChoice();
+  }
+
   async function loadSpot(spot, force = false) {
     const token = ++generation;
     clearTimeout(simulationRefreshTimer);
     lastAttempt = Date.now();
-    currentSpot = spot; loaded = null; rows = []; simulation = null; simulationTime = null; chosenSession = null;
+    currentSpot = spot; loaded = null; rows = []; simulation = null; simulationTime = sessionRequest?.time ?? null; chosenSession = null;
     conditions = null;
     loading = true;
     if (acceptedSearchId !== spot.id) clearSpotSearch();
@@ -734,18 +823,15 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfSpot").value = spot.id;
     $("surfTab").href = `#surf/${spot.id}`;
     $("surfContent").hidden = true;
+    $("surfSpotHeading").hidden = true;
     $("surfDetailContent").hidden = true;
+    for (const id of ["surfLocalSection", "surfHourlySection", "surfWindy"]) $(id).hidden = false;
     updateChoice();
     $("surfStatus").dataset.state = "loading";
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
     document.title = `${spot.town} — prognoza surfingu | Nad morzem`;
-    if (!spotMap && window.SurfSpotMap) {
-      spotMap = SurfSpotMap.create({ spots, region: "all", selectedId: spot.id,
-        onSelect: id => { clearSpotSearch(); $("surfSpot").value = id; updateChoice(); location.hash = `surf/${id}`; } });
-    } else if (spotMap) {
-      spotMap.resize();
-      spotMap.select(spot.id);
-    }
+    document.querySelectorAll(".surf-spot-label").forEach(label => { label.textContent = `Spot: ${spot.town} — ${spot.name}`; });
+    showSpotMap(spot.id);
     renderSpotNotes();
     setMap();
     renderHours();
@@ -778,7 +864,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   function route() {
-    const next = location.hash.startsWith("#surf/");
+    const next = location.hash === "#surf" || location.hash.startsWith("#surf/");
     const heatmap = location.hash.startsWith("#heatmap");
     const tab = heatmap ? "heatmap" : next ? "surf" : "cameras";
     const changed = next !== active;
@@ -795,10 +881,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (next) {
       sessionRequest = SurfSession.parse(location.hash);
       sessionScroll = Boolean(sessionRequest.day);
+      hourScroll = sessionRequest.time !== null;
       const spot = byId.get(sessionRequest.spotId);
-      if (!spot) { location.replace("#surf/wladyslawowo"); return; }
-      if (spot.id !== currentSpot?.id || changed) loadSpot(spot);
-      else { simulationTime = null; render(); }
+      // An unknown or missing spot leaves the tab without one, rather than opening a default spot.
+      if (!spot && location.hash !== "#surf") { location.replace("#surf"); return; }
+      if (!spot) showNoSpot();
+      else if (spot.id !== currentSpot?.id || changed) loadSpot(spot);
+      else { simulationTime = sessionRequest.time; render(); }
+      // Go straight to the hourly forecast while it loads; showRequestedHour() aligns it once the data is in.
+      if (hourScroll) $("surfHourlySection").scrollIntoView({ behavior: "instant", block: "start" });
     } else {
       ++generation;
       clearTimeout(simulationRefreshTimer);
@@ -843,16 +934,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cell || !hoursTable.contains(cell)) return;
     simulationTime = Number(cell.dataset.time); render();
   });
-  $("surfHoursNow").addEventListener("click", () => {
-    simulationTime = Math.floor(Date.now() / 3600000) * 3600;
-    render(); revealHoursTime(simulationTime, true);
-  });
   hoursViewport.addEventListener("scroll", updateHoursNavigation, { passive: true });
-  for (const [id, direction] of [["surfHoursPrevious", -1], ["surfHoursNext", 1]]) $(id).addEventListener("click", () => {
-    const labelWidth = hoursTable.querySelector(".surf-hourly-label")?.getBoundingClientRect().width || 0;
-    hoursViewport.scrollBy({ left: direction * Math.max(150, hoursViewport.clientWidth - labelWidth - 24),
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  });
+  $("surfDaysLess").addEventListener("click", () => { hoursDayPages--; updateDayPages(); });
+  $("surfDaysMore").addEventListener("click", () => { hoursDayPages++; updateDayPages(); });
   $("surfProfileTime").addEventListener("change", () => { simulationTime=Number($("surfProfileTime").value);render(); });
   $("surfCleanupOnly").addEventListener("change", render);
   window.addEventListener("hashchange", route);
@@ -863,7 +947,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const width = Math.round(entries[0].contentRect.width);
       if (active && width > 0 && width !== profileWidth) {
         profileWidth = width;
-        renderSimulation(simulationTime !== null ? rows.find(r => r.time === simulationTime) : rows.find(r => r.simulation));
+        // A new width only redraws the hour already shown.
+        renderSimulation(profileRow);
       }
     }).observe($("surfSimulationProfile"));
   }
@@ -894,5 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("surfCoverage").append(node("h4", "Spoty dodatkowe bez bezpośredniej kamery"), ...spots.filter(s => !s.cameras.length).map(s => {
     const p = node("p"); p.append(link(`${s.town} — ${s.name}`, `#surf/${s.id}`)); return p;
   }));
+  // Refreshing starts the forecast tab without a spot, like a first visit; opening a link to a spot still shows it.
+  if (performance.getEntriesByType?.("navigation")[0]?.type === "reload" && location.hash.startsWith("#surf/")) history.replaceState(history.state, "", "#surf");
   route();
 });

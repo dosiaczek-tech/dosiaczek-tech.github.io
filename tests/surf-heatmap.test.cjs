@@ -2,104 +2,89 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const H = require('../surf-heatmap.js');
 
-test('Polish day runs midnight to midnight with exact one-hour interval labels', () => {
-  for (const day of ['2026-11-05', '2026-07-05']) {
-    const slots = H.hoursForDay(day);
-    assert.equal(slots.length, 24);
-    assert.equal(slots[0].label, '00:00–01:00');
-    assert.equal(slots[10].label, '10:00–11:00');
-    assert.equal(slots[11].label, '11:00–12:00');
-    assert.equal(slots.at(-1).label, '23:00–00:00');
-    assert.equal(slots.at(-1).nextDay, true);
-    assert.ok(slots.every(s => H.dayKey(s.time) === day && s.end - s.time === 3600));
-    assert.ok(slots.slice(0, -1).every(s => !s.nextDay));
-  }
-  assert.equal(new Date(H.hoursForDay('2026-11-05')[0].time * 1000).toISOString(), '2026-11-04T23:00:00.000Z');
-  assert.deepEqual(H.hoursForDay('invalid'), []);
-});
-
-test('each cell preserves its hourly rating, including zero, night, and gaps', () => {
-  const slots = H.hoursForDay('2026-11-05');
-  const rows = [
-    { time: slots[0].time, score: 0, simulation: { height: 0 }, daylight: false },
-    { time: slots[1].time, score: 9.3, simulation: { height: 1 } },
-    { time: slots[2].time, score: null, simulation: { height: 1 } },
-    { time: slots[3].time, score: 8, simulation: null },
-    { time: slots[4].time, score: 10.1, simulation: { height: 1 } },
-    { time: slots[5].time, score: NaN, simulation: { height: 1 } },
-    { time: slots.at(-1).end, score: 7, simulation: { height: 1 } }
+test('columns run hour by hour from the current hour to the last rated hour of any spot', () => {
+  const now = Date.parse('2026-11-10T18:25:00Z'), first = Date.parse('2026-11-10T18:00:00Z') / 1000;
+  const spots = [
+    new Map([[first - 3600, 9], [first, 4], [first + 2 * 3600, 6]]),
+    new Map([[first + 5 * 3600, 2], [first + 9 * 3600, null], [first + 8 * 3600, 11], [first + 7 * 3600 + 60, 7]])
   ];
-  const original = structuredClone(rows);
-  const cells = H.cellsForDay(rows, '2026-11-05', slots[1].time * 1000 + 59 * 60000);
-  assert.equal(cells.length, 24);
-  assert.deepEqual(cells.slice(0, 6).map(c => c.score), [0, 9.3, null, null, null, null]);
-  assert.equal(cells[0].tone, 'bad');
-  assert.equal(cells[1].tone, 'excellent');
-  assert.equal(cells[2].tone, 'unknown');
-  assert.equal(cells[0].historical, true);
-  assert.equal(cells[1].historical, false);
-  assert.equal(cells.at(-1).score, null, 'next midnight belongs to the next day');
-  assert.deepEqual(rows, original);
+  const times = H.timeline(spots, now);
+  assert.equal(times[0], first, 'the past hour is left out, the current one stays');
+  assert.equal(times.at(-1), first + 5 * 3600, 'missing, invalid and unaligned ratings do not extend the grid');
+  assert.ok(times.every((time, i) => !i || time - times[i - 1] === 3600));
+  assert.deepEqual(H.timeline([new Map(), new Map([[first - 3600, 8]])], now), []);
 });
 
-test('clock changes preserve distinct hours without averaging or inventing scores', () => {
-  const autumn = H.hoursForDay('2026-10-25');
-  assert.equal(autumn.length, 25);
-  const repeated = autumn.filter(s => s.label.startsWith('02:00'));
-  assert.equal(repeated.length, 2);
-  assert.deepEqual(repeated.map(s => s.offset), ['CEST', 'CET']);
-  const rows = repeated.map((s, i) => ({ time: s.time, score: [2, 9][i], simulation: {} }));
-  const cells = H.cellsForDay(rows, '2026-10-25');
-  assert.deepEqual(cells.filter(c => c.score !== null).map(c => c.score), [2, 9]);
-  const spring = H.hoursForDay('2026-03-29');
-  assert.equal(spring.length, 23);
-  assert.equal(spring[1].label, '01:00–03:00');
-  assert.ok(!spring.some(s => s.label.startsWith('02:00')));
+test('the autumn clock change keeps both 02:00 hours as separate, named columns', () => {
+  const first = Date.parse('2026-10-24T22:00:00Z') / 1000;
+  const times = H.timeline([new Map([[first + 4 * 3600, 5]])], first * 1000);
+  assert.equal(times.length, 5);
+  assert.deepEqual(times.map(H.hourLabel), ['00:00–01:00', '01:00–02:00', '02:00–02:00 CEST', '02:00–03:00 CET', '03:00–04:00']);
+  assert.equal(H.hourLabel(Date.parse('2026-11-10T13:00:00Z') / 1000), '14:00–15:00');
 });
 
-test('Y-axis contains every catalogue spot once, in actual longitude order', () => {
+test('a point on the grid picks its cell, with the outer edges belonging to the outer cells', () => {
+  assert.deepEqual(H.cellAt(0, 0, 340, 364, 336, 91), { row: 0, column: 0 });
+  assert.deepEqual(H.cellAt(340, 364, 340, 364, 336, 91), { row: 90, column: 335 });
+  assert.deepEqual(H.cellAt(-3, 400, 340, 364, 336, 91), { row: 90, column: 0 });
+  assert.deepEqual(H.cellAt(170, 9, 340, 364, 336, 91), { row: 2, column: 168 });
+});
+
+test('a selected cell gets a darker shade of its own colour', () => {
+  assert.equal(H.shade('#f3cf60'), '#b69b48');
+  assert.equal(H.shade('#A9AEDB', .5), '#55576e');
+  assert.equal(H.shade('#ffffff', 1), '#ffffff');
+  assert.equal(H.shade('rgb(1, 2, 3)'), 'rgb(1, 2, 3)');
+});
+
+test('rows contain every catalogue spot once, in actual longitude order', () => {
   const spots = require('../surf-spots.js'), before = spots.map(s => s.id);
   const ordered = H.orderedSpots(spots);
   assert.equal(ordered.length, spots.length);
   assert.deepEqual(ordered.map(s => s.id).sort(), [...before].sort());
   assert.ok(ordered.every((s, i) => !i || ordered[i - 1].lon <= s.lon));
   assert.deepEqual(spots.map(s => s.id), before);
+  assert.equal(ordered[0].id, 'swinoujscie');
+  assert.equal(ordered.at(-1).id, 'piaski');
 });
 
 test('color boundaries follow the existing 0–10 recommendation scale', () => {
-  assert.deepEqual([0, 1.49, 1.5, 2.99, 3, 4.99, 5, 6.49, 6.5, 7.99, 8, 8.99, 9, 10, null, -1, 11].map(H.tone),
-    ['bad', 'bad', 'poor', 'poor', 'weak', 'weak', 'fair', 'fair', 'good', 'good', 'great', 'great', 'excellent', 'excellent', 'unknown', 'unknown', 'unknown']);
+  assert.deepEqual([0, 1.49, 1.5, 2.99, 3, 4.99, 5, 6.49, 6.5, 7.99, 8, 8.99, 9, 10, null, undefined, -1, 11].map(H.tone),
+    ['bad', 'bad', 'poor', 'poor', 'weak', 'weak', 'fair', 'fair', 'good', 'good', 'great', 'great', 'excellent', 'excellent', 'unknown', 'unknown', 'unknown', 'unknown']);
 });
 
-test('saved historical scores fill gaps older than twelve hours without replacing fresh values or resurrecting future forecasts', () => {
-  const now = Date.parse('2026-11-05T21:30:00Z');
-  const start = H.hoursForDay('2026-11-05')[0].time;
-  const row = (time, score) => ({ time, score, simulation: true });
-  const saved = [row(start, 0), row(start + 3600, 8), row(now / 1000 + 1800, 9), row(start - 9 * 86400, 5), row(start + 7200, 11)];
-  const fresh = [row(start, null), row(start + 3600, 6)];
-  const result = H.mergeHistory(fresh, saved, now);
-  assert.equal(result.find(r => r.time === start).score, 0);
-  assert.equal(result.find(r => r.time === start).archived, true);
-  assert.equal(result.find(r => r.time === start + 3600).score, 6);
-  assert.equal(result.length, 2);
-  assert.equal(H.cellsForDay(result, '2026-11-05', now)[0].tone, 'bad');
+test('a zoomed view maps a point to the tile under it', () => {
+  const view = { x: { from: .5, to: .75 }, y: { from: .25, to: .5 } };
+  assert.deepEqual(H.cellAt(0, 0, 400, 400, 100, 40, view), { row: 10, column: 50 });
+  assert.deepEqual(H.cellAt(399, 399, 400, 400, 100, 40, view), { row: 19, column: 74 });
+  assert.deepEqual(H.cellAt(200, 200, 400, 400, 100, 40, view), { row: 15, column: 62 });
 });
 
-test('history-only days remain selectable after noon and new midnight does not erase yesterday', () => {
-  const now = Date.parse('2026-11-05T21:30:00Z');
-  const past = H.hoursForDay('2026-11-04')[0].time;
-  const rows = H.mergeHistory([], [{ time: past, score: 7, simulation: true }], now);
-  assert.ok(H.calendarDays([rows], now).includes('2026-11-04'));
-  assert.ok(H.calendarDays([rows], now).includes('2026-11-10'));
-  const tomorrow = Date.parse('2026-11-06T00:15:00Z');
-  assert.equal(H.mergeHistory([], rows, tomorrow)[0].score, 7);
+// View edges are fractions, so they are compared with a rounding tolerance.
+const near = (actual, from, to, message) =>
+  assert.ok(Math.abs(actual.from - from) < 1e-9 && Math.abs(actual.to - to) < 1e-9, `${message || ''} ${JSON.stringify(actual)}`);
+
+test('pinching keeps the grid point under the fingers and stops at the edges and the zoom limit', () => {
+  const full = { from: 0, to: 1 };
+  near(H.viewAxis(full, .5, .5, 2, 10), .25, .75);
+  near(H.viewAxis(full, 0, 0, 4, 10), 0, .25, 'zooming at an edge keeps that edge');
+  near(H.viewAxis(full, .5, .5, 100, 4), .375, .625, 'tiles stop growing at the limit');
+  near(H.viewAxis({ from: .25, to: .75 }, .5, .5, .1, 10), 0, 1, 'zooming out stops at the whole grid');
+  near(H.viewAxis({ from: .25, to: .75 }, .5, .7, 1, 10), .15, .65, 'moving the fingers moves the grid with them');
+  near(H.viewAxis({ from: .25, to: .75 }, .5, 1.5, 1, 10), 0, .5);
+  near(H.viewAxis(full, .2, .9, 1, 10), 0, 1, 'the whole grid cannot be dragged away');
 });
 
-test('compact score store works with restricted storage and separates coordinate/model keys', async () => {
-  const store = H.historyStore(null);
-  const time = H.hoursForDay('2026-11-05')[0].time;
-  await store.write('v1:spot:54:19:350', [{ time, score: 4, simulation: {} }, { time: time + 3600, score: null, simulation: {} }]);
-  assert.deepEqual(await store.read('v1:spot:54:19:350'), [{ time, score: 4, simulation: true }]);
-  assert.deepEqual(await store.read('v1:spot:54.1:19:350'), []);
-  assert.deepEqual(await store.read('v2:spot:54:19:350'), []);
+test('keys bring the selected tile into a zoomed view with the smallest move', () => {
+  const axis = { from: .2, to: .4 };
+  assert.equal(H.followAxis(axis, 25, 100), axis, 'a visible tile does not move the view');
+  near(H.followAxis(axis, 40, 100), .21, .41);
+  near(H.followAxis(axis, 10, 100), .1, .3);
+});
+
+test('axis labels name the first and last tile whose centre is in view', () => {
+  assert.deepEqual(H.visibleEnds({ from: 0, to: 1 }, 335), [0, 334]);
+  assert.deepEqual(H.visibleEnds({ from: .25, to: .5 }, 100), [25, 49]);
+  assert.deepEqual(H.visibleEnds({ from: .254, to: .496 }, 100), [25, 49]);
+  assert.deepEqual(H.visibleEnds({ from: .256, to: .494 }, 100), [26, 48]);
 });

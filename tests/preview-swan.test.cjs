@@ -10,7 +10,7 @@ function bundle(spot, age = 0, clock = now) {
     shoreline:{landDistance:0,waterDistance:100,distance:50},
     hourly:[{time:Math.floor(clock/3600000)*3600,height:.8,period:5,direction:0,depth:2,distance:200,
       shoreDistance:150,shoreDistanceMin:100,shoreDistanceMax:200,powerKWm:1.2,lat:54.8018,lon:18.4}]};
-  result.history=Array.from({length:12},(_,i)=>({...result.hourly[0],time:result.hourly[0].time-(12-i)*3600}));
+  result.history=Array.from({length:24},(_,i)=>({...result.hourly[0],time:result.hourly[0].time-(24-i)*3600}));
   return result;
 }
 function harness(options = {}) {
@@ -94,21 +94,21 @@ test('a model update bypasses the previous-version startup cooldown and refuses 
 });
 test('a valid full-history local forecast is preferred to a newer publication missing half of the history',async()=>{
   const h=harness(),local=bundle(spots[0],1),published=bundle(spots[0]);
-  published.history=published.history.slice(-6);h.files.set('a',local);
+  published.history=published.history.slice(-12);h.files.set('a',local);
   const result=await h.provider.get('a',published);
   assert.equal(result.sourceType,'local');assert.equal(result.generatedAt,local.generatedAt);
-  assert.equal(result.history.length,12);assert.equal(h.calls(),0);
+  assert.equal(result.history.length,24);assert.equal(h.calls(),0);
 });
 test('missing history starts a real recalculation instead of duplicating existing hours',async()=>{
   let release;
   const h=harness({run:()=>new Promise(resolve=>{release=resolve;})}),published=bundle(spots[0]);
-  published.history=published.history.slice(-6);
+  published.history=published.history.slice(-12);
   const pending=await h.provider.get('a',published);
-  assert.equal(pending.refreshPending,true);assert.equal(pending.history.length,6);assert.equal(h.calls(),1);
+  assert.equal(pending.refreshPending,true);assert.equal(pending.history.length,12);assert.equal(h.calls(),1);
   h.files.set('a',bundle(spots[0]));
   const task=h.provider.refresh();release({available:1});await task;
   const ready=await h.provider.get('a',published);
-  assert.equal(ready.history.length,12);assert.equal(ready.refreshPending,false);
+  assert.equal(ready.history.length,24);assert.equal(ready.refreshPending,false);
 });
 test('status follows the latest complete local computation without replacing a newer publication',async()=>{
   const local={spots:2,available:1,generatedAt:now/1000-60};

@@ -80,9 +80,14 @@ DX = 100
 COMPUTE_DX = 50
 DT_MINUTES = 10
 SPINUP_HOURS = 12
-HISTORY_HOURS = 12
-HORIZON_HOURS = 120
+HISTORY_HOURS = 24
+HORIZON_HOURS = 336
+# The 0-500 m cross-section is published for the whole forecast.
+PROFILE_HOURS = HORIZON_HOURS
 MAX_SHORE_DISTANCE = 500
+# SWAN accepts at most 300 COMPUTE commands per run and we issue one per hour of
+# forcing. Longer horizons run in consecutive parts joined by a binary hotfile.
+CHUNK_HOURS = 240
 SUMMARY_DEPTH = 2
 
 
@@ -275,7 +280,7 @@ def bulk_forecast(points, marine=False, cache=None):
     for offset in range(0, len(points), 18):
         batch = points[offset:offset + 18]
         params = {"latitude": ",".join(str(p[0]) for p in batch), "longitude": ",".join(str(p[1]) for p in batch),
-                  "past_days": 2, "forecast_days": 6, "timeformat": "unixtime", "timezone": "GMT"}
+                  "past_days": 2, "forecast_days": 16, "timeformat": "unixtime", "timezone": "GMT"}
         if marine:
             params.update(hourly="wave_height,wave_direction,wave_period", models=",".join(WAVE_MODELS), cell_selection="sea")
             url = "https://marine-api.open-meteo.com/v1/marine"
@@ -408,15 +413,14 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
     cells = len(depths) - 1
     domain_length = cells * COMPUTE_DX
     (directory / "bottom.dat").write_text(" ".join(map(str, reversed(depths))) + "\n")
-    commands = ["PROJECT 'BalticSurf' '0001'", "MODE NONSTATIONARY ONEDIMENSIONAL",
+    header = ["PROJECT 'BalticSurf' '0001'", "MODE NONSTATIONARY ONEDIMENSIONAL",
                 "SET depmin=0.05 inrhog=1 NAUTICAL", f"CGRID REGULAR 0 0 0 {domain_length} 0 {cells} 0 CIRCLE 36 0.05 1.0 31",
                 f"INPGRID BOTTOM REGULAR 0 0 0 {cells} 0 {COMPUTE_DX} 1", "READINP BOTTOM 1 'bottom.dat' 3 0 FREE",
                 "BOUND SHAPESPEC JONSWAP 3.3 MEAN DSPR DEGREES", "BOUNDSPEC SIDE W CONSTANT FILE 'boundary.tpar' 1",
                 "INPGRID WIND REGULAR 0 0 0 3 0 2500 1", "GEN3 KOMEN", "BREAKING CONSTANT 1.0 0.73",
-                "FRICTION JONSWAP 0.038", "TRIAD", "PROP BSBT", f"CURVE 'PROFILE' 0 0 {cells} {domain_length} 0",
-                f"TABLE 'PROFILE' NOHEADER 'profile.tbl' TIME XP DEPTH HSIGN TM01 TMM10 DIR QB TRANSP OUTPUT {swan_time(start)} 1 HR"]
+                "FRICTION JONSWAP 0.038", "TRIAD", "PROP BSBT", f"CURVE 'PROFILE' 0 0 {cells} {domain_length} 0"]
     wind_lookup = [{t: consensus(w["data"]["hourly"], i) for i, t in enumerate(w["data"]["hourly"]["time"]) if start <= t <= end} for w in winds]
-    used = []
+    used, steps = [], []
     # Piecewise hourly forcing; incoming spectra evolve continuously between runs.
     for index, t in enumerate(times[:-1]):
         values = [lookup[t] for lookup in wind_lookup]
@@ -424,11 +428,43 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
         components.append(components[-1])  # Hold shoreline wind over the optional inland extension.
         name = f"wind{index:03d}.dat"
         (directory / name).write_text("\n".join(" ".join(f"{pair[axis]:.6f}" for pair in components) for axis in [0, 1]) + "\n")
-        commands.extend([f"READINP WIND 1 '{name}' 3 0 FREE", f"COMPUTE NONSTAT {swan_time(t)} {DT_MINUTES} MIN {swan_time(t + 3600)}"])
+        steps.append([f"READINP WIND 1 '{name}' 3 0 FREE", f"COMPUTE NONSTAT {swan_time(t)} {DT_MINUTES} MIN {swan_time(t + 3600)}"])
         used.append({"time": t, **values[-1]})
-    commands.append("STOP")
-    (directory / "INPUT").write_text("\n".join(commands) + "\n")
-    return boundary_model, used
+    chunks = []
+    for number, first in enumerate(range(0, len(steps), CHUNK_HOURS)):
+        part = steps[first:first + CHUNK_HOURS]
+        last = first + len(part) >= len(steps)
+        commands = header + ([f"INIT HOTSTART SINGLE 'hot{number - 1}' UNFORMATTED"] if number else []) + [
+            f"TABLE 'PROFILE' NOHEADER 'profile.{number}.tbl' TIME XP DEPTH HSIGN TM01 TMM10 DIR QB TRANSP OUTPUT {swan_time(times[first])} 1 HR"]
+        commands += [command for step in part for command in step]
+        commands += ([] if last else [f"HOTFILE 'hot{number}' UNFORMATTED"]) + ["STOP"]
+        chunks.append({"input": "\n".join(commands) + "\n", "table": f"profile.{number}.tbl", "start": times[first]})
+    # The archived INPUT holds every part in order, so the forcing hash covers the whole run.
+    (directory / "INPUT").write_text("".join(chunk["input"] for chunk in chunks))
+    return boundary_model, used, chunks
+
+
+def run_chunks(directory, executable, chunks):
+    """Run each SWAN part in turn and join the tables into profile.tbl.
+    A continued part repeats its first hour from the hotfile before boundary
+    forcing is applied, so that hour is taken from the previous part."""
+    merged = []
+    for number, chunk in enumerate(chunks):
+        (directory / "INPUT").write_text(chunk["input"])
+        run = subprocess.run([str(executable)], cwd=directory, env={**os.environ, "OMP_NUM_THREADS": "1"},
+                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600, text=True)
+        log = (directory / "PRINT").read_text() if (directory / "PRINT").exists() else ""
+        if run.returncode or "** Error" in log or "No continuation" in log or not (directory / chunk["table"]).exists():
+            raise ValueError("SWAN failed: " + (run.stderr or log[-1800:]))
+        first = swan_time(chunk["start"])
+        merged += [line for line in (directory / chunk["table"]).read_text().splitlines()
+                   if line.strip() and not (number and line.split()[0] == first)]
+    (directory / "profile.tbl").write_text("\n".join(merged) + "\n")
+    (directory / "INPUT").write_text("".join(chunk["input"] for chunk in chunks))
+    # Intermediate parts are fully represented by INPUT and profile.tbl in the archive.
+    for number, chunk in enumerate(chunks):
+        (directory / chunk["table"]).unlink(missing_ok=True)
+        (directory / f"hot{number}").unlink(missing_ok=True)
 
 
 def summary_location(coast, distances, depths):
@@ -526,23 +562,56 @@ def parse_output(path, spot, bath, start, end):
     return result
 
 
+def contiguous_end(times, available, start):
+    """Last hour of the unbroken hourly run of usable data beginning exactly at start."""
+    end, expected = start - 3600, start
+    for i, t in enumerate(times):
+        if t < start:
+            continue
+        if t != expected or not available(i):
+            break
+        end, expected = t, t + 3600
+    return end
+
+
+def available_end(marine, winds, start):
+    """Models end at different horizons (EWAM ~3 days, ICON ~7, WAM/IFS ~14.5);
+    Open-Meteo pads them with nulls. Stop where real inputs stop, never fill."""
+    mh = marine["data"]["hourly"]
+    missing = [None] * len(mh["time"])
+
+    def wave_ok(model):
+        series = [mh.get(f"{v}_{model}", missing) for v in ["wave_height", "wave_period", "wave_direction"]]
+        return lambda i: all(finite(values[i]) for values in series)
+    marine_end = max(contiguous_end(mh["time"], wave_ok(model), start) for model in WAVE_MODELS)
+
+    def wind_ok(hourly):
+        def check(i):
+            try:
+                consensus(hourly, i)
+                return True
+            except ValueError:
+                return False
+        return check
+    wind_end = min(contiguous_end(w["data"]["hourly"]["time"], wind_ok(w["data"]["hourly"]), start) for w in winds)
+    return min(marine_end, wind_end)
+
+
 def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HOURS, calm_test=False):
     forecast_start = int(now // 3600) * 3600
     history_start = forecast_start - HISTORY_HOURS * 3600
     start = history_start - SPINUP_HOURS * 3600
-    end = min(forecast_start + hours * 3600, max(marine["data"]["hourly"]["time"]),
-              *(max(w["data"]["hourly"]["time"]) for w in winds))
+    end = min(forecast_start + hours * 3600, available_end(marine, winds, start))
     if end < forecast_start + min(hours, 24) * 3600:
         raise ValueError("Insufficient actual forecast horizon; no extrapolation allowed")
     with tempfile.TemporaryDirectory(prefix=f"swan-{spot['id']}-", dir=cache) as temporary:
         directory = Path(temporary)
-        boundary, used = prepare_run(directory, spot, bath, marine, winds, start, end, calm_test)
-        run = subprocess.run([str(executable)], cwd=directory, env={**os.environ, "OMP_NUM_THREADS": "1"},
-                             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600, text=True)
-        log = (directory / "PRINT").read_text() if (directory / "PRINT").exists() else ""
-        if run.returncode or "** Error" in log or "No continuation" in log or not (directory / "profile.tbl").exists():
-            raise ValueError("SWAN failed: " + (run.stderr or log[-1800:]))
+        boundary, used, chunks = prepare_run(directory, spot, bath, marine, winds, start, end, calm_test)
+        run_chunks(directory, executable, chunks)
         hourly = parse_output(directory / "profile.tbl", spot, bath, forecast_start, end)
+        for row in hourly:
+            if row["time"] > forecast_start + PROFILE_HOURS * 3600:
+                row["profile"] = []
         history = parse_output(directory / "profile.tbl", spot, bath, history_start, forecast_start - 3600)
         input_hash = hashlib.sha256((directory / "INPUT").read_bytes() + (directory / "boundary.tpar").read_bytes() +
                                    (directory / "bottom.dat").read_bytes() + b"".join(p.read_bytes() for p in sorted(directory.glob("wind*.dat")))).hexdigest()
@@ -556,7 +625,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
     return {"schema": 2, "version": VERSION, "engine": "SWAN 41.51AB", "status": "ready", "generatedAt": int(time.time()),
             "forecastHours": (end - forecast_start) // 3600, "historyHours": HISTORY_HOURS,
             "shoreline": shoreline_reference(spot, bath), "maxShoreDistanceM": MAX_SHORE_DISTANCE,
-            "profileGridM": COMPUTE_DX, "profileReference": "estimated-shoreline",
+            "profileGridM": COMPUTE_DX, "profileReference": "estimated-shoreline", "profileHours": PROFILE_HOURS,
             "cycle": int(now // 43200) * 43200,
             "spot": {k: spot[k] for k in ["id", "lat", "lon", "normal"]}, "geometryKey": geometry_key(spot),
             "boundaryModel": boundary, "boundaryFetchedAt": marine["fetchedAt"], "windFetchedAt": min(w["fetchedAt"] for w in winds),

@@ -22,8 +22,8 @@
       return { ...part, time: times.length ? Math.min(...times) : null };
     });
   }
-  function combine(rows, conditions, { windWeather = null, now = Date.now(), historyHours = 12 } = {}) {
-    const lookback = Number.isFinite(historyHours) ? Math.max(0, Math.min(12, historyHours)) : 0;
+  function combine(rows, conditions, { windWeather = null, now = Date.now(), historyHours = 24 } = {}) {
+    const lookback = Number.isFinite(historyHours) ? Math.max(0, Math.min(24, historyHours)) : 0;
     const from = Math.floor(now / 3600000) * 3600 - lookback * 3600;
     // Waves define the table's hours and horizon; extra weather never adds its own columns.
     const byTime = new Map(rows.filter(row => Number.isFinite(row?.time) &&

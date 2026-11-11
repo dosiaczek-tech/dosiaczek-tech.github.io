@@ -1,15 +1,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { chartHours, chartExtent, chartSegments } = require('../surf-compare.js');
+const { chartHours, chartExtent, chartSegments, dayEdges } = require('../surf-compare.js');
 
-test('chart retains all twelve hourly scores including night and zero, independently of daily windows', () => {
+test('chart retains all twenty-four hourly scores including night and zero, independently of daily windows', () => {
   const current = Date.parse('2026-10-25T08:00:00Z') / 1000;
-  const rows = Array.from({ length: 20 }, (_, i) => ({ time: current + (i - 13) * 3600,
+  const rows = Array.from({ length: 32 }, (_, i) => ({ time: current + (i - 25) * 3600,
     score: i % 4, simulation: { height: .3 }, daylight: false }));
   const points = chartHours(rows, current * 1000 + 59 * 60000);
   const history = points.filter(p => p.historical);
-  assert.equal(history.length, 12);
-  assert.deepEqual(history.map(p => p.time), Array.from({ length: 12 }, (_, i) => current - (12 - i) * 3600));
+  assert.equal(history.length, 24);
+  assert.deepEqual(history.map(p => p.time), Array.from({ length: 24 }, (_, i) => current - (24 - i) * 3600));
   assert.ok(history.every(p => Number.isFinite(p.score)));
   assert.ok(history.some(p => p.score === 0));
   assert.equal(points.find(p => p.time === current).historical, false);
@@ -73,4 +73,11 @@ test('chart lines stay continuous through repeated local hours at the autumn clo
   const hours = [0,1,2].map(h=>({time:current+h*3600,score:3+h}));
   assert.deepEqual(chartSegments(hours),[hours]);
   assert.equal(chartExtent([{hours}]).until-chartExtent([{hours}]).from,7200);
+});
+
+test('the selected day is framed at its midnights only where the chart has data on both sides', () => {
+  const midnight = Date.parse('2026-11-15T00:00:00+01:00') / 1000, day = Array.from({ length: 24 }, (_, i) => midnight + i * 3600);
+  assert.deepEqual(dayEdges(day, { from: midnight - 3600, until: midnight + 86400 }), [midnight, midnight + 86400]);
+  assert.deepEqual(dayEdges(day.slice(8), { from: midnight + 8 * 3600, until: midnight + 86400 }), [midnight + 86400], 'data starting during the day has no left edge');
+  assert.deepEqual(dayEdges(day.slice(0, 18), { from: midnight - 3600, until: midnight + 17 * 3600 }), [midnight], 'data ending during the day has no right edge');
 });
