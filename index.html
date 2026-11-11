@@ -261,7 +261,7 @@
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js?v=stegna-location-v5"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=bs-wind-8-v1"></script>
+  <script defer src="surf-model.js?v=disputed-wind-v1"></script>
   <script defer src="surf-map-gestures.js?v=two-fingers-v1"></script>
   <script defer src="surf-wind-map.js?v=two-fingers-v1"></script>
   <script defer src="surf-api.js?v=bs-wind-8-v1"></script>
@@ -272,9 +272,9 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=bs-wind-8-v1"></script>
+  <script defer src="surf-app.js?v=disputed-wind-v1"></script>
   <script defer src="surf-compare.js?v=day-labels-v2"></script>
-  <script defer src="surf-heatmap.js?v=word-gap-v1"></script>
+  <script defer src="surf-heatmap.js?v=disputed-wind-v1"></script>
 </head>
 <body>
   <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -379,7 +379,7 @@
         <div class="heatmap-time-axis" aria-hidden="true"><span id="heatmapStart"></span><span id="heatmapEnd"></span></div>
       </div>
       <div id="heatmapDetail" class="heatmap-detail" aria-live="polite"></div>
-      <p id="heatmapExplanation" class="surf-small">Każdy wiersz to jeden spot: u góry najdalej wysunięty na zachód, na dole najdalej na wschód. Kolejność wynika z długości geograficznej; odstępy między wierszami nie oznaczają odległości. Każda kolumna to jedna godzina, od bieżącej do ostatniej z prognozą fal. Kolor pokazuje ocenę z początku godziny, bez uśredniania; niebieskofioletowy oznacza brak oceny. Rozsunięcie dwóch palców przybliża mapę, a przesuwanie dwoma palcami ją przesuwa; po przybliżeniu jeden palec przesuwa ją też w bok. Na komputerze kółko myszy przybliża i oddala mapę wokół kursora, a przeciąganie ją przesuwa; gdy widać całą mapę, kręcenie w dół przewija stronę. Podpisy osi pokazują wtedy pierwszy i ostatni widoczny spot oraz godzinę. Klawiatura: strzałki wybierają pole, Page Up i Page Down przesuwają o dobę, Enter otwiera prognozę godzinową. Nocne oceny opisują warunki falowe, nie rekomendację pływania po zmroku.</p>
+      <p id="heatmapExplanation" class="surf-small">Każdy wiersz to jeden spot: u góry najdalej wysunięty na zachód, na dole najdalej na wschód. Kolejność wynika z długości geograficznej; odstępy między wierszami nie oznaczają odległości. Każda kolumna to jedna godzina, od bieżącej do ostatniej z prognozą fal. Kolor pokazuje ocenę z początku godziny, bez uśredniania; niebieskofioletowy oznacza brak oceny. Gdy modele wiatru wskazują różne kierunki, ocena jest medianą ocen policzonych dla wiatru z każdego modelu, z niską pewnością — karta pola to zaznacza. Rozsunięcie dwóch palców przybliża mapę, a przesuwanie dwoma palcami ją przesuwa; po przybliżeniu jeden palec przesuwa ją też w bok. Na komputerze kółko myszy przybliża i oddala mapę wokół kursora, a przeciąganie ją przesuwa; gdy widać całą mapę, kręcenie w dół przewija stronę. Podpisy osi pokazują wtedy pierwszy i ostatni widoczny spot oraz godzinę. Klawiatura: strzałki wybierają pole, Page Up i Page Down przesuwają o dobę, Enter otwiera prognozę godzinową. Nocne oceny opisują warunki falowe, nie rekomendację pływania po zmroku.</p>
       </div>
     </section>
     <div id="cameraPanel">

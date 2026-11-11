@@ -370,11 +370,24 @@
     const base = buildForecast(spot, { hourly: { time: times } }, weather, null, now - 48 * 3600000);
     const series = applySimulation(base, simulation, spot, now).map(row => ({ ...row,
       members: [{ model: "bs-swan-coast500", height: row.height, period: row.period, direction: row.direction }] }));
+    // When the models' directions cancel out there is no common wind direction. Each model's wind is then
+    // scored with the same waves, and the median of those scores is shown with low confidence.
+    const disputedRating = (row, order) => {
+      const ratings = (row.wind.members || []).map(m => rate(row, { speed: m.speed, direction: m.direction, gust: m.gust }, spot, null, row.simulation, order))
+        .filter(r => finite(r?.score)).sort((a, b) => a.score - b.score);
+      if (!ratings.length) return null;
+      const middle = ratings[Math.floor((ratings.length - 1) / 2)];
+      return { ...middle, score: Math.round(median(ratings.map(r => r.score)) * 10) / 10, disputed: true,
+        flags: [...middle.flags, "Modele wiatru wskazują różne kierunki — ocena to mediana ocen dla wiatru z każdego modelu"] };
+    };
     return series.map((row, index) => {
       const cleanup = detectCleanup(series, index, spot);
       const order = waveOrder(series, index, cleanup);
-      const rating = row.simulation && row.height > .001 ? rate(row, row.wind, spot, null, row.simulation, order) : null;
+      const waves = row.simulation && row.height > .001;
+      const disputed = waves && row.wind && !finite(row.wind.direction) && finite(row.wind.speed) && row.wind.speed >= 0.5;
+      const rating = !waves ? null : disputed ? disputedRating(row, order) : rate(row, row.wind, spot, null, row.simulation, order);
       const reasons = [];
+      if (rating?.disputed) reasons.push("Modele wiatru wskazują różne kierunki — ocena to mediana ocen z poszczególnych modeli");
       if (!order.known) reasons.push("Niepełna historia uporządkowania fal");
       if (!row.wind || row.wind.count < 2) reasons.push("Ograniczona liczba modeli wiatru");
       if (row.wind && (row.wind.spread > 4 || row.wind.agreement < .7)) reasons.push("Rozbieżne prognozy wiatru");
@@ -387,7 +400,7 @@
       if (row.simulationWind?.fallback) reasons.push("Wiatr zastępczy w symulacji");
       if (!row.simulation) reasons.push("Brak prognozy przybrzeżnej");
       const confidence = { level: reasons.length ? "niska" : "średnia", reasons: reasons.length ? reasons : ["Zgodny wiatr; pojedyncza symulacja fal i przybliżone dno"] };
-      return { ...row, cleanup, confidence, components: rating?.components,
+      return { ...row, cleanup, confidence, components: rating?.components, disputedWind: Boolean(rating?.disputed),
         score: rating?.score ?? row.score,
         flags: rating ? [...rating.flags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })

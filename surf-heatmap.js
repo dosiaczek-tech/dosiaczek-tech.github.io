@@ -151,6 +151,7 @@
       link.append(el("span", `${date(selected.time)} · ${hourLabel(selected.time)}`),
         el("strong", score === null ? "Brak oceny" : `${scoreText(score)}/10 · ${M.scoreLabel(score)}`),
         el("small", `${spot.town} — ${spot.name}`));
+      if (record?.disputed?.has(selected.time)) link.append(el("small", "Niska pewność: modele wiatru wskazują różne kierunki, więc to mediana ocen dla wiatru z każdego modelu."));
       if (record?.issue) link.append(el("small", record.issue));
       link.append(el("small", "Otwórz w prognozie godzinowej →", "heatmap-pick-action"));
       detail.replaceChildren(link);
@@ -194,7 +195,7 @@
       await Promise.all(Array.from({ length: 4 }, async () => {
         while (index < catalog.length && token === generation && active()) {
           const spot = catalog[index++];
-          let scores = new Map(), issue = "";
+          let scores = new Map(), disputed = new Set(), issue = "";
           try {
             const [forecast, simulation] = await Promise.all([
               root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly: true }),
@@ -202,6 +203,7 @@
             ]);
             const rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0 });
             scores = new Map(rows.filter(row => row.simulation && validScore(row.score)).map(row => [row.time, row.score]));
+            disputed = new Set(rows.filter(row => row.disputedWind).map(row => row.time));
             const issues = [];
             if (!forecast.weather) issues.push("Brak aktualnego wiatru.");
             if (!rows.some(row => row.simulation)) issues.push("Brak aktualnej prognozy fal dla tego punktu.");
@@ -211,7 +213,7 @@
             issue = issues.join(" ");
           } catch { issue = "Nie udało się pobrać prognozy. Przeładuj stronę, aby spróbować ponownie."; }
           if (token !== generation || !active()) return;
-          records.set(spot.id, { scores, issue }); completed++;
+          records.set(spot.id, { scores, disputed, issue }); completed++;
           status();
         }
       }));

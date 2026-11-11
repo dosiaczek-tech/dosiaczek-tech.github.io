@@ -78,6 +78,9 @@ SWAN wpuszcza tylko składowe nadchodzące do domeny.
   oznaczony model zastępczy (pierwszy dostępny, preferowany ICON), zamiast fałszywej
   ciszy. Tabela nadal pokazuje niepewny kierunek konsensusu; opis SWAN wskazuje
   użyty wiatr i informację o zastępstwie.
+- Ocena takiej godziny nie jest pomijana: liczymy ją osobno dla wiatru z każdego modelu
+  (przy tej samej fali z SWAN) i pokazujemy medianę tych ocen z niską pewnością. Uśrednianie
+  sprzecznych kierunków nie ma sensu, uśrednienie skutków — tak.
 - Open-Meteo liczy osobno każdy punkt zapytania, a więcej niż 10 zmiennych lub 14 dni
   jako kilka zapytań (osiem modeli × 4 zmienne × 18 dni ≈ 4,1 na punkt). Pakiety
   są więc wysyłane w odstępach, do ok. 400 na minutę, poniżej darmowego limitu 600.

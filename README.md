@@ -86,7 +86,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   z morskiej siatki około 8 km. Przy braku poprawnej prognozy fal tabela jest ukryta.
 - **Heat map spotów** (`#heatmap`) to jedna siatka dla całego wybrzeża: wiersz to spot (u góry
   najdalej na zachód, na dole najdalej na wschód), kolumna to godzina — od bieżącej do ostatniej
-  z oceną któregokolwiek spotu. Kolor oznacza ocenę z początku godziny, bez uśredniania. Pola są tak
+  z oceną któregokolwiek spotu. Kolor oznacza ocenę z początku godziny, bez uśredniania. Gdy modele wiatru wskazują różne kierunki,
+  ocena jest medianą ocen dla wiatru z każdego modelu, a karta pola zaznacza niską pewność. Pola są tak
   małe, że cała siatka mieści się na ekranie telefonu; podpisane są tylko końce osi (pierwszy
   i ostatni spot, pierwsza i ostatnia godzina z datą). Nazwy miejscowości na osi spotów są pisane
   kapitalikami i stoją pionowo, litera pod literą. Nazwy nigdy nie są ucinane: gdy obie nie mieszczą się

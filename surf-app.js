@@ -442,6 +442,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     const definitions = [
       ["score", "Ocena warunków", r => {
+        if (M.finite(r.score) && r.disputedWind) {
+          const value = node("span");
+          value.append(scoreNode(r.score), node("small", "Modele wiatru wskazują różne kierunki — mediana ich ocen, niska pewność", "surf-cell-wind"));
+          return value;
+        }
         if (M.finite(r.score)) return scoreNode(r.score);
         if (r.simulation && r.wind?.count > 1 && M.finite(r.wind.agreement) && r.wind.agreement < 0.3 &&
             !M.finite(r.wind.direction) && r.wind.speed >= 0.5)

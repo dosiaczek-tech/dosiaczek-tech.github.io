@@ -161,3 +161,26 @@ test('a fourteen-day coastal run reaches the table without being cut to the form
   assert.ok(forecast.every(r=>r.simulation));
   assert.ok(forecast.at(-1).confidence.reasons.some(r=>r.includes('ponad 7 dni')));
 });
+
+test('opposite wind directions still give a score: the median of the scores for each model wind, with low confidence',()=>{
+  // Onshore, offshore and two cross winds cancel out: no common direction.
+  const winds={icon_seamless:[6,0],gfs_seamless:[6,90],ecmwf_ifs025:[6,180],ecmwf_aifs025_single:[6,270]};
+  const hourly={time:[time]};
+  for(const model of Object.keys(M.WIND_MODELS)){
+    const [speed,direction]=winds[model]||[null,null];
+    hourly[`wind_speed_10m_${model}`]=[speed];
+    hourly[`wind_direction_10m_${model}`]=[direction];
+    hourly[`is_day_${model}`]=[1];
+  }
+  const row=M.buildCoastalForecast(spot,{hourly},document,time*1000,{historyHours:0})[0];
+  assert.equal(row.wind.direction,null);
+  assert.equal(M.rate(row,row.wind,spot,null,row.simulation),null,'one common wind still cannot be scored');
+  const scores=Object.values(winds).map(([speed,direction])=>M.rate(row,{speed,direction},spot,null,row.simulation).score).sort((a,b)=>a-b);
+  assert.ok(scores[0]<scores[3],'each model wind gives a different score');
+  assert.equal(row.score,Math.round((scores[1]+scores[2])/2*10)/10);
+  assert.equal(row.disputedWind,true);
+  assert.equal(row.confidence.level,'niska');
+  assert.ok(row.confidence.reasons.some(reason=>reason.startsWith('Modele wiatru wskazują różne kierunki')));
+  const agreeing=M.buildCoastalForecast(spot,{hourly:{...hourly,wind_direction_10m_icon_seamless:[180],wind_direction_10m_gfs_seamless:[180],wind_direction_10m_ecmwf_aifs025_single:[180]}},document,time*1000,{historyHours:0})[0];
+  assert.equal(agreeing.disputedWind,false);
+});
