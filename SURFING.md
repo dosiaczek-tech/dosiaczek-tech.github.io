@@ -107,7 +107,7 @@ dla nauki kitesurfingu. Vättern jest jeziorem, nie częścią katalogu bałtyck
 | Dane | Źródło / dostęp | Zastosowanie |
 | --- | --- | --- |
 | Hs, średni okres, kierunek fal | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam` | Dwie równoległe prognozy, bez udawania niezależnych obserwacji |
-| Wiatr 10 m, porywy, temperatura, dzień/noc | [Open-Meteo Weather](https://open-meteo.com/en/docs), `icon_seamless,gfs_seamless,ecmwf_ifs025` | Konsensus wiatru i wybór okien dziennych |
+| Wiatr 10 m, porywy, dzień/noc | [Open-Meteo Weather](https://open-meteo.com/en/docs), `icon_seamless,gfs_seamless,ecmwf_ifs025,ecmwf_aifs025_single,ukmo_seamless,jma_seamless,gem_seamless` | Konsensus wiatru i wybór okien dziennych |
 | Głębokość | [EMODnet Bathymetry WMS](https://ows.emodnet-bathymetry.eu/wms?service=WMS&request=GetCapabilities), warstwa `emodnet:mean`, `GetFeatureInfo` | Sześć próbek profilu poprzecznego do brzegu |
 | Dno SWAN | EMODnet WCS `emodnet:mean`, GeoTIFF 1/16 minuty | Pełny przekrój próbkowany co 100 m, a nie tylko sześć punktów |
 | Mapa pogody | [Windy](https://www.windy.com/), oficjalny embed | Wizualne porównanie, osobne od wyniku |

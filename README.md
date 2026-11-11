@@ -116,7 +116,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Lista grupuje spoty miejscowościami od zachodu do wschodu; wewnątrz grupy
   również obowiązuje kolejność geograficzna. Kliknięcie znacznika mapy otwiera spot od razu.
 - **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
-  przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 3 i rastrem EMODnet.
+  przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 7 (siedem modeli) i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
 - Główny wykres pokazuje **pełny przekrój 0, 50, 100, …, 500 m** i jest od razu
   widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
@@ -237,14 +237,16 @@ log kolejnych zadań: `.dev-preview/swan-refresh.log`. Wyniki przetrwają restar
 Wybierany jest najświeższy poprawny wynik z pełnymi 24 godzinami historii. Starszy
 format publikacji z krótszą historią nie wypiera poprawnego kompletnego wyniku lokalnego.
 
-Jeżeli opublikowany wiatr jest niedostępny, ma ponad 6 godzin albo nie sięga tak daleko
-jak prognoza aplikacji (14 dni, z co najmniej dwoma modelami; tolerancja 12 godzin),
-lokalny serwer pobiera aktualny BS Wind 3 z Open-Meteo partiami do 20 spotów.
-Zabezpiecza to przed wersją strony online z krótszym horyzontem, która inaczej ucięłaby
-oceny (tak było, gdy online pobierano wiatr na 6 dni, a lokalnie na 16); gdy lokalne
-pobranie się nie uda, serwer nadal poda krótszy pakiet opublikowany. Współdzieli zapytania
+Jeżeli opublikowany wiatr jest niedostępny, ma ponad 6 godzin, nie zawiera wszystkich
+modeli aplikacji albo nie sięga tak daleko jak jej prognoza (14 dni, z co najmniej dwoma
+modelami; tolerancja 12 godzin), lokalny serwer pobiera aktualny BS Wind 7 z Open-Meteo
+partiami do 20 spotów. Zabezpiecza to przed wersją strony online z innym zestawem modeli
+lub krótszym horyzontem, która inaczej ucięłaby oceny (tak było, gdy online pobierano wiatr
+na 6 dni, a lokalnie na 16); gdy lokalne pobranie się nie uda, serwer nadal poda pakiet
+opublikowany. Współdzieli zapytania
 między rankingiem i szczegółami, zapisuje rzeczywisty czas pobrania i oznacza źródło
-jako „lokalne odświeżenie Open-Meteo”. Cache wiatru trwa 30 minut. Przy awarii może
+jako „lokalne odświeżenie Open-Meteo”. Cache wiatru trwa 3 godziny, tak jak cykl publikacji:
+siedem modeli to cięższe zapytania, które nie mogą wyczerpać darmowych limitów Open-Meteo. Przy awarii może
 użyć ostatnio pobranych lokalnych danych do 6 godzin, z oryginalną datą i oznaczeniem
 danych z pamięci. Limity wieku fal nadal wynikają z modelu SWAN.
 

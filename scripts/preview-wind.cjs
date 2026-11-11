@@ -2,7 +2,9 @@
 const { WIND_MODELS, FORECAST_HOURS, windMatchesSpot } = require("../surf-model.js");
 const MODELS = Object.keys(WIND_MODELS);
 const MAX_AGE = 6 * 3600000;
-const CACHE_TTL = 30 * 60000;
+// Seven models make each request heavier for the Open-Meteo limits, so a local refresh is kept
+// for three hours, the same cycle as the published wind.
+const CACHE_TTL = 3 * 3600000;
 
 function validWeather(data) {
   const hourly = data?.hourly, times = hourly?.time;
@@ -27,11 +29,13 @@ function windHorizon(data) {
   }
   return null;
 }
-// A published bundle replaces the local refresh only if it reaches as far as the app's forecast (12 h of slack
-// for model runs and bundle age): a site still publishing a shorter forecast must not cut the scores short.
+// A published bundle replaces the local refresh only if it is what the app uses: every wind model of the app
+// (a series may be empty where a model has no data) and a reach as far as the app's forecast (12 h of slack
+// for model runs and bundle age). A site still publishing fewer models or a shorter forecast must not decide the scores.
 function coversForecast(bundle, now = Date.now()) {
-  const until = windHorizon(bundle?.data);
-  return Number.isFinite(until) && until * 1000 >= now + (FORECAST_HOURS - 12) * 3600000;
+  const hourly = bundle?.data?.hourly, until = windHorizon(bundle?.data);
+  return MODELS.every(model => Array.isArray(hourly?.[`wind_speed_10m_${model}`]) && Array.isArray(hourly?.[`wind_direction_10m_${model}`]))
+    && Number.isFinite(until) && until * 1000 >= now + (FORECAST_HOURS - 12) * 3600000;
 }
 
 function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, batchSize = 20,
@@ -52,7 +56,7 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
     const task = (async () => {
       try {
         const params = new URLSearchParams({ latitude: batch.map(s => s.lat).join(","), longitude: batch.map(s => s.lon).join(","),
-          hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day", models: MODELS.join(","),
+          hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day", models: MODELS.join(","),
           wind_speed_unit: "ms", cell_selection: "nearest", past_days: 2, forecast_days: 16, timeformat: "unixtime", timezone: "GMT" });
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.timeout(10000) });
         if (!response.ok) {
@@ -70,7 +74,7 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
         // Publish the whole batch only after validation. Cached timestamps always remain original.
         batch.forEach((spot, i) => cache.set(spot.id, { schema: 1, spotId: spot.id, fetchedAt, data: results[i],
           spot: { id: spot.id, lat: spot.lat, lon: spot.lon },
-          source: "BS Wind 3 — lokalne odświeżenie Open-Meteo (ICON / GFS / ECMWF)", sourceType: "local", reusedInputs: false }));
+          source: "BS Wind 7 — lokalne odświeżenie Open-Meteo (ICON / GFS / ECMWF IFS / ECMWF AIFS / UKMO / JMA / GEM)", sourceType: "local", reusedInputs: false }));
         failures.delete(index);
         onRefresh(batch.length);
       } catch (error) {

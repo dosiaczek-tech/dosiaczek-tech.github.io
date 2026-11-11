@@ -9,7 +9,10 @@
   const FORECAST_HOURS = 336;
   const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
-  const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS" };
+  // BS Wind 7: seven global models. ICON and UKMO end after about a week, GEM and JMA after 10-11 days;
+  // GFS, ECMWF IFS and the ECMWF AIFS (machine learning) model cover the whole two weeks.
+  const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS",
+    ecmwf_aifs025_single: "ECMWF AIFS", ukmo_seamless: "UK Met Office", jma_seamless: "JMA", gem_seamless: "ECCC GEM" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const radians = value => value * Math.PI / 180;
@@ -41,9 +44,11 @@
     const speed = median(valid.map(m => m.speed));
     const resultant = Math.hypot(x, y);
     const agreement = speed < 0.5 ? 1 : clamp(resultant / (valid.reduce((s, m) => s + m.speed, 0) / valid.length), 0, 1);
+    // With five or more models a single outlier on either side does not make the speeds disagree.
+    const speeds = valid.map(m => m.speed).sort((a, b) => a - b), core = speeds.length >= 5 ? speeds.slice(1, -1) : speeds;
     return { speed, direction: agreement < 0.3 ? null : (Math.atan2(x, y) * 180 / Math.PI + 360) % 360,
       gust: median(valid.map(m => m.gust)), count: valid.length, agreement,
-      spread: Math.max(...valid.map(m => m.speed)) - Math.min(...valid.map(m => m.speed)), members: valid };
+      spread: core.at(-1) - core[0], members: valid };
   }
 
   function windRelative(wind, spot) {
@@ -271,7 +276,7 @@
         powerKWm: median(members.map(m => m.energetics.powerKWm)), powerDepth,
         energyModels: members.filter(m => finite(m.energetics.energyKJm2)).length,
         powerModels: members.filter(m => finite(m.energetics.powerKWm)).length,
-        spread, agreement, daylight: daylight === 1, temperature: median(Object.keys(WIND_MODELS).map(m => value(wh, "temperature_2m", m, wi))),
+        spread, agreement, daylight: daylight === 1,
         flags: [...new Set(members.flatMap(m => m.rating?.flags || []))] };
     });
     return series.map((row, index) => ({ ...row, cleanup: detectCleanup(series, index, spot) }))
@@ -372,7 +377,8 @@
       if (!row.wind || row.wind.count < 2) reasons.push("Ograniczona liczba modeli wiatru");
       if (row.wind && (row.wind.spread > 4 || row.wind.agreement < .7)) reasons.push("Rozbieżne prognozy wiatru");
       const lead = row.time * 1000 - now;
-      if (lead > 7 * 86400000) reasons.push("Prognoza ponad 7 dni naprzód — orientacyjna; wiatr z dwóch modeli, fale z jednego");
+      const models = row.wind?.count || 0;
+      if (lead > 7 * 86400000) reasons.push(`Prognoza ponad 7 dni naprzód — orientacyjna; wiatr z ${models === 1 ? "1 modelu" : `${models} modeli`}, fale z jednego`);
       else if (lead > 72 * 3600000) reasons.push("Prognoza ponad 72 godziny naprzód");
       if (now / 1000 - Math.min(simulation?.generatedAt, simulation?.windFetchedAt, simulation?.boundaryFetchedAt) > 12 * 3600) reasons.push("Dane starsze niż 12 godzin");
       if (row.simulation && (row.simulation.depth > 4 || row.simulation.depth < 1 || row.simulation.shoreDistance > 300)) reasons.push("Punkt może słabiej reprezentować strefę surfowania");

@@ -33,10 +33,11 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   36 godzin przed bieżącą godziną, żeby także historia miała pełny rozbieg.
 - Koniec prognozy wyznaczają rzeczywiste dane wejściowe, nie ich dopełnienie pustymi
   wartościami: Open-Meteo zwraca 16 dni, ale DWD EWAM kończy się po ok. 3 dniach,
-  ICON po ok. 7, a ECMWF WAM i ECMWF IFS po ok. 14,5. Brzeg fali wyznacza najdłuższy
-  kompletny model fal (w praktyce ECMWF WAM), a wiatr wymaga co najmniej dwóch modeli,
-  więc po 7. dniu konsensus tworzą GFS i ECMWF. Godziny po 7. dniu są oznaczone
-  w tabeli jako orientacyjne, a ich pewność jako niska.
+  ICON i UKMO po ok. 7, GEM po ok. 9,5, JMA po ok. 11, a ECMWF WAM, ECMWF IFS i ECMWF AIFS
+  po ok. 14,5. Brzeg fali wyznacza najdłuższy kompletny model fal (w praktyce ECMWF WAM),
+  a wiatr wymaga co najmniej dwóch modeli; po 11. dniu konsensus tworzą GFS, ECMWF IFS
+  i ECMWF AIFS. Godziny po 7. dniu są oznaczone w tabeli jako orientacyjne, a ich pewność
+  jako niska.
 - SWAN przyjmuje najwyżej 300 poleceń COMPUTE w jednym uruchomieniu, a wymuszenie
   zmienia się co godzinę. Dłuższy okres liczymy w częściach po 240 godzin połączonych
   binarnym plikiem stanu (HOTFILE / INIT HOTSTART). Pierwsza godzina kolejnej części
@@ -55,13 +56,19 @@ przez SWAN w widmo JONSWAP (`gamma=3.3`, średni okres `MEAN`, rozrzut 30°).
 To **zrekonstruowane widmo**, nie pełne widmo pobrane z modelu regionalnego.
 SWAN wpuszcza tylko składowe nadchodzące do domeny.
 
-### Wiatr BS Wind 3
+### Wiatr BS Wind 7
 
-- ICON, GFS i ECMWF przez Open-Meteo, w trzech lokalizacjach: punkt spotu,
-  2,5 km oraz 5 km w morze. Wybierana jest najbliższa komórka modelu, a nie
-  wymuszona komórka lądowa.
+- Siedem modeli globalnych przez Open-Meteo: DWD ICON, NOAA GFS, ECMWF IFS, ECMWF AIFS
+  (model uczenia maszynowego), UK Met Office, JMA i ECCC GEM — w trzech lokalizacjach:
+  punkt spotu, 2,5 km oraz 5 km w morze. Wybierana jest najbliższa komórka modelu,
+  a nie wymuszona komórka lądowa. ICON i UKMO sięgają ok. 7 dni, GEM ok. 9,5, JMA ok. 11,
+  a GFS, ECMWF IFS i AIFS cały horyzont 14 dni; w drugim tygodniu przy sprzecznych
+  kierunkach rozstrzyga więc większość trzech modeli zamiast dwóch.
+- Pobieramy prędkość, kierunek i porywy wiatru oraz porę dnia; temperatura nie jest używana.
+  AIFS i JMA nie podają porywów — ich mediana pochodzi z pozostałych modeli.
 - Ten sam algorytm co w tabeli: mediana prędkości i kierunek z uśrednionych
-  wektorów. Co najmniej dwa dostępne modele są wymagane.
+  wektorów. Co najmniej dwa dostępne modele są wymagane. Rozrzut prędkości do oceny
+  pewności liczymy bez skrajnego modelu z każdej strony, gdy modeli jest co najmniej pięć.
 - **Wektory wiatru są rzeczywistym wejściem SWAN** (`READINP WIND`), aktualizowanym
   co godzinę symulacji i interpolowanym przestrzennie między punktami. Przy
   wydłużeniu profilu w stronę lądu przytrzymujemy ostatni wiatr przybrzeżny.
@@ -69,7 +76,10 @@ SWAN wpuszcza tylko składowe nadchodzące do domeny.
   oznaczony model zastępczy (pierwszy dostępny, preferowany ICON), zamiast fałszywej
   ciszy. Tabela nadal pokazuje niepewny kierunek konsensusu; opis SWAN wskazuje
   użyty wiatr i informację o zastępstwie.
-- BS Wind 3 jest naszym połączeniem danych, **nie wiatrem GTF** innego serwisu.
+- Open-Meteo liczy osobno każdy punkt zapytania, a więcej niż 10 zmiennych lub 14 dni
+  jako kilka zapytań (siedem modeli × 4 zmienne × 18 dni ≈ 3,6 na punkt). Pakiety
+  są więc wysyłane w odstępach, do ok. 400 na minutę, poniżej darmowego limitu 600.
+- BS Wind 7 jest naszym połączeniem danych, **nie wiatrem GTF** innego serwisu.
 
 Model lokalny nie oblicza od zera całego Bałtyku. Fala wchodząca do domeny niesie
 historię generacji z regionalnego modelu; własny wiatr wpływa na jej dalszą

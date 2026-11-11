@@ -1,10 +1,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createPreviewWind, usableWind, coversForecast } = require('../scripts/preview-wind.cjs');
-const { FORECAST_HOURS } = require('../surf-model.js');
-const models = ['icon_seamless', 'gfs_seamless', 'ecmwf_ifs025'];
+const { FORECAST_HOURS, WIND_MODELS } = require('../surf-model.js');
+const models = Object.keys(WIND_MODELS);
 // Hourly wind from two days back until each listed model's last hour ahead, like an Open-Meteo bundle;
-// by default ICON ends after a week while GFS and ECMWF reach past the two-week forecast.
+// by default ICON ends after a week while GFS and ECMWF reach past the two-week forecast (other models left out).
 function forecast(now, ahead = {icon_seamless: 180, gfs_seamless: 380, ecmwf_ifs025: 348}) {
   const start = Math.floor(now / 3600000) * 3600 - 48 * 3600;
   const hourly = {time: Array.from({length: 48 + Math.max(...Object.values(ahead)) + 1}, (_, i) => start + i * 3600)};
@@ -62,6 +62,14 @@ test('published wind covers the forecast only while two models reach its last ho
   assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-12,ecmwf_ifs025:FORECAST_HOURS-12}),now),true);
   assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-13,ecmwf_ifs025:FORECAST_HOURS-13}),now),false);
   assert.equal(coversForecast(null,now),false);
+  // BS Wind 7: the second week rests on GFS, ECMWF IFS and AIFS; GEM and JMA end after 10-11 days.
+  const seven={icon_seamless:170,ukmo_seamless:158,gem_seamless:230,jma_seamless:259,ecmwf_aifs025_single:355,ecmwf_ifs025:352,gfs_seamless:372};
+  assert.equal(coversForecast(bundle(seven),now),true);
+  assert.equal(coversForecast(bundle({...seven,ecmwf_aifs025_single:240,ecmwf_ifs025:240}),now),false,'GFS alone after day 11');
+  // A site still publishing the three older models does not decide the local scores either.
+  const three=bundle(seven);
+  for(const model of models.slice(3)) for(const name of ['wind_speed_10m','wind_direction_10m','is_day']) delete three.data.hourly[`${name}_${model}`];
+  assert.equal(coversForecast(three,now),false);
 });
 test('expired published wind is replaced by a real batched fetch shared between concurrent spot requests',async()=>{
   const h=harness(), expired={schema:1,spotId:spots[0].id,fetchedAt:h.now()-6*3600000-1,data:weather()};
@@ -76,6 +84,8 @@ test('expired published wind is replaced by a real batched fetch shared between 
   assert.equal(h.calls[0].get('wind_speed_unit'),'ms');
   assert.equal(h.calls[0].get('past_days'),'2');
   assert.equal(h.calls[0].get('forecast_days'),'16');
+  // Air temperature is not used, and every extra variable of seven models costs Open-Meteo calls.
+  assert.equal(h.calls[0].get('hourly'),'wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day');
   await h.provider.get(spots[0].id);
   assert.equal(h.calls.length,1);
 });
@@ -88,7 +98,7 @@ test('each batch and the final single location are cached independently',async()
 });
 test('refresh failure keeps original cached timestamps for at most six hours and backs off',async()=>{
   const h=harness(), first=await h.provider.get(spots[0].id);
-  h.advance(31*60000); h.mode('offline');
+  h.advance(3*3600000+60000); h.mode('offline');
   const cached=await h.provider.get(spots[0].id);
   assert.equal(cached.reusedInputs,true); assert.equal(cached.fetchedAt,first.fetchedAt);
   assert.equal(cached.lastRefreshError,'offline');

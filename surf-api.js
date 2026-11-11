@@ -45,7 +45,7 @@
       if (!publishedOnly) {
         try {
           const result = await cached(`weather-${spotKey(spot)}`, fallbackURL, force);
-          return { ...result, sourceType: "direct", source: "BS Wind 3 — bezpośrednie dane Open-Meteo" };
+          return { ...result, sourceType: "direct", source: "BS Wind 7 — bezpośrednie dane Open-Meteo" };
         } catch (directError) { failure = directError; }
       }
       const age = Date.now() - saved?.fetchedAt;
@@ -110,7 +110,7 @@
       hourly: "wave_height,wave_direction,wave_period", models: Object.keys(M.WAVE_MODELS).join(",") });
     const weatherURL = endpoint("https://api.open-meteo.com/v1/forecast", { ...common,
       latitude: spot.lat, longitude: spot.lon, wind_speed_unit: "ms", cell_selection: "nearest",
-      hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,is_day", models: Object.keys(M.WIND_MODELS).join(",") });
+      hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day", models: Object.keys(M.WIND_MODELS).join(",") });
     // Nie odrzucamy fal, gdy brakuje wiatru; ocena wtedy pozostaje pusta.
     return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force, publishedOnly)])
       .then(([marine, weather]) => ({ marine: marine.status === "fulfilled" ? marine.value : null,

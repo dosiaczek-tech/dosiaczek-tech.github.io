@@ -41,6 +41,25 @@ class ModelUtilities(unittest.TestCase):
         self.assertEqual(result["speed"], 5)
         self.assertEqual(result["fallback"], "icon_seamless")
 
+    def test_seven_models_decide_by_majority_and_requests_are_paced_for_open_meteo(self):
+        # Two models against five no longer leave the direction undecided.
+        data = {}
+        for model, direction in zip(WIND_MODELS, [120, 120, 300, 295, 290, 305, 300]):
+            data[f"wind_speed_10m_{model}"] = [6]
+            data[f"wind_direction_10m_{model}"] = [direction]
+        result = consensus(data, 0)
+        self.assertEqual(result["count"], 7)
+        self.assertIsNone(result["fallback"])
+        self.assertLess(abs(result["direction"] - 298), 5)
+        # One wind batch: 18 locations, 4 variables of 7 models, 18 days.
+        wind = {"latitude": ",".join(["54"] * 18), "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
+                "models": ",".join(WIND_MODELS), "past_days": 2, "forecast_days": 16}
+        self.assertAlmostEqual(nearshore.api_calls(wind), 18 * 2.8 * 18 / 14)
+        marine = {**wind, "hourly": "wave_height,wave_direction,wave_period", "models": ",".join(WAVE_MODELS)}
+        self.assertAlmostEqual(nearshore.api_calls(marine), 18 * 18 / 14)
+        # Spacing keeps a run below the free limit of 600 calls per minute.
+        self.assertLessEqual(nearshore.api_calls(wind) / max(.3, nearshore.api_calls(wind) * 60 / nearshore.CALLS_PER_MINUTE) * 60, 600)
+
     def test_partial_solver_output_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp)/"short.tbl"
