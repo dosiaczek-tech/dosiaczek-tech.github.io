@@ -37,3 +37,25 @@ class ForecastNetwork(unittest.TestCase):
         with patch.object(nearshore.requests, "get", return_value=dns):
             self.assertFalse(nearshore.refresh_forecast_dns("https://api.open-meteo.com/v1/forecast"))
         self.assertFalse(nearshore._dns_overrides)
+
+
+class SharedConnection(unittest.TestCase):
+    def test_a_session_carries_the_request_instead_of_a_new_connection(self):
+        session, success = Mock(), Mock(status_code=200)
+        session.get.return_value = success
+        with patch.object(nearshore.requests, "get") as plain:
+            self.assertIs(nearshore.request("https://api.open-meteo.com/v1/forecast", {"latitude": 54}, session), success)
+        plain.assert_not_called()
+        session.get.assert_called_once()
+
+    def test_all_batches_share_one_connection_and_the_last_one_is_not_followed_by_a_pause(self):
+        response = Mock()
+        response.json.return_value = [{"hourly": {"time": [1]}}] * 18
+        session = Mock()
+        with patch.object(nearshore.requests, "Session", return_value=session) as opened, \
+                patch.object(nearshore, "request", return_value=response) as get, patch.object(nearshore.time, "sleep") as pause:
+            self.assertEqual(len(nearshore.bulk_forecast([(54, 18)] * 36)), 36)
+        opened.assert_called_once()
+        self.assertEqual([call.args[2] for call in get.call_args_list], [session, session])
+        self.assertEqual(pause.call_count, 1)
+        session.close.assert_called_once()

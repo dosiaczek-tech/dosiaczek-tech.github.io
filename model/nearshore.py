@@ -136,10 +136,12 @@ def archived_inputs(spot, cache, now):
         return None
 
 
-def request(url, params=None):
+def request(url, params=None, session=None):
+    # A session sends the next request over the connection already opened to the same host.
+    get = session.get if session is not None else requests.get
     for attempt in range(4):
         try:
-            response = requests.get(url, params=params, timeout=(15, 90), headers={"User-Agent": "BalticSurf/1.0 (github.com/dosiaczek-tech/dosiaczek-tech.github.io)"})
+            response = get(url, params=params, timeout=(15, 90), headers={"User-Agent": "BalticSurf/1.0 (github.com/dosiaczek-tech/dosiaczek-tech.github.io)"})
             if response.status_code in (429, 500, 502, 503, 504) and attempt < 3:
                 time.sleep(5 * (attempt + 1))
                 continue
@@ -290,51 +292,58 @@ def api_calls(params):
 def bulk_forecast(points, marine=False, cache=None):
     result = []
     rate_limited = False
-    # 18 is divisible by three: each wind transect stays in one API request.
-    for offset in range(0, len(points), 18):
-        batch = points[offset:offset + 18]
-        params = {"latitude": ",".join(str(p[0]) for p in batch), "longitude": ",".join(str(p[1]) for p in batch),
-                  "past_days": 2, "forecast_days": 16, "timeformat": "unixtime", "timezone": "GMT"}
-        if marine:
-            params.update(hourly="wave_height,wave_direction,wave_period", models=",".join(WAVE_MODELS), cell_selection="sea")
-            url = "https://marine-api.open-meteo.com/v1/marine"
-        else:
-            params.update(hourly="wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
-                          models=",".join(WIND_MODELS), wind_speed_unit="ms", cell_selection="nearest")
-            url = "https://api.open-meteo.com/v1/forecast"
-        # Persist each completed batch independently. A later failed request must
-        # not discard wind already downloaded for other beaches.
-        key = hashlib.sha256(json.dumps([url, params], sort_keys=True).encode()).hexdigest()
-        path = cache / "inputs" / f"{key}.json" if cache else None
-        fetched = int(time.time())
-        old = load(path) if path else None
-        valid_cache = isinstance(old, list) and len(old) == len(batch) and all(
-            isinstance(b, dict) and finite(b.get("fetchedAt")) and 0 <= fetched - b["fetchedAt"] <= 6 * 3600
-            and b.get("data", {}).get("hourly", {}).get("time") for b in old)
-        # Hourly scheduler checks do not multiply the provider's request load.
-        # The original retrieval timestamps remain visible to every client.
-        if valid_cache and all(fetched - b["fetchedAt"] < 3 * 3600 for b in old):
-            result.extend(old)
-            continue
-        try:
-            if rate_limited:
-                raise ValueError("Provider rate limit; no additional requests in this run")
-            data = request(url, params).json()
-            data = data if isinstance(data, list) else [data]
-            if len(data) != len(batch) or any(not d.get("hourly", {}).get("time") for d in data):
-                raise ValueError("Forecast response count/shape mismatch")
-            bundles = [{"fetchedAt": fetched, "data": d} for d in data]
-            if path:
-                dump(path, bundles)
-        except (requests.RequestException, ValueError) as error:
-            if path is None:
-                raise
-            if isinstance(error, requests.HTTPError) and error.response is not None and error.response.status_code == 429:
-                rate_limited = True
-            bundles = [{**b, "reusedInputs": True} for b in old] if valid_cache else [None] * len(batch)
-            print(f"Forecast batch {offset // 18 + 1}: {'retained original inputs' if valid_cache else 'unavailable'} ({type(error).__name__})", flush=True)
-        result.extend(bundles)
-        time.sleep(max(.3, api_calls(params) * 60 / CALLS_PER_MINUTE))
+    # One connection for every batch of this download. On hosted runners a new TLS handshake with the
+    # provider can stall for 15 s before a retry succeeds; the open connection spares later batches that.
+    session = requests.Session()
+    try:
+        # 18 is divisible by three: each wind transect stays in one API request.
+        for offset in range(0, len(points), 18):
+            batch = points[offset:offset + 18]
+            params = {"latitude": ",".join(str(p[0]) for p in batch), "longitude": ",".join(str(p[1]) for p in batch),
+                      "past_days": 2, "forecast_days": 16, "timeformat": "unixtime", "timezone": "GMT"}
+            if marine:
+                params.update(hourly="wave_height,wave_direction,wave_period", models=",".join(WAVE_MODELS), cell_selection="sea")
+                url = "https://marine-api.open-meteo.com/v1/marine"
+            else:
+                params.update(hourly="wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
+                              models=",".join(WIND_MODELS), wind_speed_unit="ms", cell_selection="nearest")
+                url = "https://api.open-meteo.com/v1/forecast"
+            # Persist each completed batch independently. A later failed request must
+            # not discard wind already downloaded for other beaches.
+            key = hashlib.sha256(json.dumps([url, params], sort_keys=True).encode()).hexdigest()
+            path = cache / "inputs" / f"{key}.json" if cache else None
+            fetched = int(time.time())
+            old = load(path) if path else None
+            valid_cache = isinstance(old, list) and len(old) == len(batch) and all(
+                isinstance(b, dict) and finite(b.get("fetchedAt")) and 0 <= fetched - b["fetchedAt"] <= 6 * 3600
+                and b.get("data", {}).get("hourly", {}).get("time") for b in old)
+            # Hourly scheduler checks do not multiply the provider's request load.
+            # The original retrieval timestamps remain visible to every client.
+            if valid_cache and all(fetched - b["fetchedAt"] < 3 * 3600 for b in old):
+                result.extend(old)
+                continue
+            try:
+                if rate_limited:
+                    raise ValueError("Provider rate limit; no additional requests in this run")
+                data = request(url, params, session).json()
+                data = data if isinstance(data, list) else [data]
+                if len(data) != len(batch) or any(not d.get("hourly", {}).get("time") for d in data):
+                    raise ValueError("Forecast response count/shape mismatch")
+                bundles = [{"fetchedAt": fetched, "data": d} for d in data]
+                if path:
+                    dump(path, bundles)
+            except (requests.RequestException, ValueError) as error:
+                if path is None:
+                    raise
+                if isinstance(error, requests.HTTPError) and error.response is not None and error.response.status_code == 429:
+                    rate_limited = True
+                bundles = [{**b, "reusedInputs": True} for b in old] if valid_cache else [None] * len(batch)
+                print(f"Forecast batch {offset // 18 + 1}: {'retained original inputs' if valid_cache else 'unavailable'} ({type(error).__name__})", flush=True)
+            result.extend(bundles)
+            if offset + 18 < len(points):
+                time.sleep(max(.3, api_calls(params) * 60 / CALLS_PER_MINUTE))
+    finally:
+        session.close()
     return result
 
 

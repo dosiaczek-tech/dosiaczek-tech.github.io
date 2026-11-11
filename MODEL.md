@@ -81,6 +81,9 @@ SWAN wpuszcza tylko składowe nadchodzące do domeny.
 - Open-Meteo liczy osobno każdy punkt zapytania, a więcej niż 10 zmiennych lub 14 dni
   jako kilka zapytań (osiem modeli × 4 zmienne × 18 dni ≈ 4,1 na punkt). Pakiety
   są więc wysyłane w odstępach, do ok. 400 na minutę, poniżej darmowego limitu 600.
+  Wszystkie pakiety jednego pobrania idą jednym połączeniem: na serwerach GitHuba nowe
+  połączenie TLS z Open-Meteo potrafi zawisnąć na 15 s, więc ponowne użycie otwartego
+  skraca pobieranie wiatru z ok. 9 do ok. 3–4 minut.
 - BS Wind 8 jest naszym połączeniem danych, **nie wiatrem GTF** innego serwisu.
 
 Model lokalny nie oblicza od zera całego Bałtyku. Fala wchodząca do domeny niesie
