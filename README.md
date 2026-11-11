@@ -116,6 +116,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   polskich znaków. Podpowiedzi działają też z klawiatury.
 - Lista grupuje spoty miejscowościami od zachodu do wschodu; wewnątrz grupy
   również obowiązuje kolejność geograficzna. Kliknięcie znacznika mapy otwiera spot od razu.
+  Na górze listy jest „Wybierz spot…”: wybranie tej pozycji zamyka listę bez wyboru spotu
+  i cofa wybór, który czekał na „Pokaż prognozę”.
 - **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 8 (osiem modeli) i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.

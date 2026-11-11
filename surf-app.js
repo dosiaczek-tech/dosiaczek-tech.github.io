@@ -71,8 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
   SurfProfilePicker.attach($("surfProfileTime"));
 
   function populateSpots() {
-    // Nothing is preselected: the empty option stays until a spot is chosen.
-    const prompt = node("option", "Wybierz spot…"); prompt.value = ""; prompt.disabled = true; prompt.hidden = true;
+    // Nothing is preselected. The empty option stays selectable, so an opened list can be left without choosing a spot.
+    const prompt = node("option", "Wybierz spot…"); prompt.value = "";
     $("surfSpot").replaceChildren(prompt, ...SurfSearch.groupWestToEast(spots).map(group => {
       const el = document.createElement("optgroup"); el.label = group.town;
       el.append(...group.spots.map(s => { const option = node("option", `${s.town} — ${s.name}`); option.value = s.id; return option; }));
