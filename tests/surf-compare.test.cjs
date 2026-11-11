@@ -168,6 +168,16 @@ test('comparison dates always include yesterday from the rolling twenty-four hou
   assert.equal(C.calendarDays(Date.parse('2026-03-29T10:37:00Z'))[0],'2026-03-28');
 });
 
+test('legend links start the hourly forecast at Warsaw midnight, also on daylight saving changes', () => {
+  const S = require('../surf-session.js');
+  for (const [day, utc] of [['2026-11-13', '2026-11-12T23:00:00Z'], ['2026-07-01', '2026-06-30T22:00:00Z'],
+    ['2026-03-29', '2026-03-28T23:00:00Z'], ['2026-10-25', '2026-10-24T22:00:00Z']]) {
+    const time = C.dayStart(day);
+    assert.equal(time, Date.parse(utc) / 1000, day);
+    assert.equal(S.parse(`#surf/sobieszewo?time=${time}`).time, time, `${day} is a valid hour link`);
+  }
+});
+
 test('future sessions take priority over better historical sessions', () => {
   const now = Date.parse('2026-10-21T10:00:00Z');
   const rows = [-3, -2, -1, 1, 2, 3].map(h => ({time: now / 1000 + h * 3600, score: h < 0 ? 9 : 4, daylight: true, height: 1, simulation: {}}));

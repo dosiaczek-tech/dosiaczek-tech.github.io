@@ -24,6 +24,12 @@
     if (first !== today) days.unshift(first);
     return days;
   }
+  // 00:00 in Warsaw on a YYYY-MM-DD day. Warsaw is one or two hours ahead of UTC,
+  // so its midnight is one of the hours from 21:00 UTC on the previous day.
+  function dayStart(key) {
+    const from = Date.parse(`${key}T00:00:00Z`) / 1000 - 3 * 3600;
+    return Array.from({ length: 6 }, (_, i) => from + i * 3600).find(time => dayKey(time) === key);
+  }
   function choose(catalog, selection = []) {
     const valid = new Set(catalog.map(s => s.id)), used = new Set();
     const requested = Array.isArray(selection) ? selection : [];
@@ -123,7 +129,7 @@
     const start = Math.max(extent.from, Math.min(from, extent.until - span));
     return { from: start, until: start + span };
   }
-  const api = { choose, pickerMatches, clampView, topWindows, daily, dayKey, retainHistory, bestSpots, calendarDays, chartHours, chartExtent, chartSegments, dayEdges };
+  const api = { choose, pickerMatches, clampView, topWindows, daily, dayKey, dayStart, retainHistory, bestSpots, calendarDays, chartHours, chartExtent, chartSegments, dayEdges };
   if (typeof module !== "undefined") module.exports = api;
   else root.SurfCompare = api;
   if (typeof document === "undefined") return;
@@ -518,6 +524,8 @@
         if (text !== undefined) item.textContent = text;
         return item;
       };
+      // Each spot links to its hourly forecast from 00:00 of the day chosen below the chart.
+      const from = dayStart(selectedDay), dayLabel = days.find(d => d.key === selectedDay)?.label;
       $("compareLegend").replaceChildren(...data.map(series => {
         const item = el("span", undefined, "compare-legend-item");
         item.setAttribute("role", "listitem"); item.dataset.spot = series.id;
@@ -525,7 +533,11 @@
         const sample = create("svg", { viewBox: "0 0 76 14", "aria-hidden": "true" });
         sample.append(create("line", { x1: 2, x2: 74, y1: 7, y2: 7, ...chartLine(series) }),
           ...[10, 38, 66].map(cx => create("circle", { cx, cy: 7, ...chartDot(series, 3.4) })));
-        item.append(sample, el("span", `${series.slot + 1}. ${label(series.spot)}`));
+        const name = `${series.slot + 1}. ${label(series.spot)}`;
+        const link = forecastLink(el("a", undefined, "compare-legend-link"), series.id, { time: from });
+        link.setAttribute("aria-label", `${name} — prognoza godzinowa od 00:00, ${dayLabel}`);
+        link.append(sample, el("span", name));
+        item.append(link);
         return item;
       }));
       const extent = chartExtent(data);
