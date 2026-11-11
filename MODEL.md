@@ -33,7 +33,7 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   36 godzin przed bieżącą godziną, żeby także historia miała pełny rozbieg.
 - Koniec prognozy wyznaczają rzeczywiste dane wejściowe, nie ich dopełnienie pustymi
   wartościami: Open-Meteo zwraca 16 dni, ale DWD EWAM kończy się po ok. 3 dniach,
-  ICON i UKMO po ok. 7, GEM po ok. 9,5, JMA po ok. 11, a ECMWF WAM, ECMWF IFS i ECMWF AIFS
+  regionalny DMI HARMONIE po ok. 2,3, ICON i UKMO po ok. 7, GEM po ok. 9,5, JMA po ok. 11, a ECMWF WAM, ECMWF IFS i ECMWF AIFS
   po ok. 14,5. Brzeg fali wyznacza najdłuższy kompletny model fal (w praktyce ECMWF WAM),
   a wiatr wymaga co najmniej dwóch modeli; po 11. dniu konsensus tworzą GFS, ECMWF IFS
   i ECMWF AIFS. Godziny po 7. dniu są oznaczone w tabeli jako orientacyjne, a ich pewność
@@ -56,10 +56,12 @@ przez SWAN w widmo JONSWAP (`gamma=3.3`, średni okres `MEAN`, rozrzut 30°).
 To **zrekonstruowane widmo**, nie pełne widmo pobrane z modelu regionalnego.
 SWAN wpuszcza tylko składowe nadchodzące do domeny.
 
-### Wiatr BS Wind 7
+### Wiatr BS Wind 8
 
-- Siedem modeli globalnych przez Open-Meteo: DWD ICON, NOAA GFS, ECMWF IFS, ECMWF AIFS
-  (model uczenia maszynowego), UK Met Office, JMA i ECCC GEM — w trzech lokalizacjach:
+- Osiem modeli przez Open-Meteo: siedem globalnych — DWD ICON, NOAA GFS, ECMWF IFS,
+  ECMWF AIFS (model uczenia maszynowego), UK Met Office, JMA i ECCC GEM — oraz regionalny
+  DMI HARMONIE AROME z siatką ok. 2 km, który przez pierwsze ok. 2,3 doby lepiej oddaje
+  wiatr przy samym brzegu (jest jednym z głosów konsensusu, nie ma większej wagi) — w trzech lokalizacjach:
   punkt spotu, 2,5 km oraz 5 km w morze. Wybierana jest najbliższa komórka modelu,
   a nie wymuszona komórka lądowa. ICON i UKMO sięgają ok. 7 dni, GEM ok. 9,5, JMA ok. 11,
   a GFS, ECMWF IFS i AIFS cały horyzont 14 dni; w drugim tygodniu przy sprzecznych
@@ -77,9 +79,9 @@ SWAN wpuszcza tylko składowe nadchodzące do domeny.
   ciszy. Tabela nadal pokazuje niepewny kierunek konsensusu; opis SWAN wskazuje
   użyty wiatr i informację o zastępstwie.
 - Open-Meteo liczy osobno każdy punkt zapytania, a więcej niż 10 zmiennych lub 14 dni
-  jako kilka zapytań (siedem modeli × 4 zmienne × 18 dni ≈ 3,6 na punkt). Pakiety
+  jako kilka zapytań (osiem modeli × 4 zmienne × 18 dni ≈ 4,1 na punkt). Pakiety
   są więc wysyłane w odstępach, do ok. 400 na minutę, poniżej darmowego limitu 600.
-- BS Wind 7 jest naszym połączeniem danych, **nie wiatrem GTF** innego serwisu.
+- BS Wind 8 jest naszym połączeniem danych, **nie wiatrem GTF** innego serwisu.
 
 Model lokalny nie oblicza od zera całego Bałtyku. Fala wchodząca do domeny niesie
 historię generacji z regionalnego modelu; własny wiatr wpływa na jej dalszą

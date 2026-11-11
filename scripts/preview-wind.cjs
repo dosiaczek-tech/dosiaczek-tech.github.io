@@ -2,7 +2,7 @@
 const { WIND_MODELS, FORECAST_HOURS, windMatchesSpot } = require("../surf-model.js");
 const MODELS = Object.keys(WIND_MODELS);
 const MAX_AGE = 6 * 3600000;
-// Seven models make each request heavier for the Open-Meteo limits, so a local refresh is kept
+// Eight models make each request heavier for the Open-Meteo limits, so a local refresh is kept
 // for three hours, the same cycle as the published wind.
 const CACHE_TTL = 3 * 3600000;
 
@@ -74,7 +74,7 @@ function createPreviewWind({ spots, fetch = globalThis.fetch, now = Date.now, ba
         // Publish the whole batch only after validation. Cached timestamps always remain original.
         batch.forEach((spot, i) => cache.set(spot.id, { schema: 1, spotId: spot.id, fetchedAt, data: results[i],
           spot: { id: spot.id, lat: spot.lat, lon: spot.lon },
-          source: "BS Wind 7 — lokalne odświeżenie Open-Meteo (ICON / GFS / ECMWF IFS / ECMWF AIFS / UKMO / JMA / GEM)", sourceType: "local", reusedInputs: false }));
+          source: "BS Wind 8 — lokalne odświeżenie Open-Meteo (ICON / GFS / ECMWF IFS / ECMWF AIFS / UKMO / JMA / GEM / DMI HARMONIE)", sourceType: "local", reusedInputs: false }));
         failures.delete(index);
         onRefresh(batch.length);
       } catch (error) {

@@ -62,12 +62,12 @@ test('published wind covers the forecast only while two models reach its last ho
   assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-12,ecmwf_ifs025:FORECAST_HOURS-12}),now),true);
   assert.equal(coversForecast(bundle({gfs_seamless:FORECAST_HOURS-13,ecmwf_ifs025:FORECAST_HOURS-13}),now),false);
   assert.equal(coversForecast(null,now),false);
-  // BS Wind 7: the second week rests on GFS, ECMWF IFS and AIFS; GEM and JMA end after 10-11 days.
-  const seven={icon_seamless:170,ukmo_seamless:158,gem_seamless:230,jma_seamless:259,ecmwf_aifs025_single:355,ecmwf_ifs025:352,gfs_seamless:372};
-  assert.equal(coversForecast(bundle(seven),now),true);
-  assert.equal(coversForecast(bundle({...seven,ecmwf_aifs025_single:240,ecmwf_ifs025:240}),now),false,'GFS alone after day 11');
+  // BS Wind 8: the second week rests on GFS, ECMWF IFS and AIFS; GEM and JMA end after 10-11 days, HARMONIE after ~2.
+  const all={icon_seamless:170,ukmo_seamless:158,gem_seamless:230,jma_seamless:259,ecmwf_aifs025_single:355,ecmwf_ifs025:352,gfs_seamless:372,dmi_harmonie_arome_europe:55};
+  assert.equal(coversForecast(bundle(all),now),true);
+  assert.equal(coversForecast(bundle({...all,ecmwf_aifs025_single:240,ecmwf_ifs025:240}),now),false,'GFS alone after day 11');
   // A site still publishing the three older models does not decide the local scores either.
-  const three=bundle(seven);
+  const three=bundle(all);
   for(const model of models.slice(3)) for(const name of ['wind_speed_10m','wind_direction_10m','is_day']) delete three.data.hourly[`${name}_${model}`];
   assert.equal(coversForecast(three,now),false);
 });

@@ -605,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
     details.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
       : "Model nie wskazuje wyraźnej strefy załamania w rozpoznanych pierwszych 500 m.", "surf-small"));
     details.append(node("p", `Położenie brzegu szacujemy z mapy dna. Odległość punktu mieści się w przedziale ${Math.round(s.shoreDistanceMin)}–${Math.round(s.shoreDistanceMax)} m względem rozpoznanej granicy ląd–woda. Rozdzielczość danych wynosi około 100 m.`, "surf-small"));
-    if (row.simulationWind) details.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 7.`, "surf-small"));
+    if (row.simulationWind) details.append(node("p", `Wiatr użyty w SWAN przy plaży: z ${compass(row.simulationWind.direction)}, ${fmt(row.simulationWind.speed)} m/s${row.simulationWind.fallback ? " — model zastępczy przy rozbieżności konsensusu" : ""}. Tabela może już zawierać nowszy przebieg wiatru BS Wind 8.`, "surf-small"));
     const points = s.profile || [];
     const profileUntil = simulation.hourly?.[0]?.time + simulation.profileHours * 3600;
     if (points.length !== 11 && M.finite(profileUntil) && row.time > profileUntil) {
@@ -693,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
     const errors = [...loaded.errors, ...[loaded.weather].filter(r => r?.error).map(r => r.error)];
     $("surfStatus").dataset.state = stale ? "stale" : errors.length ? "error" : "ready";
-    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 7, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 7, lokalne odświeżenie Open-Meteo" : "BS Wind 7, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu. ${errors.join(" ")}`;
+    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu. ${errors.join(" ")}`;
     if (simulation?.sourceType === "local") $("surfStatus").textContent += " Fale: lokalne obliczenia SWAN.";
     const refreshMessage = waveRefreshMessage();
     if (refreshMessage) {

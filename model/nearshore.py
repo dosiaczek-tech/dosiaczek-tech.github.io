@@ -74,8 +74,10 @@ VERSION = "BS-SWAN-1.3-seaward2m"
 ENGINE_URL = "https://swanmodel.sourceforge.io/download/zip/SWAN-41.51-Linux.tar.gz"
 ENGINE_SHA256 = "11ec02bd4106cee1e9267a648a525ec009a5c0e18c5fe57a3a1f685b90b4f894"
 WAVE_MODELS = ["dwd_ewam", "ecmwf_wam"]
-# BS Wind 7. ICON stays first: it is the marked substitute when the directions conflict.
-WIND_MODELS = ["icon_seamless", "gfs_seamless", "ecmwf_ifs025", "ecmwf_aifs025_single", "ukmo_seamless", "jma_seamless", "gem_seamless"]
+# BS Wind 8: seven global models and the regional DMI HARMONIE (about 2 km, first ~2 days).
+# ICON stays first: it is the marked substitute when the directions conflict.
+WIND_MODELS = ["icon_seamless", "gfs_seamless", "ecmwf_ifs025", "ecmwf_aifs025_single", "ukmo_seamless", "jma_seamless", "gem_seamless",
+               "dmi_harmonie_arome_europe"]
 # Open-Meteo counts every location of a request, and more than 10 variables or 14 days as several calls.
 # Requests are spaced to stay well below the free limit of 600 calls per minute.
 CALLS_PER_MINUTE = 400
@@ -641,7 +643,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
             "cycle": int(now // 43200) * 43200,
             "spot": {k: spot[k] for k in ["id", "lat", "lon", "normal"]}, "geometryKey": geometry_key(spot),
             "boundaryModel": boundary, "boundaryFetchedAt": marine["fetchedAt"], "windFetchedAt": min(w["fetchedAt"] for w in winds),
-            "windModels": WIND_MODELS, "windName": "BS Wind 7", "inputHash": input_hash, "engineArchiveSha256": ENGINE_SHA256,
+            "windModels": WIND_MODELS, "windName": "BS Wind 8", "inputHash": input_hash, "engineArchiveSha256": ENGINE_SHA256,
             "sourceCommit": os.environ.get("GITHUB_SHA"),
             "grid": {"lengthM": LENGTH - shoreline_reference(spot, bath)["distance"], "offshoreDistanceM": LENGTH, "spacingM": COMPUTE_DX, "bathymetrySamplingM": DX, "timeStepMinutes": DT_MINUTES, "directions": 36, "frequencies": 32, "spinupHours": SPINUP_HOURS},
             "assumptions": ["1D transect, no harbour shadow/diffraction", "reconstructed JONSWAP boundary from mean period; spreading 30 deg", "water level 0 relative to LAT; no currents or ice", "regional DTM, not current sandbar survey"],
@@ -680,7 +682,7 @@ def main():
             saved_inputs[s["id"]] = archived_inputs(s, args.cache, now)
         return saved_inputs[s["id"]]
     # Three spatial nodes, ordered offshore -> shore; both the run and the
-    # public table use the same BS Wind 7 algorithm and raw multi-model data.
+    # public table use the same BS Wind 8 algorithm and raw multi-model data.
     points = [offshore(s, d) for s in spots for d in [5000, 2500, 0]]
     try:
         winds = bulk_forecast(points, cache=args.cache)
@@ -706,7 +708,7 @@ def main():
             continue
         shore = wind_by_spot[s["id"]][-1]
         dump(args.output / "wind" / f'{s["id"]}.json', {"schema": 1, "spotId": s["id"], "spot": wind_spot, "fetchedAt": shore["fetchedAt"] * 1000,
-            "data": shore["data"], "source": "BS Wind 7 — ICON / GFS / ECMWF IFS / ECMWF AIFS / UKMO / JMA / GEM", "sourceType": "scheduled", "reusedInputs": s["id"] in reused})
+            "data": shore["data"], "source": "BS Wind 8 — ICON / GFS / ECMWF IFS / ECMWF AIFS / UKMO / JMA / GEM / DMI HARMONIE", "sourceType": "scheduled", "reusedInputs": s["id"] in reused})
     try:
         marine = bulk_forecast([offshore(s, 5000) for s in needed], marine=True, cache=args.cache) if needed else []
         marine_by_spot = {}

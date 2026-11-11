@@ -45,7 +45,7 @@
       if (!publishedOnly) {
         try {
           const result = await cached(`weather-${spotKey(spot)}`, fallbackURL, force);
-          return { ...result, sourceType: "direct", source: "BS Wind 7 — bezpośrednie dane Open-Meteo" };
+          return { ...result, sourceType: "direct", source: "BS Wind 8 — bezpośrednie dane Open-Meteo" };
         } catch (directError) { failure = directError; }
       }
       const age = Date.now() - saved?.fetchedAt;

@@ -261,10 +261,10 @@
   <script defer src="surf-community.js"></script>
   <script defer src="surf-spots.js?v=stegna-location-v5"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=bs-wind-7-v1"></script>
+  <script defer src="surf-model.js?v=bs-wind-8-v1"></script>
   <script defer src="surf-map-gestures.js?v=two-fingers-v1"></script>
   <script defer src="surf-wind-map.js?v=two-fingers-v1"></script>
-  <script defer src="surf-api.js?v=bs-wind-7-v1"></script>
+  <script defer src="surf-api.js?v=bs-wind-8-v1"></script>
   <script defer src="surf-weather.js?v=horizon-14d-v1"></script>
   <script defer src="surf-hourly.js?v=horizon-14d-v1"></script>
   <script defer src="surf-directions.js?v=direction-minis-v1"></script>
@@ -272,7 +272,7 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=bs-wind-7-v1"></script>
+  <script defer src="surf-app.js?v=bs-wind-8-v1"></script>
   <script defer src="surf-compare.js?v=day-labels-v2"></script>
   <script defer src="surf-heatmap.js?v=word-gap-v1"></script>
 </head>
@@ -529,7 +529,7 @@
           <details class="surf-info">
             <summary>Informacje</summary>
             <p id="surfHoursHint" class="surf-small">Przesuwaj tabelę w bok myszką lub palcem. Obejmuje ostatnie 24 godziny modelowe oraz prognozę na 14 dni; godziny po 7. dniu są oznaczone jako orientacyjne, bo trafność prognozy spada, wiatr pochodzi wtedy z mniejszej liczby modeli (po 11. dniu z trzech: GFS, ECMWF IFS i ECMWF AIFS), a fale z jednego; wcześniejsze godziny są oznaczone jako historia. Pokazujemy tylko godziny i dni z dostępną wysokością fal. Każda kolumna to jedna godzina; wartości dotyczą jej początku. Data jest nad godziną. Podświetlenie dnia zmienia się, gdy jego ostatnia kolumna zniknie z widoku. Kliknij godzinę, aby zobaczyć przekrój fal do 500 m od brzegu.</p>
-            <p class="surf-small">Pod wartościami fal: najnowszy BS Wind 7 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
+            <p class="surf-small">Pod wartościami fal: najnowszy BS Wind 8 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
             <p id="surfDirectionHint" class="surf-small"><strong>Miniaturki kierunków:</strong> widok z plaży w stronę morza — morze u góry, ląd na dole. Strzałka biegnie od kropki do grotu: pokazuje ruch fal (niebieski) lub wiatru (fioletowy), względem brzegu tego spotu.</p>
           </details>
           <div id="surfDays" class="surf-days" role="group" aria-label="Przewiń prognozę godzinową do dnia"></div>
@@ -560,7 +560,7 @@
         </div>
       </section>
       <details class="surf-box"><summary>Jak liczymy prognozę? Źródła i ograniczenia</summary>
-        <p><strong>Bałtyk Surf 1.1</strong> pokazuje wyłącznie wynik SWAN w strefie do 500 m od oszacowanego brzegu. Wybieramy płytki punkt możliwie bliski głębokości 2 m i podajemy jego położenie. Gdy taki wynik jest niedostępny, nie zastępujemy go falą z dalszego morza. DWD EWAM / ECMWF WAM są jedynie danymi wejściowymi na zewnętrznej granicy obliczeń; wiatr BS Wind 7 i mapa dna pozwalają symulować drogę fali do plaży. Ocena sesji i ranking dotyczą już wyniku przy spocie.</p>
+        <p><strong>Bałtyk Surf 1.1</strong> pokazuje wyłącznie wynik SWAN w strefie do 500 m od oszacowanego brzegu. Wybieramy płytki punkt możliwie bliski głębokości 2 m i podajemy jego położenie. Gdy taki wynik jest niedostępny, nie zastępujemy go falą z dalszego morza. DWD EWAM / ECMWF WAM są jedynie danymi wejściowymi na zewnętrznej granicy obliczeń; wiatr BS Wind 8 i mapa dna pozwalają symulować drogę fali do plaży. Ocena sesji i ranking dotyczą już wyniku przy spocie.</p>
         <p>Model korzysta z rastra głębokości EMODnet, nie z wymyślonego dna. Widmo na granicy odtwarzamy z wysokości, średniego okresu i kierunku, przyjmując kształt JONSWAP i rozrzut kierunkowy 30°. Rozdzielczość dna ogranicza wynik; nie modelujemy osłony falochronów, prądów i poziomu wody ani nie wyznaczamy dokładnej wysokości ściany fali. Wyniki wymagają porównania z obserwacjami.</p>
         <p><strong>Satelity:</strong> w tej wersji nie wykorzystujemy bezpośrednio obserwacji satelitarnych. Satelity wyposażone w altimetry mierzą wysokość fal wzdłuż toru przelotu, a nie stale przy każdej plaży. Kolejny etap to sprawdzanie trafności prognoz na podstawie obserwacji Copernicus Marine, danych z boi i raportów surferów oraz regionalny model WAM/SWAN.</p>
         <p>Dane: <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine</a> / DWD EWAM i ECMWF WAM; <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo Weather</a> / DWD ICON, NOAA GFS, ECMWF IFS; <a href="https://emodnet.ec.europa.eu/en/bathymetry" target="_blank" rel="noopener noreferrer">EMODnet Bathymetry Consortium (DTM, luki uzupełniane GEBCO)</a>. Dane Open-Meteo: CC BY 4.0, publiczny endpoint do użytku niekomercyjnego. Mapy: Windy oraz © OpenStreetMap contributors, ODbL.</p>

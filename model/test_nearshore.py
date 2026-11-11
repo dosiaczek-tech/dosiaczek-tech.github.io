@@ -51,10 +51,10 @@ class ModelUtilities(unittest.TestCase):
         self.assertEqual(result["count"], 7)
         self.assertIsNone(result["fallback"])
         self.assertLess(abs(result["direction"] - 298), 5)
-        # One wind batch: 18 locations, 4 variables of 7 models, 18 days.
+        # One wind batch: 18 locations, 4 variables of every model, 18 days.
         wind = {"latitude": ",".join(["54"] * 18), "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
                 "models": ",".join(WIND_MODELS), "past_days": 2, "forecast_days": 16}
-        self.assertAlmostEqual(nearshore.api_calls(wind), 18 * 2.8 * 18 / 14)
+        self.assertAlmostEqual(nearshore.api_calls(wind), 18 * (4 * len(WIND_MODELS) / 10) * 18 / 14)
         marine = {**wind, "hourly": "wave_height,wave_direction,wave_period", "models": ",".join(WAVE_MODELS)}
         self.assertAlmostEqual(nearshore.api_calls(marine), 18 * 18 / 14)
         # Spacing keeps a run below the free limit of 600 calls per minute.

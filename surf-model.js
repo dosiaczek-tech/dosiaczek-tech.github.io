@@ -9,10 +9,12 @@
   const FORECAST_HOURS = 336;
   const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
-  // BS Wind 7: seven global models. ICON and UKMO end after about a week, GEM and JMA after 10-11 days;
-  // GFS, ECMWF IFS and the ECMWF AIFS (machine learning) model cover the whole two weeks.
+  // BS Wind 8: seven global models and the regional DMI HARMONIE (about 2 km) for the first ~2 days near the coast.
+  // ICON and UKMO end after about a week, GEM and JMA after 10-11 days; GFS, ECMWF IFS and the
+  // ECMWF AIFS (machine learning) model cover the whole two weeks.
   const WIND_MODELS = { icon_seamless: "DWD ICON", gfs_seamless: "NOAA GFS", ecmwf_ifs025: "ECMWF IFS",
-    ecmwf_aifs025_single: "ECMWF AIFS", ukmo_seamless: "UK Met Office", jma_seamless: "JMA", gem_seamless: "ECCC GEM" };
+    ecmwf_aifs025_single: "ECMWF AIFS", ukmo_seamless: "UK Met Office", jma_seamless: "JMA", gem_seamless: "ECCC GEM",
+    dmi_harmonie_arome_europe: "DMI HARMONIE" };
   const finite = value => typeof value === "number" && Number.isFinite(value);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const radians = value => value * Math.PI / 180;
