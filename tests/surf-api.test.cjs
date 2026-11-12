@@ -24,6 +24,11 @@ function harness(storage = new Map()) {
       if (url.startsWith('data/')) return {ok:false,status:404};
       calls++;
       if (mode === 'offline' || (mode === 'weather-down' && url.includes('api.open-meteo.com/v1/forecast'))) throw new Error('offline');
+      if (mode === 'network') throw new TypeError('Failed to fetch');
+      if (mode === 'timeout') throw Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+      if (mode === 'bad-json') return { ok: true, json: async () => { throw new SyntaxError('Unexpected token < in JSON at position 0'); } };
+      if (mode === 'provider-error') return { ok: true, json: async () => ({ error: true, reason: 'Cannot initialize WeatherVariable from invalid String value' }) };
+      if (mode === 'broken') return { ok: true, json: async () => null };
       if (mode === 'sea-down' && url.includes('sea_surface_temperature')) throw new Error('sea unavailable');
       if (mode === 'rate-limit') return { ok: false, status: 429 };
       if (url.includes('GetFeatureInfo')) return { ok: true, json: async () => ({ features: [{ properties: { Depth: mode === 'land' ? 2 : -10 } }] }) };
@@ -319,4 +324,27 @@ test('conditions preserve cache age on failure and stop serving stale temperatur
   assert.equal(expired.weather, null);
   assert.equal(expired.sea, null);
   assert.equal(expired.errors.length, 2);
+});
+
+test('errors reach the page only in Polish, whatever the browser or the provider reports', async () => {
+  for (const [mode, text] of [['network', /^Brak połączenia z serwerem/], ['offline', /^Brak połączenia z serwerem/],
+    ['timeout', /^Serwer nie odpowiedział na czas/], ['bad-json', /^Nieprawidłowa odpowiedź dostawcy/],
+    ['provider-error', /^Nieprawidłowa odpowiedź dostawcy/], ['broken', /^Nie udało się pobrać danych/]]) {
+    const h = harness(); h.mode(mode);
+    const conditions = await h.api.conditions(spot), forecast = await h.api.forecasts(spot);
+    assert.equal(conditions.errors.length, 2, mode); assert.equal(forecast.errors.length, 2, mode);
+    for (const error of forecast.errors) assert.match(error, text, mode);
+    // After a label ("Pogoda i słońce: …") the same sentence continues in lower case.
+    for (const error of conditions.errors) assert.match(error.split(': ')[1], new RegExp(text.source.toLowerCase()), mode);
+    for (const error of [...conditions.errors, ...forecast.errors]) assert.doesNotMatch(error, /Failed|aborted|Unexpected|Cannot|offline|null/, mode);
+  }
+});
+
+test('a failed wave load keeps its Polish reason for the collapsed details', async () => {
+  const h = harness();
+  const waves = await h.api.nearshore(spot);
+  assert.equal(waves.status, 'unavailable'); assert.equal(waves.loadFailed, true);
+  assert.equal(waves.error, 'Dostawca zwrócił HTTP 404.');
+  assert.equal(h.api.errorText(new TypeError('Failed to fetch')), 'Nie udało się pobrać danych.');
+  assert.equal(h.api.errorText(h.api.polishError('Brak połączenia z serwerem — sprawdź internet.')), 'Brak połączenia z serwerem — sprawdź internet.');
 });

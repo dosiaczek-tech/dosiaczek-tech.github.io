@@ -216,6 +216,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (row?.wind) el.append(node("p", `Aktualnie: wiatr z ${compass(row.wind.direction)}, ${windKnots(row.wind.speed)} — ${M.windRelative(row.wind, currentSpot) || "kierunek niepewny"} względem tej plaży.`, "surf-small"));
   }
 
+  // Errors of the spot's wind sit collapsed under the status line, so they are not seen at first glance.
+  function statusErrors(texts) {
+    $("surfStatusErrors").textContent = texts.join(" ");
+    $("surfStatusMore").hidden = !texts.length;
+  }
+
   function renderConditionsStatus() {
     if (!active || !currentSpot) return;
     const sources = [["Pogoda i słońce", conditions?.weather], ["Woda", conditions?.sea]].filter(([, source]) => source);
@@ -223,8 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const status = $("surfWeatherStatus");
     status.dataset.state = !conditions ? "loading" : stale ? "stale" : conditions.errors.length ? "error" : "ready";
     const fetched = ([label, source]) => `${label}: ${source.stale ? "dane z pamięci — odświeżenie nie powiodło się; " : ""}pobrano ${day(source.fetchedAt / 1000)} ${hour(source.fetchedAt / 1000)}.`;
-    // Download errors (e.g. "Failed to fetch") are never shown; a source that failed simply has no fetch time.
-    status.textContent = !conditions ? "Pobieram pogodę dla wybranego spotu…" : sources.map(fetched).join(" ");
+    // Errors stay in the collapsed "Dodatkowe informacje", always in Polish.
+    status.textContent = !conditions ? "Pobieram pogodę dla wybranego spotu…" : [...sources.map(fetched), ...conditions.errors].join(" ");
     status.hidden = !status.textContent;
     // A failed refresh shown from the cached copy also appears under the table, outside the collapsed details.
     const problems = sources.filter(([, source]) => source.stale).map(fetched);
@@ -347,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfDays").scrollIntoView({ behavior: "instant", block: "start" });
   }
 
-  // A failed refresh never shows its raw error (e.g. "Failed to fetch"); it only schedules the next attempt.
+  // A failed refresh is described only in the cross-section's collapsed details; it also schedules the next attempt.
   function waveRefreshMessage() {
     const parts = [];
     if (simulation?.refreshPending) parts.push("Trwa lokalne przeliczanie fal SWAN. Prognoza odświeży się automatycznie.");
@@ -592,6 +598,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const info = $("surfSimulationInfo"), details = $("surfSimulationDetails"), plot = $("surfSimulationProfile");
     info.replaceChildren(); details.replaceChildren(); plot.replaceChildren();
     $("surfProfileTime").value = "";
+    // Errors open the collapsed "Dodatkowe informacje" below, in Polish.
+    const waveErrors = [simulation?.loadFailed && `Przyczyna braku danych o falach: ${SurfAPI.lowerFirst(simulation.error)}`,
+      simulation?.refreshError && `Odświeżenie fal nie powiodło się, więc pokazujemy ostatni zapisany wynik. Przyczyna: ${SurfAPI.lowerFirst(simulation.refreshError)}`].filter(Boolean);
+    $("surfSimulationErrors").textContent = waveErrors.join(" ");
+    $("surfSimulationErrors").hidden = !waveErrors.length;
     if (!simulation) { info.append(node("p", "Wczytywanie wyników SWAN…", "surf-small")); return; }
     const refreshMessage = waveRefreshMessage();
     if (refreshMessage) info.append(node("p", refreshMessage, "surf-small"));
@@ -703,8 +714,9 @@ document.addEventListener("DOMContentLoaded", () => {
       : !sessionRequest?.day ? rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000) : null;
     const stale = loaded.weather?.stale;
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
-    // Download errors (e.g. "Failed to fetch") are never shown in the status line; a refresh served from the cached copy still is.
+    // Wind errors are not in the status line itself but collapsed below it, in Polish; a refresh served from the cached copy is still announced.
     $("surfStatus").dataset.state = stale ? "stale" : "ready";
+    statusErrors([...loaded.errors, loaded.weather?.error].filter(Boolean).map(text => `Wiatr: ${SurfAPI.lowerFirst(text)}`));
     $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu.`;
     if (simulation?.sourceType === "local") $("surfStatus").textContent += " Fale: lokalne obliczenia SWAN.";
     const refreshMessage = waveRefreshMessage();
@@ -817,6 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfTab").href = "#surf";
     for (const id of ["surfSpotHeading", "surfLocalSection", "surfContent", "surfHourlySection", "surfDetailContent", "surfWindy", "surfSources"]) $(id).hidden = true;
     delete $("surfStatus").dataset.state;
+    statusErrors([]);
     $("surfStatus").textContent = "Nie wybrano spotu. Wybierz plażę w wyszukiwarce, na liście albo na mapie, aby zobaczyć prognozę.";
     document.title = "Prognozy surfingu | Nad morzem";
     showSpotMap(null);
@@ -841,6 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const id of ["surfLocalSection", "surfHourlySection", "surfWindy"]) $(id).hidden = false;
     updateChoice();
     $("surfStatus").dataset.state = "loading";
+    statusErrors([]);
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
     document.title = `${spot.town} — prognoza surfingu | Nad morzem`;
     document.querySelectorAll(".surf-spot-label").forEach(label => { label.textContent = `Spot: ${spot.town} — ${spot.name}`; });
@@ -856,12 +870,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await SurfAPI.forecasts(spot, force, { coastalOnly: true });
       if (token !== generation || !active) return;
       loaded = result;
-      if (!result.weather && simulation?.status !== "ready") throw new Error(result.errors.join(" ") || "Prognoza jest chwilowo niedostępna.");
+      if (!result.weather && simulation?.status !== "ready") throw SurfAPI.polishError(result.errors.join(" ") || "Prognoza jest chwilowo niedostępna.");
       render();
-    } catch {
+    } catch (error) {
       if (token !== generation || !active) return;
       $("surfStatus").dataset.state = "error";
       $("surfStatus").textContent = "Nie udało się pobrać prognozy. Możesz odświeżyć dane lub porównać mapę Windy poniżej.";
+      statusErrors([SurfAPI.errorText(error)]);
     } finally { if (token === generation) { loading = false; updateChoice(); renderHours(); } }
   }
 

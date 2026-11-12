@@ -255,7 +255,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=no-fetch-errors-v1">
+  <link rel="stylesheet" href="surf.css?v=polish-errors-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
@@ -264,7 +264,7 @@
   <script defer src="surf-model.js?v=disputed-wind-v1"></script>
   <script defer src="surf-map-gestures.js?v=two-fingers-v1"></script>
   <script defer src="surf-wind-map.js?v=two-fingers-v1"></script>
-  <script defer src="surf-api.js?v=no-wave-errors-v1"></script>
+  <script defer src="surf-api.js?v=polish-errors-v1"></script>
   <script defer src="surf-weather.js?v=horizon-14d-v1"></script>
   <script defer src="surf-hourly.js?v=horizon-14d-v1"></script>
   <script defer src="surf-directions.js?v=direction-minis-v1"></script>
@@ -272,8 +272,8 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=no-wave-errors-v1"></script>
-  <script defer src="surf-compare.js?v=ranking-info-v1"></script>
+  <script defer src="surf-app.js?v=polish-errors-v2"></script>
+  <script defer src="surf-compare.js?v=polish-errors-v1"></script>
   <script defer src="surf-heatmap.js?v=disputed-wind-v1"></script>
 </head>
 <body>
@@ -340,6 +340,7 @@
       <div id="compareSelectors" class="compare-selectors" role="group" aria-label="Wybierz spoty"></div>
       <p id="compareSpotLimit" class="surf-small">Maksymalnie 15 spotów.</p>
       <p id="compareStatus" class="surf-small" role="status"></p>
+      <details id="compareErrors" class="surf-info" hidden><summary>Dodatkowe informacje</summary><p id="compareErrorText" class="surf-small"></p></details>
       <div id="compareContent" aria-busy="false" data-mode="idle">
         <div id="compareZoom" class="compare-zoom" role="group" aria-label="Przybliżenie wykresu" hidden>
           <button id="compareZoomOut" type="button" class="filter" aria-label="Oddal wykres" disabled>−</button>
@@ -484,6 +485,7 @@
         <p id="surfSpotMapSelected" class="surf-small" role="status" aria-live="polite"></p>
       </section>
       <p id="surfStatus" class="surf-status" role="status" aria-live="polite">Wybierz plażę, aby pobrać prognozę.</p>
+      <details id="surfStatusMore" class="surf-info" hidden><summary>Dodatkowe informacje</summary><p id="surfStatusErrors" class="surf-small"></p></details>
       <div id="surfSpotHeading" class="surf-spot-heading" hidden><div><h2 id="surfSpotTitle"></h2><p id="surfSpotMeta"></p></div><a id="surfMapLink" target="_blank" rel="noopener noreferrer">Położenie plaży ↗</a></div>
       <section id="surfLocalSection" class="surf-box" aria-labelledby="surfLocalTitle"><h3 id="surfLocalTitle">Orientacja i opis spotu</h3><div id="surfLocalBody"></div></section>
       <div id="surfContent" hidden>
@@ -499,6 +501,7 @@
           <div id="surfSimulationInfo" role="status" aria-live="polite"></div>
           <details class="surf-info">
             <summary>Dodatkowe informacje</summary>
+            <p id="surfSimulationErrors" class="surf-small" hidden></p>
             <div id="surfSimulationDetails"></div>
             <p class="surf-small">Siatka obliczeniowa SWAN ma krok 50 m. Mapa dna ma rozdzielczość około 100 m i jest interpolowana do siatki — nie są to pomiary dna co 50 m. Odległość 0 m to linia brzegu przyjęta w modelu, z granicznym zerem na lądzie. Rzeczywiste położenie linii wody i napływ fali na piasek mogą się różnić.</p>
           </details>

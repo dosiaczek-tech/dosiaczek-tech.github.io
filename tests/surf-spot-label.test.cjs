@@ -16,6 +16,12 @@ test('every widget with data of one spot names that spot above its heading', () 
   assert.match(html, /<summary>Źródła prognozy przy spocie<span class="surf-spot-label">/, 'the collapsed sources name their spot too');
 });
 
+test('errors sit collapsed in "Dodatkowe informacje" next to what they concern', () => {
+  assert.match(html, /<p id="surfStatus"[^\n]*\n\s*<details id="surfStatusMore" class="surf-info" hidden><summary>Dodatkowe informacje<\/summary><p id="surfStatusErrors"/);
+  assert.match(html, /<p id="compareStatus"[^\n]*\n\s*<details id="compareErrors" class="surf-info" hidden><summary>Dodatkowe informacje<\/summary><p id="compareErrorText"/);
+  assert.match(html, /<summary>Dodatkowe informacje<\/summary>\n\s*<p id="surfSimulationErrors" class="surf-small" hidden><\/p>\n\s*<div id="surfSimulationDetails">/);
+});
+
 test('the weather fetch times and sources sit collapsed right under the hourly table, with problems shown above them', () => {
   assert.match(html, /id="surfHoursScroll"[^\n]*\n\s*<p id="surfWeatherAlert"[^\n]* hidden><\/p>\n\s*<details class="surf-info">\n\s*<summary>Dodatkowe informacje<\/summary>\n\s*<p id="surfWeatherStatus"[^\n]*\n\s*<p class="surf-small surf-weather-source">[^\n]*\n\s*<\/details>\n\s*<\/section>/);
 });

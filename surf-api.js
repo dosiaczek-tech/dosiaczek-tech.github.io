@@ -13,14 +13,25 @@
     memory.set(key, value);
     try { localStorage.setItem(PREFIX + key, JSON.stringify(value)); } catch { /* RAM cache still works. */ }
   }
+  // Users see errors only in Polish: problems found here carry their own Polish text, failed requests
+  // get a Polish description and anything unexpected a general one.
+  const polishError = text => Object.assign(new Error(text), { polish: true });
+  const errorText = error => error?.polish ? error.message : "Nie udało się pobrać danych.";
+  // An error after a label ("Pogoda i słońce: …") continues the sentence.
+  const lowerFirst = text => text ? text[0].toLowerCase() + text.slice(1) : text;
   async function json(url, { allowError = false } = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 18000);
+    const timedOut = error => error?.name === "AbortError";
     try {
-      const r = await fetch(url, { signal: controller.signal });
-      if (!r.ok) throw new Error(r.status === 429 ? "Limit zapytań dostawcy — spróbuj za kilka minut." : `Dostawca zwrócił HTTP ${r.status}.`);
-      const data = await r.json();
-      if (data.error && !allowError) throw new Error(data.reason || "Nieprawidłowa odpowiedź dostawcy.");
+      let r, data;
+      try { r = await fetch(url, { signal: controller.signal }); }
+      catch (error) { throw polishError(timedOut(error) ? "Serwer nie odpowiedział na czas." : "Brak połączenia z serwerem — sprawdź internet."); }
+      if (!r.ok) throw polishError(r.status === 429 ? "Limit zapytań dostawcy — spróbuj za kilka minut." : `Dostawca zwrócił HTTP ${r.status}.`);
+      try { data = await r.json(); }
+      catch (error) { throw polishError(timedOut(error) ? "Serwer nie odpowiedział na czas." : "Nieprawidłowa odpowiedź dostawcy."); }
+      // The provider's own reason is in English, so it is not passed on.
+      if (data?.error && !allowError) throw polishError("Nieprawidłowa odpowiedź dostawcy.");
       return data;
     } finally { clearTimeout(timer); }
   }
@@ -34,8 +45,8 @@
       const age = Date.now() - data.fetchedAt;
       if (data.schema !== 1 || data.spotId !== spot.id || !M.finite(data.fetchedAt) || age < -300000 || age > 21600000 ||
           !Array.isArray(data.data?.hourly?.time) || !data.data.hourly.time.length)
-        throw new Error(age > 21600000 ? "Opublikowany wiatr ma ponad 6 godzin — potrzebne jest odświeżenie danych." : "Nieprawidłowy lub nieaktualny pakiet wiatru.");
-      if (!M.windMatchesSpot(data, spot)) throw new Error("Pakiet wiatru nie potwierdza aktualnych współrzędnych spotu.");
+        throw polishError(age > 21600000 ? "Opublikowany wiatr ma ponad 6 godzin — potrzebne jest odświeżenie danych." : "Nieprawidłowy lub nieaktualny pakiet wiatru.");
+      if (!M.windMatchesSpot(data, spot)) throw polishError("Pakiet wiatru nie potwierdza aktualnych współrzędnych spotu.");
       const value = { ...data, stale: Boolean(data.reusedInputs) };
       memory.set(key, { loadedAt: Date.now(), value });
       write(`${key}-saved`, value);
@@ -51,7 +62,7 @@
       const age = Date.now() - saved?.fetchedAt;
       if (saved?.schema === 1 && saved.spotId === spot.id && age >= 0 && age <= 21600000 &&
           M.windMatchesSpot(saved, spot) && saved.data?.hourly?.time?.length)
-        return { ...saved, stale: true, error: failure.message };
+        return { ...saved, stale: true, error: errorText(failure) };
       throw failure;
     }
   }
@@ -67,10 +78,10 @@
     if (previous && !force && Date.now() - previous.loadedAt < ttl) return previous.value;
     try {
       const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`, { allowError: true });
-      if (value.schema !== 2 || value.spot?.id !== spot.id) throw new Error("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
-      if (value.status === "ready" && value.version !== M.SIMULATION_VERSION) throw new Error("Prognoza wymaga przeliczenia dla nowego punktu od strony morza.");
+      if (value.schema !== 2 || value.spot?.id !== spot.id) throw polishError("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
+      if (value.status === "ready" && value.version !== M.SIMULATION_VERSION) throw polishError("Prognoza wymaga przeliczenia dla nowego punktu od strony morza.");
       if (value.status === "ready" && (![value.generatedAt, value.windFetchedAt, value.boundaryFetchedAt].every(M.finite) || !Array.isArray(value.hourly) ||
-          ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw new Error("Niezgodna geometria SWAN");
+          ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw polishError("Niezgodna geometria SWAN");
       memory.set(key, { loadedAt: Date.now(), value });
       const valueAge = M.simulationAge(value, Date.now());
       if (value.status === "ready" && M.finite(valueAge) && valueAge <= 18) write(`${key}-saved`, offlineCopy(value));
@@ -79,9 +90,9 @@
       const saved = read(`${key}-saved`), savedAge = M.simulationAge(saved, Date.now());
       if (saved?.status === "ready" && saved.version === M.SIMULATION_VERSION && saved.schema === 2 && saved.spot?.id === spot.id &&
           ["lat", "lon", "normal"].every(k => saved.spot[k] === spot[k]) && M.finite(savedAge) && savedAge <= 18)
-        return { ...saved, stale: true, refreshPending: false, refreshError: error.message, retryAfter: 60 };
-      // No usable wave data: the page says "Brak danych o falach" instead of the raw error.
-      return { status: "unavailable", error: error.message, loadFailed: true };
+        return { ...saved, stale: true, refreshPending: false, refreshError: errorText(error), retryAfter: 60 };
+      // No usable wave data: the page says "Brak danych o falach" and keeps the reason in its collapsed details.
+      return { status: "unavailable", error: errorText(error), loadFailed: true };
     }
   }
   async function cached(key, url, force = false) {
@@ -91,12 +102,12 @@
     const task = (async () => {
       try {
         const data = await json(url);
-        if (!Array.isArray(data.hourly?.time) || !data.hourly.time.length || !data.hourly.time.every(M.finite)) throw new Error("Niepełna prognoza dostawcy.");
+        if (!Array.isArray(data.hourly?.time) || !data.hourly.time.length || !data.hourly.time.every(M.finite)) throw polishError("Niepełna prognoza dostawcy.");
         const result = { data, fetchedAt: Date.now(), url };
         write(key, result);
         return { ...result, stale: false };
       } catch (error) {
-        if (old?.data?.hourly?.time && age >= 0 && age <= 21600000) return { ...old, stale: true, error: error.message };
+        if (old?.data?.hourly?.time && age >= 0 && age <= 21600000) return { ...old, stale: true, error: errorText(error) };
         throw error;
       } finally { pending.delete(key); }
     })();
@@ -116,7 +127,7 @@
     return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force, publishedOnly)])
       .then(([marine, weather]) => ({ marine: marine.status === "fulfilled" ? marine.value : null,
         weather: weather.status === "fulfilled" ? weather.value : null,
-        errors: [marine, weather].filter(r => r.status === "rejected").map(r => r.reason.message) }));
+        errors: [marine, weather].filter(r => r.status === "rejected").map(r => errorText(r.reason)) }));
   }
   function conditions(spot, force = false) {
     // Only the open spot requests these extras; the coast-wide ranking uses published wind/SWAN.
@@ -131,7 +142,7 @@
         weather: weather.status === "fulfilled" ? weather.value : null,
         sea: sea.status === "fulfilled" ? sea.value : null,
         errors: [weather, sea].flatMap((result, i) => result.status === "rejected"
-          ? [`${i === 0 ? "Pogoda i słońce" : "Temperatura wody"}: ${result.reason.message}`] : [])
+          ? [`${i === 0 ? "Pogoda i słońce" : "Temperatura wody"}: ${lowerFirst(errorText(result.reason))}`] : [])
       }));
   }
   async function bathymetry(spot) {
@@ -165,5 +176,5 @@
     pending.set(key, task);
     return task;
   }
-  root.SurfAPI = { forecasts, conditions, bathymetry, nearshore };
+  root.SurfAPI = { forecasts, conditions, bathymetry, nearshore, polishError, errorText, lowerFirst };
 })(globalThis);

@@ -229,7 +229,7 @@
       closeHints();
       for (const id of ["compareLegend", "compareDays", "compareRanking", "compareHourlyTable"]) $(id).replaceChildren();
       $("compareRankingTitle").hidden = true;
-      $("compareStatus").textContent = "";
+      $("compareStatus").textContent = ""; $("compareErrors").hidden = true;
       const count = choices.filter(Boolean).length;
       $("compareStorage").textContent = count ? `Wybrane spoty: ${count}/${MAX_SLOTS}. Kliknij „Porównaj wybrane”, aby je wyświetlić.`
         : "Wskaż własne spoty i kliknij „Porównaj wybrane” albo skorzystaj z „Pokaż najlepsze”.";
@@ -392,17 +392,18 @@
         const task = Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly }), root.SurfAPI.nearshore(spot, force)])
           .then(([forecast, simulation]) => {
             const rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, Date.now(), { historyHours: 24 });
-            const issues = [];
-            if (!forecast.weather) issues.push(`Brak aktualnego wiatru. ${forecast.errors.join(" ")}`);
+            // Notes stay in the status line; the Polish reasons of errors are collapsed below it.
+            const issues = [], reasons = [];
+            if (!forecast.weather) { issues.push("Brak aktualnego wiatru."); reasons.push(...forecast.errors); }
             if (!rows.some(row => row.simulation)) issues.push(M.simulationAge(simulation) > 18
               ? "Ostatnie wyniki SWAN lub ich dane wejściowe mają ponad 18 godzin." : "Brak poprawnej, aktualnej prognozy fal przy brzegu.");
             if (simulation.refreshPending) issues.push("Podczas pobierania trwało lokalne przeliczanie fal SWAN.");
-            if (simulation.refreshError) issues.push(simulation.refreshError);
+            if (simulation.refreshError) reasons.push(`Fale: ${root.SurfAPI.lowerFirst(simulation.refreshError)}`);
             if (simulation.refreshPending || simulation.refreshError) issues.push("Nowsze wyniki wczytasz przyciskiem „Pokaż najlepsze” lub „Porównaj wybrane”.");
-            if (cache.get(id) === task) problems.set(id, issues.join(" "));
+            if (cache.get(id) === task) problems.set(id, { issue: issues.join(" "), reason: reasons.join(" ") });
             return rows;
           })
-          .catch(error => { if (cache.get(id) === task) problems.set(id, `Nie udało się pobrać prognozy: ${error.message}`); return []; })
+          .catch(error => { if (cache.get(id) === task) problems.set(id, { issue: "Nie udało się pobrać prognozy.", reason: root.SurfAPI.errorText(error) }); return []; })
           .then(rows => {
             const key = M.coastalHistoryKey(spot);
             let savedRows;
@@ -430,7 +431,7 @@
     function beginLoad(message) {
       loading = true; data = []; bestByDay.clear();
       $("compareStorage").textContent = manual ? `Porównuję wybrane spoty: ${ids.length}…` : "Wyszukuję najlepsze spoty na wybrany dzień…";
-      $("compareStatus").textContent = message;
+      $("compareStatus").textContent = message; $("compareErrors").hidden = true;
       $("compareContent").setAttribute("aria-busy", "true");
       $("compareContent").dataset.mode = manual ? "manual" : "auto";
       closeHints();
@@ -512,7 +513,10 @@
       });
       const available = data.filter(d => d.days.get(selectedDay)).length;
       const upcoming = data.filter(d => d.days.get(selectedDay) && !d.days.get(selectedDay).historical).length;
-      const issues = [...new Set((selected.length ? selected : data).map(d => problems.get(d.id)).filter(Boolean))];
+      const shown = (selected.length ? selected : data).map(d => problems.get(d.id)).filter(Boolean);
+      const issues = [...new Set(shown.map(p => p.issue).filter(Boolean))], reasons = [...new Set(shown.map(p => p.reason).filter(Boolean))];
+      $("compareErrorText").textContent = reasons.join(" ");
+      $("compareErrors").hidden = !reasons.length;
       $("compareStatus").textContent = `${selectedLabel} · przyszłe okna: ${upcoming}/${data.length} spotów. Z uwzględnieniem historii: ${available}/${data.length}. Oceny wcześniejszych godzin są oznaczone jako historia prognozy. ${issues.join(" ")}`;
       chart(selected, days); ranking(selected); hourlyTable(selected);
     }
