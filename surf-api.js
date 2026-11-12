@@ -80,7 +80,8 @@
       if (saved?.status === "ready" && saved.version === M.SIMULATION_VERSION && saved.schema === 2 && saved.spot?.id === spot.id &&
           ["lat", "lon", "normal"].every(k => saved.spot[k] === spot[k]) && M.finite(savedAge) && savedAge <= 18)
         return { ...saved, stale: true, refreshPending: false, refreshError: error.message, retryAfter: 60 };
-      return { status: "unavailable", error: error.message };
+      // No usable wave data: the page says "Brak danych o falach" instead of the raw error.
+      return { status: "unavailable", error: error.message, loadFailed: true };
     }
   }
   async function cached(key, url, force = false) {

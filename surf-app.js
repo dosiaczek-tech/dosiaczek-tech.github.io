@@ -347,13 +347,12 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfDays").scrollIntoView({ behavior: "instant", block: "start" });
   }
 
-  // The status line passes false: it never shows the raw refresh error.
-  function waveRefreshMessage(withError = true) {
+  // A failed refresh never shows its raw error (e.g. "Failed to fetch"); it only schedules the next attempt.
+  function waveRefreshMessage() {
     const parts = [];
     if (simulation?.refreshPending) parts.push("Trwa lokalne przeliczanie fal SWAN. Prognoza odświeży się automatycznie.");
     const age = M.simulationAge(simulation);
     if (M.finite(age) && age > 18) parts.push(`Ostatnie obliczenia fal: ${day(simulation.generatedAt)}, ${hour(simulation.generatedAt)}. Wynik lub jego dane wejściowe mają ponad 18 godzin — oczekiwanie na aktualizację.`);
-    if (withError && simulation?.refreshError) parts.push(simulation.refreshError);
     return parts.join(" ");
   }
 
@@ -526,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hoursTable.style.setProperty("--hourly-column-count", periods.length);
     hoursViewport.hidden = !periods.length;
     $("surfHoursEmpty").hidden = Boolean(periods.length);
-    $("surfHoursEmpty").textContent = waveRefreshMessage() || (awaitingWaves ? "Pobieram prognozę fal…" : "Brak dostępnej prognozy wysokości fal dla tego spotu.");
+    $("surfHoursEmpty").textContent = waveRefreshMessage() || (awaitingWaves ? "Pobieram prognozę fal…" : "Brak danych o falach.");
     const decorate = (cell, period) => {
       cell.dataset.time = period.row.time; cell.dataset.end = period.end;
       cell.dataset.day = period.day;
@@ -598,7 +597,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (refreshMessage) info.append(node("p", refreshMessage, "surf-small"));
     if (simulation.status !== "ready") {
       info.append(node("p", "Brak potwierdzonej prognozy w strefie do 500 m od brzegu. Nie zastępujemy jej wartościami z dalszego morza.", "surf-small"));
-      if (simulation.error) info.append(node("p", `Powód: ${simulation.error}`, "surf-small"));
+      // Waves that could not be loaded say so plainly; a published reason (e.g. the spot's geometry) is still given.
+      if (simulation.loadFailed) info.append(node("p", "Brak danych o falach.", "surf-small"));
+      else if (simulation.error) info.append(node("p", `Powód: ${simulation.error}`, "surf-small"));
       return;
     }
     details.append(node("p", `Prognoza ${simulation.engine}${simulation.sourceType === "local" ? " · obliczenia lokalne" : ""} · obliczono ${day(simulation.generatedAt)} ${hour(simulation.generatedAt)} · wiatr do symulacji pobrano ${day(simulation.windFetchedAt)} ${hour(simulation.windFetchedAt)}.`, "surf-small"));
@@ -706,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfStatus").dataset.state = stale ? "stale" : "ready";
     $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu.`;
     if (simulation?.sourceType === "local") $("surfStatus").textContent += " Fale: lokalne obliczenia SWAN.";
-    const refreshMessage = waveRefreshMessage(false);
+    const refreshMessage = waveRefreshMessage();
     if (refreshMessage) {
       $("surfStatus").textContent += ` ${refreshMessage}`;
       $("surfStatus").dataset.state = simulation.refreshPending ? "loading" : "stale";
