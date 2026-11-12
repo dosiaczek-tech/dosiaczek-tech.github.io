@@ -347,12 +347,13 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfDays").scrollIntoView({ behavior: "instant", block: "start" });
   }
 
-  function waveRefreshMessage() {
+  // The status line passes false: it never shows the raw refresh error.
+  function waveRefreshMessage(withError = true) {
     const parts = [];
     if (simulation?.refreshPending) parts.push("Trwa lokalne przeliczanie fal SWAN. Prognoza odświeży się automatycznie.");
     const age = M.simulationAge(simulation);
     if (M.finite(age) && age > 18) parts.push(`Ostatnie obliczenia fal: ${day(simulation.generatedAt)}, ${hour(simulation.generatedAt)}. Wynik lub jego dane wejściowe mają ponad 18 godzin — oczekiwanie na aktualizację.`);
-    if (simulation?.refreshError) parts.push(simulation.refreshError);
+    if (withError && simulation?.refreshError) parts.push(simulation.refreshError);
     return parts.join(" ");
   }
 
@@ -701,11 +702,11 @@ document.addEventListener("DOMContentLoaded", () => {
       : !sessionRequest?.day ? rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000) : null;
     const stale = loaded.weather?.stale;
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
-    const errors = [...loaded.errors, ...[loaded.weather].filter(r => r?.error).map(r => r.error)];
-    $("surfStatus").dataset.state = stale ? "stale" : errors.length ? "error" : "ready";
-    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu. ${errors.join(" ")}`;
+    // Download errors (e.g. "Failed to fetch") are never shown in the status line; a refresh served from the cached copy still is.
+    $("surfStatus").dataset.state = stale ? "stale" : "ready";
+    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu.`;
     if (simulation?.sourceType === "local") $("surfStatus").textContent += " Fale: lokalne obliczenia SWAN.";
-    const refreshMessage = waveRefreshMessage();
+    const refreshMessage = waveRefreshMessage(false);
     if (refreshMessage) {
       $("surfStatus").textContent += ` ${refreshMessage}`;
       $("surfStatus").dataset.state = simulation.refreshPending ? "loading" : "stale";
@@ -856,10 +857,10 @@ document.addEventListener("DOMContentLoaded", () => {
       loaded = result;
       if (!result.weather && simulation?.status !== "ready") throw new Error(result.errors.join(" ") || "Prognoza jest chwilowo niedostępna.");
       render();
-    } catch (error) {
+    } catch {
       if (token !== generation || !active) return;
       $("surfStatus").dataset.state = "error";
-      $("surfStatus").textContent = `Nie udało się pobrać prognozy. ${error.message} Możesz odświeżyć dane lub porównać mapę Windy poniżej.`;
+      $("surfStatus").textContent = "Nie udało się pobrać prognozy. Możesz odświeżyć dane lub porównać mapę Windy poniżej.";
     } finally { if (token === generation) { loading = false; updateChoice(); renderHours(); } }
   }
 

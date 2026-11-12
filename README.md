@@ -58,7 +58,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   i „Pokaż mniej” działają jak pod wykresem porównania. Dzień przewinięty w tabeli zawsze ma swój kafelek.
   Czasy pobrania pogody i wody oraz opis źródeł są pod tabelą w zwiniętych „Dodatkowych informacjach”.
   Gdy odświeżenie się nie powiedzie i pokazujemy dane z pamięci, komunikat jest widoczny pod tabelą
-  bez rozwijania. Błędów pobierania pogody i wody (np. „Failed to fetch”) nie pokazujemy wcale.
+  bez rozwijania. Błędów pobierania pogody i wody (np. „Failed to fetch”) nie pokazujemy wcale; linijka statusu
+  nad prognozą też pomija techniczne przyczyny błędów wiatru i odświeżania fal.
   Ikony przy zachmurzeniu korzystają
   z kodu pogody WMO Open-Meteo: rozróżniają pogodę, chmury, deszcz, śnieg i burze;
   uwzględniają również noc. Samo duże zachmurzenie nie jest oznaczane jako deszcz.
