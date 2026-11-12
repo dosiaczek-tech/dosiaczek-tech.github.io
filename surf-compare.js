@@ -526,18 +526,21 @@
       };
       // Each spot links to its hourly forecast from 00:00 of the day chosen below the chart.
       const from = dayStart(selectedDay), dayLabel = days.find(d => d.key === selectedDay)?.label;
-      $("compareLegend").replaceChildren(...data.map(series => {
+      $("compareLegend").replaceChildren(...data.map((series, i) => {
         const item = el("span", undefined, "compare-legend-item");
         item.setAttribute("role", "listitem"); item.dataset.spot = series.id;
         item.title = `Spot ${series.slot + 1}: linia ${series.linePattern.name}`;
         const sample = create("svg", { viewBox: "0 0 76 14", "aria-hidden": "true" });
         sample.append(create("line", { x1: 2, x2: 74, y1: 7, y2: 7, ...chartLine(series) }),
           ...[10, 38, 66].map(cx => create("circle", { cx, cy: 7, ...chartDot(series, 3.4) })));
-        const name = `${series.slot + 1}. ${label(series.spot)}`;
-        const link = forecastLink(el("a", undefined, "compare-legend-link"), series.id, { time: from });
+        const name = `${series.slot + 1}. ${label(series.spot)}`, text = el("span");
+        const link = forecastLink(el("a", name, "compare-legend-link"), series.id, { time: from });
         link.setAttribute("aria-label", `${name} — prognoza godzinowa od 00:00, ${dayLabel}`);
-        link.append(sample, el("span", name));
-        item.append(link);
+        sample.addEventListener("click", () => link.click());
+        // The "i" follows the last word of the last spot, also when the name wraps.
+        text.append(link);
+        if (i === data.length - 1) text.append(" ", ...legendInfo());
+        item.append(sample, text);
         return item;
       }));
       const extent = chartExtent(data);
@@ -775,6 +778,37 @@
       });
       return link;
     }
+    // The "i" after the last spot explains the legend links. Its hint opens on a tap and closes
+    // on another tap of the "i", a tap anywhere else or Escape.
+    function legendInfo() {
+      const button = el("button", "i", "compare-legend-info");
+      const hint = el("span", "Kliknij spot w legendzie, aby zobaczyć jego prognozę godzinową od 00:00 w dniu wybranym pod wykresem.", "compare-legend-hint");
+      button.type = "button"; button.setAttribute("aria-label", "Informacja o legendzie");
+      button.setAttribute("aria-expanded", "false"); button.setAttribute("aria-controls", "compareLegendHint");
+      hint.id = "compareLegendHint"; hint.hidden = true;
+      // An empty title keeps the spot's line description off the "i" and its hint.
+      button.title = hint.title = "";
+      button.addEventListener("click", () => legendHint(hint.hidden));
+      return [button, hint];
+    }
+    function legendHint(open) {
+      const button = $("compareLegend").querySelector(".compare-legend-info"), hint = $("compareLegendHint");
+      if (!button || !hint || (!open && hint.hidden)) return;
+      button.setAttribute("aria-expanded", String(open)); hint.hidden = !open;
+      if (!open) return;
+      // Below the "i" and within the legend; the arrow points at the "i".
+      const box = $("compareLegend").getBoundingClientRect(), mark = button.getBoundingClientRect();
+      const centre = mark.left + mark.width / 2 - box.left, width = hint.offsetWidth;
+      const left = Math.max(0, Math.min(box.width - width, centre - width / 2));
+      hint.style.left = `${left}px`; hint.style.top = `${mark.bottom - box.top + 10}px`;
+      hint.style.setProperty("--arrow", `${centre - left}px`);
+    }
+    document.addEventListener("pointerdown", event => { if (!event.target.closest?.(".compare-legend-info")) legendHint(false); }, true);
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape" || $("compareLegendHint")?.hidden !== false) return;
+      legendHint(false); $("compareLegend").querySelector(".compare-legend-info").focus();
+    });
+    window.addEventListener("resize", () => { if ($("compareLegendHint")?.hidden === false) legendHint(true); });
     function hourlyTable(data) {
       const box = $("compareHourlyTable");
       box.replaceChildren();
