@@ -272,7 +272,7 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=cached-collapsed-v1"></script>
+  <script defer src="surf-app.js?v=waves-only-v1"></script>
   <script defer src="surf-compare.js?v=coast-parts-v1"></script>
   <script defer src="surf-heatmap.js?v=coast-parts-v1"></script>
 </head>
@@ -540,7 +540,7 @@
           <details class="surf-info">
             <summary>Informacje</summary>
             <p id="surfHoursHint" class="surf-small">Przesuwaj tabelę w bok myszką lub palcem. Obejmuje ostatnie 24 godziny modelowe oraz prognozę na 14 dni; godziny po 7. dniu są oznaczone jako orientacyjne, bo trafność prognozy spada, wiatr pochodzi wtedy z mniejszej liczby modeli (po 11. dniu z trzech: GFS, ECMWF IFS i ECMWF AIFS), a fale z jednego; wcześniejsze godziny są oznaczone jako historia. Pokazujemy tylko godziny i dni z dostępną wysokością fal. Każda kolumna to jedna godzina; wartości dotyczą jej początku. Data jest nad godziną. Podświetlenie dnia zmienia się, gdy jego ostatnia kolumna zniknie z widoku. Kliknij godzinę, aby zobaczyć przekrój fal do 500 m od brzegu.</p>
-            <p class="surf-small">Pod wartościami fal: najnowszy BS Wind 8 względem kierunku fali przy spocie. Onshore = zgodnie z ruchem fal; cross-on = ukośnie zgodnie; cross = w poprzek; cross-off = ukośnie przeciwnie; offshore = przeciwnie do ruchu fal. Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
+            <p class="surf-small">Wiersz „Wiatr przy brzegu” łączy kierunek, siłę i ustawienie wiatru względem plaży.</p>
             <p id="surfDirectionHint" class="surf-small"><strong>Miniaturki kierunków:</strong> widok z plaży w stronę morza — morze u góry, ląd na dole. Strzałka biegnie od kropki do grotu: pokazuje ruch fal (niebieski) lub wiatru (fioletowy), względem brzegu tego spotu.</p>
           </details>
           <div id="surfDays" class="surf-days" role="group" aria-label="Przewiń prognozę godzinową do dnia"></div>

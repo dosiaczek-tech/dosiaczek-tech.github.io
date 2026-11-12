@@ -161,8 +161,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   odległość, głębokość oraz link do punktu prognozy na mapie. Brak wyniku
   przybrzeżnego nie jest zastępowany prognozą z dalszego morza.
 - Automatyczny backend GitHub Actions: wiatr co 3 h, nowe obliczenia SWAN
-  w cyklach 00/12 UTC. W tabeli wiatr pod komórkami fal i pięć klas kierunku:
-  onshore, cross-on, cross, cross-off, offshore.
+  w cyklach 00/12 UTC. Wiatr ma w tabeli własny wiersz „Wiatr przy brzegu” (kierunek, siła
+  i ustawienie względem plaży); wiersze fal pokazują tylko fale.
 - Automatycznie widoczna mapa Windy z zakładkami **Fale** i **Wiatr**, godziny polskie,
   oznaczanie brakujących i nieaktualnych danych. Wybrana warstwa podąża za lokalizacją spotu;
   odnośnik „Otwórz Windy” otwiera tę samą warstwę. Zakładki obsługują również klawiaturę.

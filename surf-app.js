@@ -436,16 +436,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     hoursDataKey = dataKey;
-    const windValue = (wind, withFrom = false) => [
-      M.finite(wind?.direction) ? `${withFrom ? "z " : ""}${compass(wind.direction)}` : null,
+    const windValue = wind => [
+      M.finite(wind?.direction) ? compass(wind.direction) : null,
       M.finite(wind?.speed) ? windKnots(wind.speed) : null
     ].filter(value => value !== null).join(" · ") || null;
-    const allPeriods = SurfHourly.periods(combined, { session: chosenSession, selectedTime: focusTime })
-      .map(period => {
-        const wind = windValue(period.row.wind, true);
-        const relative = M.windRelativeToWave(period.row.wind, period.row.simulation?.direction);
-        return { ...period, windText: wind ? `BS Wind: ${wind}${relative ? ` · ${relative}` : ""}` : null };
-      });
+    // The wind has its own row ("Wiatr przy brzegu"); the wave rows show only the waves.
+    const allPeriods = SurfHourly.periods(combined, { session: chosenSession, selectedTime: focusTime });
     const definitions = [
       ["score", "Ocena warunków", r => {
         if (M.finite(r.score) && r.disputedWind) {
@@ -459,10 +455,10 @@ document.addEventListener("DOMContentLoaded", () => {
           return node("small", "Modele wskazują różne kierunki wiatru. Na podstawie tych danych nie można wyliczyć wiarygodnej oceny.", "surf-cell-wind");
         return null;
       }],
-      ["height", "Wysokość fal przy spocie", r => M.finite(r.simulation?.height) ? `~${fmt(r.simulation.height)} m` : null, true],
-      ["period", "Czas między falami", r => M.finite(r.period) ? `${fmt(r.period)} s` : null, true],
-      ["energy", "Energia fal · kJ/m²", r => M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : null, true],
-      ["power", "Moc fal · kW/m", r => M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : null, true],
+      ["height", "Wysokość fal przy spocie", r => M.finite(r.simulation?.height) ? `~${fmt(r.simulation.height)} m` : null],
+      ["period", "Czas między falami", r => M.finite(r.period) ? `${fmt(r.period)} s` : null],
+      ["energy", "Energia fal · kJ/m²", r => M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : null],
+      ["power", "Moc fal · kW/m", r => M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : null],
       ["direction", "Fale nadchodzą z", r => {
         const motion = SurfDirections.wave(r.simulation, currentSpot);
         return directionCell(motion, motion?.state === "calm" ? null : M.finite(r.direction) ? compass(r.direction) : null);
@@ -475,8 +471,8 @@ document.addEventListener("DOMContentLoaded", () => {
           : motion?.label || (relative === "cisza / słaby" ? "Słaby wiatr" : relative);
         return directionCell(motion, value, caption);
       }],
-      ["waterTemperature", "Temp. wody", r => M.finite(r.weather.waterTemperature) ? `${fmt(r.weather.waterTemperature)} °C` : null, false, "weather"],
-      ["airTemperature", "Temp. powietrza", r => M.finite(r.weather.airTemperature) ? `${fmt(r.weather.airTemperature)} °C` : null, false, "weather"],
+      ["waterTemperature", "Temp. wody", r => M.finite(r.weather.waterTemperature) ? `${fmt(r.weather.waterTemperature)} °C` : null, "weather"],
+      ["airTemperature", "Temp. powietrza", r => M.finite(r.weather.airTemperature) ? `${fmt(r.weather.airTemperature)} °C` : null, "weather"],
       ["cloudCover", "Zachmurzenie", r => {
         const symbol = SurfWeather.weatherSymbol(r.weather, r.daylight);
         const hasCover = M.finite(r.weather.cloudCover);
@@ -489,11 +485,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hasCover) reading.append(node("span", `${fmt(r.weather.cloudCover, 0)}%`, "surf-cloud-percent"));
         el.append(reading, node("small", symbol?.label || r.weather.cloudLabel, "surf-cell-weather"));
         return el;
-      }, false, "weather"]
+      }, "weather"]
     ];
     const { periods, fields } = SurfHourly.compactTable(allPeriods,
-      definitions.map(([key, label, value, withWind = false, group = "surf"]) => ({
-        key, label, withWind, group, values: allPeriods.map(period => value(period.row))
+      definitions.map(([key, label, value, group = "surf"]) => ({
+        key, label, group, values: allPeriods.map(period => value(period.row))
       })));
     hoursColumns = []; hoursDayButtons.clear(); hoursDayPartTargets.clear();
     hoursVisibleDay = null; hoursVisibleTime = null; hoursVisiblePart = null;
@@ -560,7 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     $("surfHoursHead").replaceChildren(heading);
     let weatherGroupStarted = false;
-    $("surfHours").replaceChildren(...fields.map(({ key, label, values, withWind, group }) => {
+    $("surfHours").replaceChildren(...fields.map(({ key, label, values, group }) => {
       const tr = node("tr"), title = node("th", label, "surf-hourly-label");
       title.scope = "row"; tr.dataset.field = key; tr.dataset.group = group;
       if (group === "weather" && !weatherGroupStarted) {
@@ -575,7 +571,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (values[i] !== null && values[i] !== undefined && values[i] !== "") {
           const primary = node("div", undefined, "surf-hour-value");
           primary.append(values[i]); cell.append(primary);
-          if (withWind && period.windText) cell.append(node("small", period.windText, "surf-cell-wind"));
         }
         tr.append(cell);
       }
