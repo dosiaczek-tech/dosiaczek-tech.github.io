@@ -240,8 +240,8 @@
       }
       loading = true; completed = 0; loadedAt = 0; snapshotTime = Date.now(); records.clear(); setView(FULL);
       status();
-      // One file for the whole coast; each spot then reads it from memory.
-      await root.SurfAPI.coast(force);
+      // The whole coast in parts, west to east like the rows; each spot waits only for its part.
+      root.SurfAPI.coast(force);
       let index = 0;
       await Promise.all(Array.from({ length: 4 }, async () => {
         while (index < catalog.length && token === generation && active()) {

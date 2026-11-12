@@ -273,3 +273,14 @@ test('a spot with several great windows never pushes out another compared spot',
   assert.equal(top[0].start, current, 'of two equal windows the earlier one stays');
   assert.equal(top.at(-1).start, current, 'a weak spot still shows the better of its windows');
 });
+
+test('the saved history keeps only the last and the next 24 hours, with the fields needed for session ratings', () => {
+  const now = Date.parse('2026-11-12T10:20:00Z'), hour = Date.parse('2026-11-12T10:00:00Z') / 1000;
+  const rows = [-24, -1, 0, 23, 24, 48, 300].map(h => ({ time: hour + h * 3600, score: 4, height: .8, daylight: true,
+    simulation: { height: .8, profile: [1, 2] }, confidence: { level: 'niska', reasons: ['x'] }, flags: ['y'], cleanup: false, wind: { speed: 5 } }));
+  const saved = C.savedHistory(rows, now);
+  assert.deepEqual(saved.map(r => (r.time - hour) / 3600), [-24, -1, 0, 23, 24], 'up to 24 hours from now, not further');
+  assert.deepEqual(saved[0], { time: hour - 24 * 3600, score: 4, height: .8, daylight: true, simulation: { height: .8 },
+    confidence: { level: 'niska', reasons: ['x'] }, flags: ['y'], cleanup: false });
+  assert.equal(C.retainHistory([], saved, now + 3 * 3600000).length, 2, 'what was saved still restores the past hours');
+});

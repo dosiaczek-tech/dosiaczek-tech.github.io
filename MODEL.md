@@ -198,12 +198,13 @@ Workflow `.github/workflows/forecast-pages.yml`:
    brakuje dostatecznego horyzontu albo ręcznie wybrano `force`.
 4. Publikuje `data/nearshore/ID.json` i `data/status.json`, a potem cały frontend
    przez artefakt GitHub Pages. Wyniki nie trafiają jako automatyczne commity do Git.
-   `model/build_site.py` składa też `data/coast.json`: wiatr i fale wszystkich spotów w jednym
-   pliku, bez przekrojów 0–500 m. Czytają go „Pokaż najlepsze” i heat mapa zamiast dwóch plików na spot;
-   lokalny podgląd (`scripts/dev-server.cjs`) buduje go z tych samych danych spotów
-   (`scripts/coast-bundle.cjs`) i, jak GitHub Pages, wysyła dane skompresowane gzipem. Ostatni złożony
-   plik wysyła od razu, a nowszy składa w tle (najwyżej raz na minutę); na nowe dane czeka tylko pierwsze
-   zapytanie po starcie albo po lokalnym odświeżeniu wiatru lub SWAN.
+   `model/build_site.py` składa też `data/coast-1.json` … `coast-4.json`: wiatr i fale wszystkich
+   spotów w czterech częściach od zachodu na wschód, bez przekrojów 0–500 m (każda część podaje, ile ich jest).
+   Czytają je „Pokaż najlepsze” i heat mapa zamiast dwóch plików na spot, po kolei, licząc spoty jednej części
+   w czasie pobierania następnej. Lokalny podgląd (`scripts/dev-server.cjs`) buduje te same części z tych samych
+   danych spotów (`scripts/coast-bundle.cjs`) i, jak GitHub Pages, wysyła dane skompresowane gzipem. Ostatnio
+   złożone części wysyła od razu, a nowsze składa w tle (najwyżej raz na minutę); na nowe dane czeka tylko
+   pierwsze zapytanie po starcie albo po lokalnym odświeżeniu wiatru lub SWAN.
 5. Zachowuje batymetrię i wyniki w cache. Wejścia i logi solvera są artefaktem
    `swan-inputs-and-logs-RUN_ID`, przechowywanym przez 14 dni.
 

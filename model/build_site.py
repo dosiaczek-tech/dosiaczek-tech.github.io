@@ -1,8 +1,11 @@
 """Stage public Surf and SUP files; never copy journals, tools, keys or caches."""
 from pathlib import Path
+import math
 import shutil
 import json
 from nearshore import VERSION
+
+COAST_PARTS = 4
 
 
 def slim_nearshore(document):
@@ -15,15 +18,31 @@ def slim_nearshore(document):
     return slim
 
 
+def longitude(entry):
+    for kind in ("nearshore", "wind"):
+        lon = ((entry.get(kind) or {}).get("spot") or {}).get("lon")
+        if isinstance(lon, (int, float)) and not isinstance(lon, bool) and math.isfinite(lon):
+            return lon
+    return math.inf
+
+
 def write_coast(data):
-    """One file for "Pokaż najlepsze" and the heat map instead of two requests per spot.
-    scripts/coast-bundle.cjs builds the same file for the local preview."""
+    """The whole coast for "Pokaż najlepsze" and the heat map in a few files (coast-1.json, …), west to east,
+    instead of two requests per spot: the app computes the spots of one part while it downloads the next.
+    scripts/coast-bundle.cjs splits the local preview's copy the same way."""
     spots = {}
     for kind in ("wind", "nearshore"):
         for path in sorted((data / kind).glob("*.json")):
             document = json.loads(path.read_text(encoding="utf-8"))
             spots.setdefault(path.stem, {})[kind] = slim_nearshore(document) if kind == "nearshore" else document
-    (data / "coast.json").write_text(json.dumps({"schema": 1, "spots": spots}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    ordered = sorted(spots.items(), key=lambda item: (longitude(item[1]), item[0]))
+    parts = max(1, min(COAST_PARTS, len(ordered)))
+    for old in data.glob("coast*.json"):
+        old.unlink()
+    for index in range(parts):
+        chunk = dict(ordered[index * len(ordered) // parts:(index + 1) * len(ordered) // parts])
+        part = {"schema": 1, "part": index + 1, "parts": parts, "spots": chunk}
+        (data / f"coast-{index + 1}.json").write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
 def stage_site(root, target):

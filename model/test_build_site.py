@@ -32,24 +32,28 @@ class PublicSite(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SUP public file"):
                 stage_site(root, target)
 
-    def test_coast_file_keeps_everything_but_the_cross_sections(self):
+    def test_coast_parts_keep_everything_but_the_cross_sections_west_to_east(self):
         with tempfile.TemporaryDirectory() as temp:
             data = Path(temp)
             (data / "wind").mkdir(); (data / "nearshore").mkdir()
-            wind = {"schema": 1, "spotId": "a", "data": {"hourly": {"time": [1]}}}
-            wave = {"schema": 2, "spot": {"id": "a"}, "windUsed": [{"time": 1, "speed": 4}],
+            (data / "coast.json").write_text("{}")
+            wind = {"schema": 1, "spotId": "a", "spot": {"id": "a", "lon": 18.6}, "data": {"hourly": {"time": [1]}}}
+            wave = {"schema": 2, "spot": {"id": "a", "lon": 18.6}, "windUsed": [{"time": 1, "speed": 4}],
                     "hourly": [{"time": 1, "height": 0.5, "profile": [{"distance": 0}]}],
                     "history": [{"time": 0, "height": 0.4, "profile": []}]}
             (data / "wind/a.json").write_text(json.dumps(wind)); (data / "nearshore/a.json").write_text(json.dumps(wave))
-            (data / "wind/b.json").write_text(json.dumps({**wind, "spotId": "b"}))
+            (data / "wind/b.json").write_text(json.dumps({**wind, "spotId": "b", "spot": {"id": "b", "lon": 14.2}}))
+            (data / "wind/c.json").write_text(json.dumps({**wind, "spotId": "c", "spot": None}))
             write_coast(data)
-            coast = json.loads((data / "coast.json").read_text(encoding="utf-8"))
-            self.assertEqual(coast["schema"], 1)
-            self.assertEqual(coast["spots"]["a"]["wind"], wind)
-            self.assertEqual(coast["spots"]["a"]["nearshore"], {**wave, "hourly": [{"time": 1, "height": 0.5}], "history": [{"time": 0, "height": 0.4}]})
-            self.assertEqual(coast["spots"]["b"], {"wind": {**wind, "spotId": "b"}})
+            self.assertFalse((data / "coast.json").exists())
+            parts = [json.loads((data / f"coast-{i}.json").read_text(encoding="utf-8")) for i in (1, 2, 3)]
+            self.assertFalse((data / "coast-4.json").exists())
+            self.assertEqual([(part["part"], part["parts"], list(part["spots"])) for part in parts], [(1, 3, ["b"]), (2, 3, ["a"]), (3, 3, ["c"])])
+            self.assertEqual(parts[1]["spots"]["a"]["wind"], wind)
+            self.assertEqual(parts[1]["spots"]["a"]["nearshore"], {**wave, "hourly": [{"time": 1, "height": 0.5}], "history": [{"time": 0, "height": 0.4}]})
+            self.assertEqual(parts[0]["spots"]["b"], {"wind": {**wind, "spotId": "b", "spot": {"id": "b", "lon": 14.2}}})
 
-    def test_staging_writes_the_coast_file(self):
+    def test_staging_writes_the_coast_parts(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); target = root / "dist"
             (target / "data").mkdir(parents=True)
@@ -59,4 +63,4 @@ class PublicSite(unittest.TestCase):
                 path = root / "sup" / name
                 path.parent.mkdir(parents=True, exist_ok=True); path.write_text("fixture")
             stage_site(root, target)
-            self.assertEqual(json.loads((target / "data/coast.json").read_text()), {"schema": 1, "spots": {}})
+            self.assertEqual(json.loads((target / "data/coast-1.json").read_text()), {"schema": 1, "part": 1, "parts": 1, "spots": {}})

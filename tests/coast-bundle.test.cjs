@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { slimNearshore, coastBundle } = require('../scripts/coast-bundle.cjs');
+const { slimNearshore, coastBundle, coastParts } = require('../scripts/coast-bundle.cjs');
 
 test('the coast file keeps everything but the cross-sections, like the published copy', () => {
   const wind = { schema: 1, spotId: 'a', data: { hourly: { time: [1] } } };
@@ -15,3 +15,13 @@ test('the coast file keeps everything but the cross-sections, like the published
   assert.equal(wave.hourly[0].profile.length, 1, 'the served document itself is left intact');
   assert.deepEqual(slimNearshore({ status: 'unavailable', error: 'Brak danych.' }), { status: 'unavailable', error: 'Brak danych.' });
 });
+
+test('the coast parts run west to east, each saying how many there are', () => {
+  const at = (id, lon) => [id, { wind: { spotId: id, spot: { lon } }, nearshore: { spot: { id, lon }, hourly: [] } }];
+  const parts = coastParts([at('d', 18.6), at('a', 14.2), at('c', 16.9), at('b', 14.2), at('e', 19.3), ['x', { wind: { spotId: 'x' } }]], 4);
+  assert.deepEqual(parts.map(part => [part.part, part.parts, Object.keys(part.spots)]),
+    [[1, 4, ['a']], [2, 4, ['b', 'c']], [3, 4, ['d']], [4, 4, ['e', 'x']]], 'ties by id, spots without coordinates last');
+  assert.deepEqual(coastParts([at('a', 14)], 4).map(part => part.parts), [1]);
+  assert.equal(coastParts([], 4).length, 1);
+});
+

@@ -17,7 +17,8 @@ function harness(storage = new Map()) {
       requests.push(url);
       if (url.startsWith('data/nearshore/') && swan) return {ok:true,json:async()=>structuredClone(swan)};
       if (url.startsWith('data/wind/') && publishedWind) return {ok:true,json:async()=>structuredClone(publishedWind)};
-      if (url.startsWith('data/coast.json') && coast) return {ok:true,json:async()=>structuredClone(coast)};
+      const part = /^data\/coast-(\d+)\.json/.exec(url)?.[1];
+      if (part && coast?.[part - 1]) return {ok:true,json:async()=>structuredClone(coast[part - 1])};
       if (url.startsWith('data/wind/') && ['expired-published', 'local-published'].includes(mode)) return {
         ok: true, json: async () => ({schema:1,spotId:'test',fetchedAt:mode==='expired-published'?now-21600001:now,
           sourceType:mode==='local-published'?'local':'scheduled',data:{hourly:{time:[now/1000]}}})
@@ -350,26 +351,33 @@ test('a failed wave load keeps its Polish reason for the collapsed details', asy
   assert.equal(h.api.errorText(h.api.polishError('Brak połączenia z serwerem — sprawdź internet.')), 'Brak połączenia z serwerem — sprawdź internet.');
 });
 
-test('the ranking reads one coast file for every spot and keeps its slim waves away from the spot page', async () => {
+test('the ranking reads the coast in parts, one after another, and keeps its slim waves away from the spot page', async () => {
   const h = harness(), other = { id: 'other', lat: 54.5, lon: 18.6, normal: 10 };
   const wind = id => ({ schema: 1, spotId: id, fetchedAt: h.now(), data: { hourly: { time: [h.now() / 1000] } } });
   const waves = id => ({ schema: 2, status: 'unavailable', spot: { id }, error: 'Oczekiwanie na obliczenia SWAN.' });
-  h.setCoast({ schema: 1, spots: { test: { wind: wind('test'), nearshore: waves('test') }, other: { wind: wind('other'), nearshore: waves('other') } } });
-  await h.api.coast();
+  h.setCoast([{ schema: 1, part: 1, parts: 2, spots: { other: { wind: wind('other'), nearshore: waves('other') } } },
+    { schema: 1, part: 2, parts: 2, spots: { test: { wind: wind('test'), nearshore: waves('test') } } }]);
+  h.api.coast();
   const [first, second] = await Promise.all([h.api.coastal(spot), h.api.coastal(other)]);
   assert.equal(first[0].weather.spotId, 'test'); assert.equal(second[0].weather.spotId, 'other');
   assert.equal(first[1].error, 'Oczekiwanie na obliczenia SWAN.');
-  assert.equal(h.requests.filter(url => url.startsWith('data/')).length, 1, 'one request for the whole coast');
+  assert.deepEqual(h.requests.filter(url => url.startsWith('data/')).map(url => url.split('?')[0]), ['data/coast-1.json', 'data/coast-2.json'],
+    'two parts, in order, and no per-spot files');
   assert.equal([...h.storage.keys()].some(key => key.includes('scheduled-wind')), false, 'no offline copies of the whole coast');
   await h.api.nearshore(spot);
   assert.ok(h.requests.some(url => url.startsWith('data/nearshore/test.json')), 'the spot page still asks for its full waves');
 });
 
-test('without the coast file each spot falls back to its own two files', async () => {
+test('a missing part or a missing coast leaves only those spots to their own two files', async () => {
   const h = harness(); h.mode('local-published');
+  h.setCoast([{ schema: 1, part: 1, parts: 2, spots: {} }]);
+  h.api.coast();
   const [forecast, waves] = await h.api.coastal(spot);
   assert.equal(forecast.weather.sourceType, 'local');
   assert.equal(waves.loadFailed, true);
-  for (const file of ['data/coast.json', 'data/wind/test.json', 'data/nearshore/test.json'])
+  for (const file of ['data/coast-1.json', 'data/coast-2.json', 'data/wind/test.json', 'data/nearshore/test.json'])
     assert.ok(h.requests.some(url => url.startsWith(file)), file);
+  const none = harness(); none.mode('local-published');
+  await none.api.coastal(spot);
+  assert.deepEqual(none.requests.map(url => url.split('?')[0]).sort(), ['data/coast-1.json', 'data/nearshore/test.json', 'data/wind/test.json']);
 });

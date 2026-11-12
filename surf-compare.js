@@ -50,6 +50,14 @@
     for (const r of rows) if (recent(r) && (Number.isFinite(r.score) || !byTime.has(r.time))) byTime.set(r.time, r);
     return [...byTime.values()].sort((a, b) => a.time - b.time);
   }
+  // The copy kept in the browser storage only needs the hours that can become history before a later load:
+  // the last 24 hours and the next 24. The rest of the forecast arrives fresh with every load; saving it for all
+  // spots used to fill the whole storage, which the camera favourites and the SUP app share.
+  function savedHistory(rows, now = Date.now()) {
+    return rows.filter(r => r.time * 1000 < now + 24 * 3600000).map(r => ({ time: r.time, score: r.score,
+      height: r.height, daylight: r.daylight, simulation: r.simulation ? { height: r.height } : null,
+      confidence: r.confidence, flags: r.flags, cleanup: r.cleanup }));
+  }
   function daily(rows, model, now = Date.now()) {
     const groups = new Map();
     const from = historyStart(now);
@@ -129,7 +137,7 @@
     const start = Math.max(extent.from, Math.min(from, extent.until - span));
     return { from: start, until: start + span };
   }
-  const api = { choose, pickerMatches, clampView, topWindows, daily, dayKey, dayStart, retainHistory, bestSpots, calendarDays, chartHours, chartExtent, chartSegments, dayEdges };
+  const api = { choose, pickerMatches, clampView, topWindows, daily, dayKey, dayStart, retainHistory, savedHistory, bestSpots, calendarDays, chartHours, chartExtent, chartSegments, dayEdges };
   if (typeof module !== "undefined") module.exports = api;
   else root.SurfCompare = api;
   if (typeof document === "undefined") return;
@@ -418,10 +426,8 @@
             let savedRows;
             try { savedRows = JSON.parse(localStorage.getItem(key)); } catch { /* Storage optional. */ }
             const retained = retainHistory(rows, savedRows);
-            // Store only the fields needed to reconstruct session ratings, not full SWAN profiles.
-            try { localStorage.setItem(key, JSON.stringify(retained.map(r => ({ time: r.time, score: r.score,
-              height: r.height, daylight: r.daylight, simulation: r.simulation ? { height: r.height } : null,
-              confidence: r.confidence, flags: r.flags, cleanup: r.cleanup })))); } catch { /* In-memory history still works. */ }
+            // Only the fields needed to reconstruct session ratings, for the hours that can become history.
+            try { localStorage.setItem(key, JSON.stringify(savedHistory(retained))); } catch { /* In-memory history still works. */ }
             return retained;
           });
         cache.set(id, task);
@@ -906,11 +912,13 @@
       beginLoad("Sprawdzam prognozy wszystkich spotów…");
       let next = 0, completed = 0;
       const entries = [], snapshot = Date.now();
-      // Only published files: one for the whole coast, read from memory by each spot; no requests to the weather provider.
-      await root.SurfAPI.coast(force);
+      // Only published files, no requests to the weather provider: the whole coast in parts, west to east, so the spots
+      // go in the same order and each waits only for its part.
+      root.SurfAPI.coast(force);
+      const westToEast = [...catalog].sort((a, b) => a.lon - b.lon || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       await Promise.all(Array.from({ length: 4 }, async () => {
-        while (next < catalog.length && token === autoGeneration) {
-          const spot = catalog[next++];
+        while (next < westToEast.length && token === autoGeneration) {
+          const spot = westToEast[next++];
           if (force) cache.delete(spot.id);
           const rows = await fetchSpot(spot.id, force, true);
           entries.push({ id: spot.id, rows }); completed++;

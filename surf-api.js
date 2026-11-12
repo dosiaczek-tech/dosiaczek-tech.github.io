@@ -150,23 +150,46 @@
           ? [`${i === 0 ? "Pogoda i słońce" : "Temperatura wody"}: ${lowerFirst(errorText(result.reason))}`] : [])
       }));
   }
-  // "Pokaż najlepsze" and the heat map read one file for the whole coast (data/coast.json, without cross-sections)
-  // instead of two files per spot. A missing or broken file is remembered for a minute; the spots then use their own files.
+  // "Pokaż najlepsze" and the heat map read the whole coast in a few parts (data/coast-1.json, …, west to east, without
+  // cross-sections) instead of two files per spot. The parts come one after another, so the spots of one part are
+  // computed while the next part downloads. A missing part leaves its spots to their own files; a coast that could not
+  // be read at all is tried again after a minute, a complete one after 15 minutes or on request.
+  let coastState = null;
   function coast(force = false) {
-    const previous = memory.get("coast");
-    if (previous && !force && Date.now() - previous.loadedAt < (previous.value ? 900000 : 60000)) return Promise.resolve(previous.value);
-    if (pending.has("coast")) return pending.get("coast");
-    const task = json(`data/coast.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`)
-      .then(value => value?.schema === 1 && value.spots && typeof value.spots === "object" ? value : null, () => null)
-      .then(value => { memory.set("coast", { loadedAt: Date.now(), value }); return value; })
-      .finally(() => pending.delete("coast"));
-    pending.set("coast", task);
-    return task;
+    const state = coastState, age = Date.now() - state?.startedAt;
+    if (state && (state.loading || (!force && age >= 0 && age < (state.spots.size ? 900000 : 60000)))) return state.done;
+    const next = coastState = { startedAt: Date.now(), loading: true, spots: new Map(), waiting: new Map() };
+    const settle = (id, entry) => { const resolve = next.waiting.get(id); next.waiting.delete(id); resolve?.(entry); };
+    next.done = (async () => {
+      const query = `model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`;
+      let parts = 1;
+      for (let part = 1; part <= parts; part++) {
+        let value = null;
+        try { value = await json(`data/coast-${part}.json?${query}`); } catch { /* Its spots use their own files. */ }
+        if (value?.schema !== 1 || !value.spots || typeof value.spots !== "object") { if (part === 1) break; continue; }
+        if (part === 1) parts = Math.max(1, Math.min(20, Math.floor(Number(value.parts)) || 1));
+        for (const [id, entry] of Object.entries(value.spots)) { next.spots.set(id, entry); settle(id, entry); }
+      }
+      next.loading = false;
+      for (const id of [...next.waiting.keys()]) settle(id, null);
+      return next.spots.size > 0;
+    })();
+    return next.done;
+  }
+  // A spot's entry once its part has arrived; null when no part has it.
+  function coastEntry(id) {
+    const state = coastState;
+    if (!state || state.spots.has(id) || !state.loading) return Promise.resolve(state?.spots.get(id) ?? null);
+    return new Promise(resolve => {
+      const earlier = state.waiting.get(id);
+      state.waiting.set(id, entry => { earlier?.(entry); resolve(entry); });
+    });
   }
   // One spot for the ranking or the heat map: [forecast, waves] as from forecasts() and nearshore().
-  // Call coast(force) once before a whole round; each spot then reads the file already in memory.
+  // Start coast(force) once for a whole round; each spot then waits only for its own part.
   async function coastal(spot, force = false) {
-    const entry = (await coast())?.spots?.[spot.id];
+    if (!coastState) coast();
+    const entry = await coastEntry(spot.id);
     return Promise.all([forecasts(spot, force, { coastalOnly: true, publishedOnly: true, published: entry?.wind }),
       nearshore(spot, force, entry?.nearshore)]);
   }

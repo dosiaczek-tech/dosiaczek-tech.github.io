@@ -6,7 +6,7 @@ const zlib = require("node:zlib");
 const { parseArgs } = require("node:util");
 const { createPreviewWind, usableWind } = require("./preview-wind.cjs");
 const { createPreviewSwan, usableSwan } = require("./preview-swan.cjs");
-const { coastBundle } = require("./coast-bundle.cjs");
+const { coastParts } = require("./coast-bundle.cjs");
 
 const { values } = parseArgs({ options: {
   host: { type: "string", default: "0.0.0.0" },
@@ -21,12 +21,12 @@ const cache = new Map();
 const pending = new Map();
 const spots = require("../surf-spots.js"), byId = new Map(spots.map(spot => [spot.id, spot]));
 const windSource = createPreviewWind({ spots,
-  onRefresh: count => { cache.delete("/data/coast.json"); console.log(`Wiatr: lokalnie odświeżono ${count} spotów z Open-Meteo.`); },
+  onRefresh: count => { cache.delete("/data/coast"); console.log(`Wiatr: lokalnie odświeżono ${count} spotów z Open-Meteo.`); },
   onFailure: error => console.error(`Odświeżenie lokalnego wiatru: ${error.message}`) });
 const swanSource = createPreviewSwan({ spots,
   onRefresh: status => {
     for (const key of cache.keys()) if (key.startsWith("/data/nearshore/")) cache.delete(key);
-    cache.delete("/data/status.json"); cache.delete("/data/coast.json");
+    cache.delete("/data/status.json"); cache.delete("/data/coast");
     console.log(`SWAN: lokalnie przeliczono prognozy; dostępne ${status?.available ?? "?"}/${spots.length} spotów.`);
   }, onFailure: error => console.error(error.message) });
 const types = {
@@ -88,12 +88,15 @@ async function forecast(resource) {
   try { return await task; } finally { pending.delete(key); }
 }
 
-// "Pokaż najlepsze" and the heat map read one file for the whole coast, built from the same per-spot answers
-// (local wind and SWAN refreshes included), so the preview matches what each spot's own files say.
+// "Pokaż najlepsze" and the heat map read the whole coast in a few parts (coast-1.json, …), built from the same
+// per-spot answers (local wind and SWAN refreshes included), so the preview matches what each spot's own files say.
+async function coastPart(number) {
+  return (await coast()).parts[number - 1] || null;
+}
 // The last file is served at once while a newer one is built (at most once a minute), so only the first request
 // waits; a local wind or SWAN refresh drops the file, and the next request then waits for the new data.
 async function coast() {
-  const key = "/data/coast.json", saved = cache.get(key);
+  const key = "/data/coast", saved = cache.get(key);
   if (saved) {
     if (Date.now() - saved.loadedAt >= 60000 && !pending.has(key)) buildCoast(key).catch(error => console.error(`Plik wybrzeża: ${error.message}`));
     return saved;
@@ -117,7 +120,8 @@ async function buildCoast(key) {
         entries.push([id, documents]);
       }
     }));
-    const result = { status: 200, body: Buffer.from(JSON.stringify(coastBundle(entries))), type: types[".json"], loadedAt: Date.now() };
+    const result = { loadedAt: Date.now(), parts: coastParts(entries).map(part =>
+      ({ status: 200, body: Buffer.from(JSON.stringify(part)), type: types[".json"] })) };
     cache.set(key, result);
     return result;
   })();
@@ -146,11 +150,13 @@ const server = http.createServer(async (request, response) => {
   } catch { send(400, "Invalid URL"); return; }
 
   if (pathname.startsWith("/data/")) {
-    if (!/^\/data\/(?:status\.json|coast\.json|(?:nearshore|wind)\/[a-z0-9-]+\.json)$/.test(pathname)) {
+    if (!/^\/data\/(?:status\.json|coast-\d+\.json|(?:nearshore|wind)\/[a-z0-9-]+\.json)$/.test(pathname)) {
       send(404, "Not found"); return;
     }
     try {
-      const result = pathname === "/data/coast.json" ? await coast() : await forecast(pathname + url.search);
+      const part = /^\/data\/coast-(\d+)\.json$/.exec(pathname)?.[1];
+      const result = part ? await coastPart(Number(part)) : await forecast(pathname + url.search);
+      if (!result) { send(404, "Not found"); return; }
       // Like GitHub Pages, data travel compressed: the coast file shrinks from about 20 MB to 2–3 MB.
       if (result.status === 200 && /\bgzip\b/.test(request.headers["accept-encoding"] || "")) {
         result.gzip ??= zlib.gzipSync(result.body);

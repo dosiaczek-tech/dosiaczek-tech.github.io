@@ -121,13 +121,15 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   przewija stronę, więc da się ją minąć bez zatrzymywania na mapie.
   Klawiatura: strzałki wybierają pole, Page Up/Page Down przesuwają o dobę, Enter otwiera prognozę;
   przybliżony widok podąża za wybranym polem.
-- **Szybsze ładowanie całego wybrzeża**: „Pokaż najlepsze” i heat mapa pobierają jeden plik
-  `data/coast.json` (wiatr i fale wszystkich spotów, bez przekrojów 0–500 m, ok. 2,7 MB po kompresji)
-  zamiast 182 osobnych plików; dane są sprawdzane tak samo jak pliki spotu, a gdy pliku zbiorczego brak,
-  spoty wracają do własnych plików. Oceny całego wybrzeża policzone przez heat mapę albo „Pokaż najlepsze”
-  są pamiętane przez 15 minut w pamięci sesji przeglądarki, więc heat mapa po rankingu i po przeładowaniu
-  strony pojawia się od razu. Ranking nie zapisuje już kopii offline wiatru wszystkich spotów — robi to
-  tylko otwarty spot.
+- **Szybsze ładowanie całego wybrzeża**: „Pokaż najlepsze” i heat mapa pobierają cztery części
+  `data/coast-1.json` … `coast-4.json` (wiatr i fale wszystkich spotów od zachodu na wschód, bez przekrojów
+  0–500 m, razem ok. 2,7 MB po kompresji) zamiast 182 osobnych plików. Części przychodzą jedna po drugiej,
+  a spoty z już pobranej części liczą się, zanim dotrze następna. Dane są sprawdzane tak samo jak pliki spotu;
+  gdy części brak, jej spoty wracają do własnych plików. Oceny całego wybrzeża policzone przez heat mapę albo
+  „Pokaż najlepsze” są pamiętane przez 15 minut w pamięci sesji przeglądarki, więc heat mapa po rankingu
+  i po przeładowaniu strony pojawia się od razu. Ranking nie zapisuje już kopii offline wiatru wszystkich spotów
+  (robi to tylko otwarty spot), a historia porównania w pamięci przeglądarki obejmuje tylko ostatnie i najbliższe
+  24 godziny (ok. 20 kB na spot zamiast ok. 160 kB), więc nie zapełnia pamięci wspólnej z ulubionymi kamerami i SUP.
 - Zakładka „Prognozy surf” (`#surf`) otwiera się bez wybranego spotu: widać porównanie spotów,
   wyszukiwarkę, listę („Wybierz spot…”) i mapę bez zaznaczenia, a prognoza spotu pojawia się dopiero
   po wyborze. Odświeżenie strony zawsze zaczyna od `#surf`, także gdy wcześniej był wybrany spot;
