@@ -201,7 +201,9 @@ Workflow `.github/workflows/forecast-pages.yml`:
    `model/build_site.py` składa też `data/coast.json`: wiatr i fale wszystkich spotów w jednym
    pliku, bez przekrojów 0–500 m. Czytają go „Pokaż najlepsze” i heat mapa zamiast dwóch plików na spot;
    lokalny podgląd (`scripts/dev-server.cjs`) buduje go z tych samych danych spotów
-   (`scripts/coast-bundle.cjs`) i, jak GitHub Pages, wysyła dane skompresowane gzipem.
+   (`scripts/coast-bundle.cjs`) i, jak GitHub Pages, wysyła dane skompresowane gzipem. Ostatni złożony
+   plik wysyła od razu, a nowszy składa w tle (najwyżej raz na minutę); na nowe dane czeka tylko pierwsze
+   zapytanie po starcie albo po lokalnym odświeżeniu wiatru lub SWAN.
 5. Zachowuje batymetrię i wyniki w cache. Wejścia i logi solvera są artefaktem
    `swan-inputs-and-logs-RUN_ID`, przechowywanym przez 14 dni.
 

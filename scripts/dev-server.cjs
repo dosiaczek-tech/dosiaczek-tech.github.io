@@ -90,9 +90,17 @@ async function forecast(resource) {
 
 // "Pokaż najlepsze" and the heat map read one file for the whole coast, built from the same per-spot answers
 // (local wind and SWAN refreshes included), so the preview matches what each spot's own files say.
+// The last file is served at once while a newer one is built (at most once a minute), so only the first request
+// waits; a local wind or SWAN refresh drops the file, and the next request then waits for the new data.
 async function coast() {
   const key = "/data/coast.json", saved = cache.get(key);
-  if (saved && Date.now() - saved.loadedAt < 60000) return saved;
+  if (saved) {
+    if (Date.now() - saved.loadedAt >= 60000 && !pending.has(key)) buildCoast(key).catch(error => console.error(`Plik wybrzeża: ${error.message}`));
+    return saved;
+  }
+  return buildCoast(key);
+}
+async function buildCoast(key) {
   if (pending.has(key)) return pending.get(key);
   const task = (async () => {
     const entries = [];
