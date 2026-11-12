@@ -545,8 +545,11 @@
           <div id="surfDayParts" class="surf-day-parts" role="group" aria-label="Przewiń do pory wybranego dnia" hidden></div>
           <p id="surfHoursEmpty" class="surf-small" role="status" hidden>Pobieram prognozę fal…</p>
           <div id="surfHoursScroll" class="surf-table-scroll" tabindex="0" role="region" aria-label="Przewijana poziomo prognoza fal i pogody: godziny w kolumnach" aria-describedby="surfForecastPoint surfHoursHint surfDirectionHint"><table id="surfHoursTable" class="surf-table" aria-label="Parametry surfingu i pogoda na spocie w kolejnych przedziałach godzinowych"><thead id="surfHoursHead"></thead><tbody id="surfHours"></tbody></table></div>
-          <p id="surfWeatherStatus" class="surf-small" role="status" aria-live="polite">Pobieram pogodę dla wybranego spotu…</p>
-          <p class="surf-small surf-weather-source">Pogoda na spocie jest pokazana pod parametrami surfingu, dla tych samych godzin. Wschód i zachód słońca są pod kafelkami dni, w czasie polskim. Temperatura wody pochodzi z najbliższej komórki morskiej modelu o siatce około 8 km — może różnić się od temperatury przy samej plaży. Źródła: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo Weather</a> oraz <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine / Météo-France, Copernicus Marine</a>.</p>
+          <details class="surf-info">
+            <summary>Dodatkowe informacje</summary>
+            <p id="surfWeatherStatus" class="surf-small" role="status" aria-live="polite">Pobieram pogodę dla wybranego spotu…</p>
+            <p class="surf-small surf-weather-source">Pogoda na spocie jest pokazana pod parametrami surfingu, dla tych samych godzin. Wschód i zachód słońca są pod kafelkami dni, w czasie polskim. Temperatura wody pochodzi z najbliższej komórki morskiej modelu o siatce około 8 km — może różnić się od temperatury przy samej plaży. Źródła: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo Weather</a> oraz <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine / Météo-France, Copernicus Marine</a>.</p>
+          </details>
         </section>
       <div id="surfDetailContent" hidden>
         <section class="surf-box"><span class="surf-spot-label"></span><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>

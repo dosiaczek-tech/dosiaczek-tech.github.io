@@ -56,6 +56,7 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   wartości. Przy braku poprawnych danych punktu opis jest ukryty. Większe kafelki dni mają pod sobą
   godziny wschodu i zachodu słońca dla danej daty; na start widać 5 dni od dzisiaj, a „Pokaż kolejne…”
   i „Pokaż mniej” działają jak pod wykresem porównania. Dzień przewinięty w tabeli zawsze ma swój kafelek.
+  Czasy pobrania pogody i wody oraz opis źródeł są pod tabelą w zwiniętych „Dodatkowych informacjach”.
   Ikony przy zachmurzeniu korzystają
   z kodu pogody WMO Open-Meteo: rozróżniają pogodę, chmury, deszcz, śnieg i burze;
   uwzględniają również noc. Samo duże zachmurzenie nie jest oznaczane jako deszcz.
