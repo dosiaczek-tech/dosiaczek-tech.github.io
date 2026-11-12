@@ -691,6 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfContent").hidden = false;
     $("surfSpotHeading").hidden = false;
     $("surfDetailContent").hidden = false;
+    $("surfSources").hidden = false;
     renderSession();
     const now = simulationTime !== null ? rows.find(r => r.time === simulationTime)
       : !sessionRequest?.day ? rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000) : null;
@@ -808,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
     conditions = null; loading = false;
     $("surfSpot").value = "";
     $("surfTab").href = "#surf";
-    for (const id of ["surfSpotHeading", "surfLocalSection", "surfContent", "surfHourlySection", "surfDetailContent", "surfWindy"]) $(id).hidden = true;
+    for (const id of ["surfSpotHeading", "surfLocalSection", "surfContent", "surfHourlySection", "surfDetailContent", "surfWindy", "surfSources"]) $(id).hidden = true;
     delete $("surfStatus").dataset.state;
     $("surfStatus").textContent = "Nie wybrano spotu. Wybierz plażę w wyszukiwarce, na liście albo na mapie, aby zobaczyć prognozę.";
     document.title = "Prognozy surfingu | Nad morzem";
@@ -830,6 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfContent").hidden = true;
     $("surfSpotHeading").hidden = true;
     $("surfDetailContent").hidden = true;
+    $("surfSources").hidden = true;
     for (const id of ["surfLocalSection", "surfHourlySection", "surfWindy"]) $(id).hidden = false;
     updateChoice();
     $("surfStatus").dataset.state = "loading";

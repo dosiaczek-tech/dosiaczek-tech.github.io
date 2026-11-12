@@ -151,6 +151,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   oznaczanie brakujących i nieaktualnych danych. Wybrana warstwa podąża za lokalizacją spotu;
   odnośnik „Otwórz Windy” otwiera tę samą warstwę. Zakładki obsługują również klawiaturę.
   Mapa nie przeładowuje się przy ponownym wybraniu aktywnej zakładki ani przy odświeżaniu tego samego spotu.
+- „Źródła prognozy przy spocie” (fala SWAN i wiatr z każdego modelu) są zwinięte na samym dole zakładki
+  i rozwijają się po kliknięciu. „Dno przy spocie” zajmuje całą szerokość.
 - Szacowana **moc fal przy spocie (kW/m)** i **energia fal (kJ/m²)** w podsumowaniu,
   z objaśnieniem jednostek. Tabela godzinowa pokazuje energię, a opis sekwencji
   wiatru znajduje się w osobnej sekcji.

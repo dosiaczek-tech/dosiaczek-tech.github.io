@@ -255,7 +255,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=ranking-info-v1">
+  <link rel="stylesheet" href="surf.css?v=sources-bottom-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
@@ -272,7 +272,7 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=spot-prompt-v1"></script>
+  <script defer src="surf-app.js?v=sources-bottom-v1"></script>
   <script defer src="surf-compare.js?v=ranking-info-v1"></script>
   <script defer src="surf-heatmap.js?v=disputed-wind-v1"></script>
 </head>
@@ -549,10 +549,7 @@
           <p class="surf-small surf-weather-source">Pogoda na spocie jest pokazana pod parametrami surfingu, dla tych samych godzin. Wschód i zachód słońca są pod kafelkami dni, w czasie polskim. Temperatura wody pochodzi z najbliższej komórki morskiej modelu o siatce około 8 km — może różnić się od temperatury przy samej plaży. Źródła: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo Weather</a> oraz <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener noreferrer">Open-Meteo Marine / Météo-France, Copernicus Marine</a>.</p>
         </section>
       <div id="surfDetailContent" hidden>
-        <div class="surf-detail-grid">
-          <section class="surf-box"><span class="surf-spot-label"></span><h3>Źródła prognozy przy spocie</h3><div id="surfModels"></div><p class="surf-small">Fale są wynikiem SWAN dla punktu przy brzegu. Poniżej porównujemy modele wiatru; ich zgodność nie jest gwarancją trafności prognozy.</p></section>
-          <section class="surf-box"><span class="surf-spot-label"></span><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>
-        </div>
+        <section class="surf-box"><span class="surf-spot-label"></span><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>
         <section class="surf-box"><span class="surf-spot-label"></span><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
       </div>
       <section id="surfWindy" class="surf-box" aria-labelledby="windyTitle">
@@ -575,6 +572,7 @@
         <p>Automatyczny harmonogram: pobranie wiatru co 3 h, obliczenia SWAN w cyklach 00/12 UTC. GitHub Actions może opóźniać zadania; na stronie podajemy rzeczywiste czasy, a wyniki starsze niż 18 h nie są używane. Odświeżenie strony pobiera ostatni opublikowany wynik, nie uruchamia solvera. Czas tabeli: Europe/Warsaw. <a href="MODEL.md">Opis modelu SWAN i odtwarzanie obliczeń</a> · <a href="SURFING.md">Metodyka oceny surfingu</a>.</p>
       </details>
       <details class="surf-box"><summary id="surfCoverageTitle">Które kamery i spoty mają prognozę?</summary><p>Prognozy obejmują morskie plaże, w tym Zatokę Gdańską, ale nie Zatokę Pucką. Dodatkowo uwzględniamy punkty surfingowe z mapy WestCoast i Sobieszewo, także bez kamery. Kamery portów, miast i zatoki nie są automatycznie przypisywane do tych spotów.</p><p>Źródło opisów: <a href="https://www.google.com/maps/d/viewer?mid=124V-0M-nOqrd7XHs2fK-J9E86LTFxQ-C" target="_blank" rel="noopener noreferrer">Surfing na Pomorze Zachodnie / WestCoast — mapa społecznościowa ↗</a>. Opisy i poziomy dotyczą surfingu; oceny kitesurfingowe nie są zamienne. Wskazana strona Unplug jest obecnie niedostępna (HTTP 503, sprawdzono 20.10.2026), więc nie importujemy jej ocen.</p><div id="surfCoverage"></div></details>
+      <details id="surfSources" class="surf-box" hidden><summary>Źródła prognozy przy spocie<span class="surf-spot-label"></span></summary><div id="surfModels"></div><p class="surf-small">Fale są wynikiem SWAN dla punktu przy brzegu. Poniżej porównujemy modele wiatru; ich zgodność nie jest gwarancją trafności prognozy.</p></details>
     </section>
   </main>
   <footer class="shell page-footer">
