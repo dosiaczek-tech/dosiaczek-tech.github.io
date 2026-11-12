@@ -226,7 +226,7 @@
       ++generation; ++autoGeneration;
       loading = false; manual = true; data = []; ids = []; bestByDay.clear();
       $("compareContent").setAttribute("aria-busy", "false"); $("compareContent").dataset.mode = "idle";
-      legendHint(false);
+      closeHints();
       for (const id of ["compareLegend", "compareDays", "compareRanking", "compareHourlyTable"]) $(id).replaceChildren();
       $("compareRankingTitle").hidden = true;
       $("compareStatus").textContent = "";
@@ -433,7 +433,7 @@
       $("compareStatus").textContent = message;
       $("compareContent").setAttribute("aria-busy", "true");
       $("compareContent").dataset.mode = manual ? "manual" : "auto";
-      legendHint(false);
+      closeHints();
       for (const id of ["compareLegend", "compareRanking", "compareHourlyTable"]) $(id).replaceChildren();
       $("compareRankingTitle").hidden = true;
       chartState("loading", message); updateActions();
@@ -528,7 +528,7 @@
       };
       // Each spot links to its hourly forecast from 00:00 of the day chosen below the chart.
       const from = dayStart(selectedDay), dayLabel = days.find(d => d.key === selectedDay)?.label;
-      legendHint(false);
+      closeHints();
       $("compareLegend").replaceChildren(...data.map(series => {
         const item = el("span", undefined, "compare-legend-item");
         item.setAttribute("role", "listitem"); item.dataset.spot = series.id;
@@ -778,28 +778,34 @@
       });
       return link;
     }
-    // The "i" beside the legend frame explains its links. The hint opens on a tap and closes
-    // on another tap of the "i", a tap anywhere else or Escape.
-    function legendHint(open) {
-      const button = $("compareLegendInfo"), hint = $("compareLegendHint");
+    // Each "i" explains the links next to it: the legend's and the ranking tiles'. A hint opens on a tap
+    // and closes on another tap of its "i", a tap anywhere else or Escape; only one is open at a time.
+    function infoHints() {
+      return [["compareLegendInfo", "compareLegendHint"], ["compareRankingInfo", "compareRankingHint"]]
+        .map(([button, hint]) => ({ button: $(button), hint: $(hint) }));
+    }
+    function showHint({ button, hint }, open) {
       if (!open && hint.hidden) return;
       button.setAttribute("aria-expanded", String(open)); hint.hidden = !open;
       if (!open) return;
-      // Below the "i" and within the legend row; the arrow points at the "i".
+      // Below the "i" and within its box; the arrow points at the "i" and stays clear of the rounded corners.
       const box = button.parentElement.getBoundingClientRect(), mark = button.getBoundingClientRect();
       const centre = mark.left + mark.width / 2 - box.left, width = hint.offsetWidth;
       const left = Math.max(0, Math.min(box.width - width, centre - width / 2));
       hint.style.left = `${left}px`; hint.style.top = `${mark.bottom - box.top + 10}px`;
-      // The arrow stays clear of the rounded corners.
       hint.style.setProperty("--arrow", `${Math.max(14, Math.min(width - 14, centre - left))}px`);
     }
-    $("compareLegendInfo").addEventListener("click", () => legendHint($("compareLegendHint").hidden));
-    document.addEventListener("pointerdown", event => { if (!event.target.closest?.("#compareLegendInfo")) legendHint(false); }, true);
+    function closeHints(except = null) {
+      for (const info of infoHints()) if (info.button !== except) showHint(info, false);
+    }
+    for (const info of infoHints()) info.button.addEventListener("click", () => { closeHints(info.button); showHint(info, info.hint.hidden); });
+    document.addEventListener("pointerdown", event => closeHints(infoHints().find(info => info.button.contains(event.target))?.button), true);
     document.addEventListener("keydown", event => {
-      if (event.key !== "Escape" || $("compareLegendHint").hidden) return;
-      legendHint(false); $("compareLegendInfo").focus();
+      const open = infoHints().find(info => !info.hint.hidden);
+      if (event.key !== "Escape" || !open) return;
+      showHint(open, false); open.button.focus();
     });
-    window.addEventListener("resize", () => { if (!$("compareLegendHint").hidden) legendHint(true); });
+    window.addEventListener("resize", () => { for (const info of infoHints()) if (!info.hint.hidden) showHint(info, true); });
     function hourlyTable(data) {
       const box = $("compareHourlyTable");
       box.replaceChildren();

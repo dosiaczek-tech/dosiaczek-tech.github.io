@@ -43,6 +43,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   nie minie jego górna godzina, także gdy już trwa; żadne nie przechodzi przez północ (dla minionego dnia
   nie ma propozycji). Spot bez okna dostaje szary kafelek „Wybierz kolejny dzień”. Przy „Pokaż najlepsze” są to spoty
   dobrane na ten dzień, przy „Porównaj wybrane” — wskazane spoty, także dodane ponad pięć list. Karty prowadzą do sesji.
+  Nad kafelkami jest jeden wspólny znaczek „i” (widoczny, gdy choć jeden kafelek prowadzi do prognozy) z dymkiem:
+  „Kliknij spot poniżej, żeby przejść do szczegółowej prognozy godzinowej podanego zakresu godzinowego wybranego dnia.”
+  Naraz otwarty jest tylko jeden dymek „i”.
   Zmiana dnia korzysta z już pobranych danych; wybór spośród remisów pozostaje stały
   do odświeżenia. „Porównaj wybrane” zatwierdza własny zestaw do porównywania między dniami;
   „Pokaż najlepsze” uruchamia ranking automatyczny dla aktualnie wskazanej daty.
