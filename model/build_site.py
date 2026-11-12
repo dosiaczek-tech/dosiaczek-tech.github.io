@@ -4,11 +4,34 @@ import shutil
 import json
 from nearshore import VERSION
 
+
+def slim_nearshore(document):
+    """The ranking ("Pokaż najlepsze") and the heat map draw no cross-sections: every hour keeps all but its 0–500 m profile."""
+    slim = dict(document)
+    for key in ("hourly", "history"):
+        rows = slim.get(key)
+        if isinstance(rows, list):
+            slim[key] = [{k: v for k, v in row.items() if k != "profile"} if isinstance(row, dict) else row for row in rows]
+    return slim
+
+
+def write_coast(data):
+    """One file for "Pokaż najlepsze" and the heat map instead of two requests per spot.
+    scripts/coast-bundle.cjs builds the same file for the local preview."""
+    spots = {}
+    for kind in ("wind", "nearshore"):
+        for path in sorted((data / kind).glob("*.json")):
+            document = json.loads(path.read_text(encoding="utf-8"))
+            spots.setdefault(path.stem, {})[kind] = slim_nearshore(document) if kind == "nearshore" else document
+    (data / "coast.json").write_text(json.dumps({"schema": 1, "spots": spots}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+
 def stage_site(root, target):
     target.mkdir(exist_ok=True)
     status = json.loads((target / "data" / "status.json").read_text())
     if status.get("version") != VERSION:
         raise ValueError("Forecast bundle is incompatible with this frontend/model version; retain the existing public site")
+    write_coast(target / "data")
     for pattern in ("*.html", "*.css", "*.js", "*.md", ".nojekyll"):
         for file in root.glob(pattern):
             if file.is_file():

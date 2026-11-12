@@ -88,3 +88,27 @@ test('axis labels name the first and last tile whose centre is in view', () => {
   assert.deepEqual(H.visibleEnds({ from: .254, to: .496 }, 100), [25, 49]);
   assert.deepEqual(H.visibleEnds({ from: .256, to: .494 }, 100), [26, 48]);
 });
+
+test('a spot row keeps its scores from the current hour, the disputed hours and what is missing', () => {
+  const now = Date.parse('2026-11-12T10:20:00Z'), hour = Date.parse('2026-11-12T10:00:00Z') / 1000;
+  const rows = [{ time: hour - 3600, score: 9, simulation: {} }, { time: hour, score: 4.5, simulation: {} },
+    { time: hour + 3600, score: 6, simulation: {}, disputedWind: true }, { time: hour + 7200, score: null, simulation: {} }];
+  const record = H.record(rows, { weather: { stale: true } }, { refreshPending: true }, now);
+  assert.deepEqual([...record.scores], [[hour, 4.5], [hour + 3600, 6]]);
+  assert.deepEqual([...record.disputed], [hour + 3600]);
+  assert.match(record.issue, /Dane z pamięci/); assert.match(record.issue, /Trwa przeliczanie fal/);
+  assert.equal(H.record([], { weather: null }, {}, now).issue, 'Brak aktualnego wiatru. Brak aktualnej prognozy fal dla tego punktu.');
+});
+
+test('ratings of the whole coast come back unchanged for 15 minutes, never after a model change', () => {
+  const model = { VERSION: 'a', SIMULATION_VERSION: 'b' }, now = Date.parse('2026-11-12T10:20:00Z'), hour = Date.parse('2026-11-12T10:00:00Z') / 1000;
+  H.remember(new Map([['x', { scores: new Map([[hour, 4.5], [hour + 7200, 6]]), disputed: new Set([hour + 7200]), issue: '' }],
+    ['y', { scores: new Map(), disputed: new Set(), issue: H.FAILED }]]), now, model);
+  const back = H.recall(model, now + 14 * 60000);
+  assert.equal(back.snapshotTime, now);
+  assert.deepEqual([...back.records.get('x').scores], [[hour, 4.5], [hour + 7200, 6]]);
+  assert.deepEqual([...back.records.get('x').disputed], [hour + 7200]);
+  assert.equal(back.records.get('y').scores.size, 0); assert.equal(back.records.get('y').issue, H.FAILED);
+  assert.equal(H.recall(model, now + 15 * 60000), null);
+  assert.equal(H.recall({ ...model, VERSION: 'c' }, now + 60000), null);
+});

@@ -386,12 +386,17 @@
       if (typing()) activePicker.place(); else closePicker();
     }, true);
     window.addEventListener("resize", () => { if (typing()) activePicker.place(); else closePicker(); });
+    // Heat map ratings from the same rows: after "Pokaż najlepsze" the heat map needs no computing of its own.
+    const ratings = new Map();
     async function fetchSpot(id, force = false, publishedOnly = false) {
       if (!cache.has(id)) {
         const spot = catalog.find(s => s.id === id);
-        const task = Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly }), root.SurfAPI.nearshore(spot, force)])
+        // "Pokaż najlepsze" reads the whole coast from one file; chosen spots read their own files.
+        const task = (publishedOnly ? root.SurfAPI.coastal(spot, force)
+          : Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly }), root.SurfAPI.nearshore(spot, force)]))
           .then(([forecast, simulation]) => {
-            const rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, Date.now(), { historyHours: 24 });
+            const now = Date.now(), rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, now, { historyHours: 24 });
+            if (root.SurfHeatmap) ratings.set(id, root.SurfHeatmap.record(rows, forecast, simulation, now));
             // Notes stay in the status line; the Polish reasons of errors are collapsed below it.
             const issues = [], reasons = [];
             if (!forecast.weather) { issues.push("Brak aktualnego wiatru."); reasons.push(...forecast.errors); }
@@ -403,7 +408,11 @@
             if (cache.get(id) === task) problems.set(id, { issue: issues.join(" "), reason: reasons.join(" ") });
             return rows;
           })
-          .catch(error => { if (cache.get(id) === task) problems.set(id, { issue: "Nie udało się pobrać prognozy.", reason: root.SurfAPI.errorText(error) }); return []; })
+          .catch(error => {
+            if (cache.get(id) === task) problems.set(id, { issue: "Nie udało się pobrać prognozy.", reason: root.SurfAPI.errorText(error) });
+            if (root.SurfHeatmap) ratings.set(id, { scores: new Map(), disputed: new Set(), issue: root.SurfHeatmap.FAILED });
+            return [];
+          })
           .then(rows => {
             const key = M.coastalHistoryKey(spot);
             let savedRows;
@@ -896,8 +905,9 @@
       manual = false;
       beginLoad("Sprawdzam prognozy wszystkich spotów…");
       let next = 0, completed = 0;
-      const entries = [];
-      // Only published files, four spots at a time; no mass requests to the weather provider.
+      const entries = [], snapshot = Date.now();
+      // Only published files: one for the whole coast, read from memory by each spot; no requests to the weather provider.
+      await root.SurfAPI.coast(force);
       await Promise.all(Array.from({ length: 4 }, async () => {
         while (next < catalog.length && token === autoGeneration) {
           const spot = catalog[next++];
@@ -912,6 +922,9 @@
         }
       }));
       if (token !== autoGeneration) return;
+      // The heat map reuses these ratings for 15 minutes instead of computing them again.
+      if (root.SurfHeatmap && catalog.every(spot => ratings.has(spot.id)))
+        root.SurfHeatmap.remember(new Map(catalog.map(spot => [spot.id, ratings.get(spot.id)])), snapshot, M);
       finishLoad(entries);
     }
     selectors(); resetComparison();

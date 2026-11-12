@@ -2,9 +2,11 @@
 const http = require("node:http");
 const { readFile, stat } = require("node:fs/promises");
 const path = require("node:path");
+const zlib = require("node:zlib");
 const { parseArgs } = require("node:util");
 const { createPreviewWind, usableWind } = require("./preview-wind.cjs");
 const { createPreviewSwan, usableSwan } = require("./preview-swan.cjs");
+const { coastBundle } = require("./coast-bundle.cjs");
 
 const { values } = parseArgs({ options: {
   host: { type: "string", default: "0.0.0.0" },
@@ -19,12 +21,12 @@ const cache = new Map();
 const pending = new Map();
 const spots = require("../surf-spots.js"), byId = new Map(spots.map(spot => [spot.id, spot]));
 const windSource = createPreviewWind({ spots,
-  onRefresh: count => console.log(`Wiatr: lokalnie odświeżono ${count} spotów z Open-Meteo.`),
+  onRefresh: count => { cache.delete("/data/coast.json"); console.log(`Wiatr: lokalnie odświeżono ${count} spotów z Open-Meteo.`); },
   onFailure: error => console.error(`Odświeżenie lokalnego wiatru: ${error.message}`) });
 const swanSource = createPreviewSwan({ spots,
   onRefresh: status => {
     for (const key of cache.keys()) if (key.startsWith("/data/nearshore/")) cache.delete(key);
-    cache.delete("/data/status.json");
+    cache.delete("/data/status.json"); cache.delete("/data/coast.json");
     console.log(`SWAN: lokalnie przeliczono prognozy; dostępne ${status?.available ?? "?"}/${spots.length} spotów.`);
   }, onFailure: error => console.error(error.message) });
 const types = {
@@ -86,6 +88,35 @@ async function forecast(resource) {
   try { return await task; } finally { pending.delete(key); }
 }
 
+// "Pokaż najlepsze" and the heat map read one file for the whole coast, built from the same per-spot answers
+// (local wind and SWAN refreshes included), so the preview matches what each spot's own files say.
+async function coast() {
+  const key = "/data/coast.json", saved = cache.get(key);
+  if (saved && Date.now() - saved.loadedAt < 60000) return saved;
+  if (pending.has(key)) return pending.get(key);
+  const task = (async () => {
+    const entries = [];
+    let next = 0;
+    await Promise.all(Array.from({ length: 8 }, async () => {
+      while (next < spots.length) {
+        const id = spots[next++].id, documents = {};
+        for (const kind of ["wind", "nearshore"]) {
+          try {
+            const result = await forecast(`/data/${kind}/${id}.json`);
+            if (result.status === 200) documents[kind] = JSON.parse(result.body.toString("utf8"));
+          } catch { /* Without this file the spot falls back to its own requests. */ }
+        }
+        entries.push([id, documents]);
+      }
+    }));
+    const result = { status: 200, body: Buffer.from(JSON.stringify(coastBundle(entries))), type: types[".json"], loadedAt: Date.now() };
+    cache.set(key, result);
+    return result;
+  })();
+  pending.set(key, task);
+  try { return await task; } finally { pending.delete(key); }
+}
+
 const server = http.createServer(async (request, response) => {
   let url, pathname;
   function send(status, body, type = "text/plain; charset=utf-8") {
@@ -107,12 +138,17 @@ const server = http.createServer(async (request, response) => {
   } catch { send(400, "Invalid URL"); return; }
 
   if (pathname.startsWith("/data/")) {
-    if (!/^\/data\/(?:status\.json|(?:nearshore|wind)\/[a-z0-9-]+\.json)$/.test(pathname)) {
+    if (!/^\/data\/(?:status\.json|coast\.json|(?:nearshore|wind)\/[a-z0-9-]+\.json)$/.test(pathname)) {
       send(404, "Not found"); return;
     }
     try {
-      const result = await forecast(pathname + url.search);
-      send(result.status, result.body, result.type);
+      const result = pathname === "/data/coast.json" ? await coast() : await forecast(pathname + url.search);
+      // Like GitHub Pages, data travel compressed: the coast file shrinks from about 20 MB to 2–3 MB.
+      if (result.status === 200 && /\bgzip\b/.test(request.headers["accept-encoding"] || "")) {
+        result.gzip ??= zlib.gzipSync(result.body);
+        response.setHeader("Content-Encoding", "gzip"); response.setHeader("Vary", "Accept-Encoding");
+        send(result.status, result.gzip, result.type);
+      } else send(result.status, result.body, result.type);
     } catch (error) {
       console.error(`Prognoza ${pathname}: ${error.message}`);
       send(502, JSON.stringify({ error: "Nie udało się pobrać opublikowanej prognozy." }), types[".json"]);

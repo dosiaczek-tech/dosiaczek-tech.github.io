@@ -36,12 +36,13 @@
     } finally { clearTimeout(timer); }
   }
   function endpoint(base, params) { return `${base}?${new URLSearchParams(params)}`; }
-  async function scheduledWeather(spot, fallbackURL, force, publishedOnly = false) {
+  // `published`: the spot's wind taken from the coast file, checked exactly like its own file.
+  async function scheduledWeather(spot, fallbackURL, force, publishedOnly = false, published = null) {
     const key = `scheduled-wind-${spotKey(spot)}`, previous = memory.get(key);
     const saved = read(`${key}-saved`);
     if (previous && !force && Date.now() - previous.loadedAt < 1800000) return previous.value;
     try {
-      const data = await json(`data/wind/${encodeURIComponent(spot.id)}.json?v=${Math.floor(Date.now() / 1800000)}`);
+      const data = published || await json(`data/wind/${encodeURIComponent(spot.id)}.json?v=${Math.floor(Date.now() / 1800000)}`);
       const age = Date.now() - data.fetchedAt;
       if (data.schema !== 1 || data.spotId !== spot.id || !M.finite(data.fetchedAt) || age < -300000 || age > 21600000 ||
           !Array.isArray(data.data?.hourly?.time) || !data.data.hourly.time.length)
@@ -49,7 +50,8 @@
       if (!M.windMatchesSpot(data, spot)) throw polishError("Pakiet wiatru nie potwierdza aktualnych współrzędnych spotu.");
       const value = { ...data, stale: Boolean(data.reusedInputs) };
       memory.set(key, { loadedAt: Date.now(), value });
-      write(`${key}-saved`, value);
+      // Offline copies come only from spots opened one by one; copies of the whole coast would overflow the storage.
+      if (!published) write(`${key}-saved`, value);
       return value;
     } catch (error) {
       let failure = error;
@@ -71,17 +73,20 @@
     const until = value.hourly[0]?.time + hours * 3600;
     return { ...value, profileHours: hours, hourly: value.hourly.map(row => row.time > until ? { ...row, profile: [] } : row) };
   }
-  async function nearshore(spot, force = false) {
+  // `slim`: the spot's waves from the coast file, without cross-sections. They are checked like the spot's own file,
+  // but neither cached nor saved for the spot's page, which draws the cross-sections.
+  async function nearshore(spot, force = false, slim = null) {
     const key = `swan-${M.SIMULATION_VERSION}-${spotKey(spot)}`, previous = memory.get(key);
     const age = M.simulationAge(previous?.value, Date.now());
     const ttl = previous?.value.refreshPending || previous?.value.refreshError || !M.finite(age) || age > 18 ? 5000 : 900000;
-    if (previous && !force && Date.now() - previous.loadedAt < ttl) return previous.value;
+    if (!slim && previous && !force && Date.now() - previous.loadedAt < ttl) return previous.value;
     try {
-      const value = await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`, { allowError: true });
+      const value = slim || await json(`data/nearshore/${encodeURIComponent(spot.id)}.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`, { allowError: true });
       if (value.schema !== 2 || value.spot?.id !== spot.id) throw polishError("Wynik wymaga przeliczenia dla strefy 0–500 m od brzegu");
       if (value.status === "ready" && value.version !== M.SIMULATION_VERSION) throw polishError("Prognoza wymaga przeliczenia dla nowego punktu od strony morza.");
       if (value.status === "ready" && (![value.generatedAt, value.windFetchedAt, value.boundaryFetchedAt].every(M.finite) || !Array.isArray(value.hourly) ||
           ["lat", "lon", "normal"].some(k => value.spot[k] !== spot[k]))) throw polishError("Niezgodna geometria SWAN");
+      if (slim) return value;
       memory.set(key, { loadedAt: Date.now(), value });
       const valueAge = M.simulationAge(value, Date.now());
       if (value.status === "ready" && M.finite(valueAge) && valueAge <= 18) write(`${key}-saved`, offlineCopy(value));
@@ -114,7 +119,7 @@
     pending.set(key, task);
     return task;
   }
-  function forecasts(spot, force = false, { coastalOnly = false, publishedOnly = false } = {}) {
+  function forecasts(spot, force = false, { coastalOnly = false, publishedOnly = false, published = null } = {}) {
     const sea = M.offshore(spot);
     const common = { past_days: 2, forecast_days: 16, timeformat: "unixtime", timezone: "GMT" };
     const marineURL = endpoint("https://marine-api.open-meteo.com/v1/marine", { ...common,
@@ -124,7 +129,7 @@
       latitude: spot.lat, longitude: spot.lon, wind_speed_unit: "ms", cell_selection: "nearest",
       hourly: "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day", models: Object.keys(M.WIND_MODELS).join(",") });
     // Nie odrzucamy fal, gdy brakuje wiatru; ocena wtedy pozostaje pusta.
-    return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force, publishedOnly)])
+    return Promise.allSettled([coastalOnly ? Promise.resolve(null) : cached(`marine-${spotKey(spot)}`, marineURL, force), scheduledWeather(spot, weatherURL, force, publishedOnly, published)])
       .then(([marine, weather]) => ({ marine: marine.status === "fulfilled" ? marine.value : null,
         weather: weather.status === "fulfilled" ? weather.value : null,
         errors: [marine, weather].filter(r => r.status === "rejected").map(r => errorText(r.reason)) }));
@@ -144,6 +149,26 @@
         errors: [weather, sea].flatMap((result, i) => result.status === "rejected"
           ? [`${i === 0 ? "Pogoda i słońce" : "Temperatura wody"}: ${lowerFirst(errorText(result.reason))}`] : [])
       }));
+  }
+  // "Pokaż najlepsze" and the heat map read one file for the whole coast (data/coast.json, without cross-sections)
+  // instead of two files per spot. A missing or broken file is remembered for a minute; the spots then use their own files.
+  function coast(force = false) {
+    const previous = memory.get("coast");
+    if (previous && !force && Date.now() - previous.loadedAt < (previous.value ? 900000 : 60000)) return Promise.resolve(previous.value);
+    if (pending.has("coast")) return pending.get("coast");
+    const task = json(`data/coast.json?model=${M.SIMULATION_VERSION}&v=${Math.floor(Date.now() / 900000)}`)
+      .then(value => value?.schema === 1 && value.spots && typeof value.spots === "object" ? value : null, () => null)
+      .then(value => { memory.set("coast", { loadedAt: Date.now(), value }); return value; })
+      .finally(() => pending.delete("coast"));
+    pending.set("coast", task);
+    return task;
+  }
+  // One spot for the ranking or the heat map: [forecast, waves] as from forecasts() and nearshore().
+  // Call coast(force) once before a whole round; each spot then reads the file already in memory.
+  async function coastal(spot, force = false) {
+    const entry = (await coast())?.spots?.[spot.id];
+    return Promise.all([forecasts(spot, force, { coastalOnly: true, publishedOnly: true, published: entry?.wind }),
+      nearshore(spot, force, entry?.nearshore)]);
   }
   async function bathymetry(spot) {
     const key = `bath-${spotKey(spot)}`, old = read(key);
@@ -176,5 +201,5 @@
     pending.set(key, task);
     return task;
   }
-  root.SurfAPI = { forecasts, conditions, bathymetry, nearshore, polishError, errorText, lowerFirst };
+  root.SurfAPI = { forecasts, conditions, bathymetry, nearshore, coast, coastal, polishError, errorText, lowerFirst };
 })(globalThis);

@@ -121,6 +121,13 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   przewija stronę, więc da się ją minąć bez zatrzymywania na mapie.
   Klawiatura: strzałki wybierają pole, Page Up/Page Down przesuwają o dobę, Enter otwiera prognozę;
   przybliżony widok podąża za wybranym polem.
+- **Szybsze ładowanie całego wybrzeża**: „Pokaż najlepsze” i heat mapa pobierają jeden plik
+  `data/coast.json` (wiatr i fale wszystkich spotów, bez przekrojów 0–500 m, ok. 2,7 MB po kompresji)
+  zamiast 182 osobnych plików; dane są sprawdzane tak samo jak pliki spotu, a gdy pliku zbiorczego brak,
+  spoty wracają do własnych plików. Oceny całego wybrzeża policzone przez heat mapę albo „Pokaż najlepsze”
+  są pamiętane przez 15 minut w pamięci sesji przeglądarki, więc heat mapa po rankingu i po przeładowaniu
+  strony pojawia się od razu. Ranking nie zapisuje już kopii offline wiatru wszystkich spotów — robi to
+  tylko otwarty spot.
 - Zakładka „Prognozy surf” (`#surf`) otwiera się bez wybranego spotu: widać porównanie spotów,
   wyszukiwarkę, listę („Wybierz spot…”) i mapę bez zaznaczenia, a prognoza spotu pojawia się dopiero
   po wyborze. Odświeżenie strony zawsze zaczyna od `#surf`, także gdy wcześniej był wybrany spot;

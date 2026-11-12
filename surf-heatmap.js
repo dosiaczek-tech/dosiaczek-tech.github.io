@@ -54,7 +54,46 @@
     const name = repeated ? ` ${zoneFormat.formatToParts(new Date(time * 1000)).find(part => part.type === "timeZoneName").value}` : "";
     return `${from}–${clock(time + 3600)}${name}`;
   }
-  const api = { tone, orderedSpots, timeline, cellAt, viewAxis, followAxis, visibleEnds, shade, hourLabel };
+  // One spot's row of the grid from its coastal forecast rows: scores from the current hour on, the hours whose
+  // wind models disagree, and what is missing. "Pokaż najlepsze" builds the same rows, so it can fill the grid too.
+  function record(rows, forecast, simulation, now = Date.now()) {
+    const ahead = rows.filter(row => row.time >= Math.floor(now / 3600000) * 3600);
+    const issues = [];
+    if (!forecast.weather) issues.push("Brak aktualnego wiatru.");
+    if (!ahead.some(row => row.simulation)) issues.push("Brak aktualnej prognozy fal dla tego punktu.");
+    if (forecast.weather?.stale || simulation.stale) issues.push("Dane z pamięci; ostatnie pobranie nie powiodło się.");
+    if (simulation.refreshPending) issues.push("Trwa przeliczanie fal. Przeładuj stronę za chwilę, aby zobaczyć nowsze oceny.");
+    if (simulation.refreshError) issues.push(simulation.refreshError);
+    return { scores: new Map(ahead.filter(row => row.simulation && validScore(row.score)).map(row => [row.time, row.score])),
+      disputed: new Set(ahead.filter(row => row.disputedWind).map(row => row.time)), issue: issues.join(" ") };
+  }
+  const FAILED = "Nie udało się pobrać prognozy. Przeładuj stronę, aby spróbować ponownie.";
+  // Ratings of the whole coast, computed here or by "Pokaż najlepsze", are reused for 15 minutes, also after a reload.
+  // Scores are kept hour by hour from the first rated hour, so the stored copy stays small. The session storage keeps
+  // them across reloads with its own limit, which the forecast history in the local storage cannot fill.
+  const STORE = "nad-morzem:heatmap-ratings-v1", STORE_TTL = 15 * 60000;
+  let stored = null;
+  function remember(records, snapshotTime, model) {
+    const spots = {};
+    for (const [id, { scores, disputed, issue }] of records) {
+      const times = [...scores.keys()].sort((a, b) => a - b), from = times[0] ?? null;
+      spots[id] = { from, scores: from === null ? [] : Array.from({ length: (times.at(-1) - from) / 3600 + 1 }, (_, i) => scores.get(from + i * 3600) ?? null),
+        disputed: [...disputed], issue };
+    }
+    stored = { version: `${model.VERSION}|${model.SIMULATION_VERSION}`, snapshotTime, spots };
+    try { sessionStorage.setItem(STORE, JSON.stringify(stored)); } catch { /* The copy in memory still works. */ }
+  }
+  function recall(model, now = Date.now()) {
+    let value = stored;
+    if (!value) try { value = JSON.parse(sessionStorage.getItem(STORE)); } catch { value = null; }
+    const age = now - value?.snapshotTime;
+    if (!value?.spots || value.version !== `${model.VERSION}|${model.SIMULATION_VERSION}` || !(age >= 0 && age < STORE_TTL)) return null;
+    stored = value;
+    return { snapshotTime: value.snapshotTime, records: new Map(Object.entries(value.spots).map(([id, spot]) => [id, {
+      scores: new Map(spot.scores.map((score, i) => [spot.from + i * 3600, score]).filter(([, score]) => validScore(score))),
+      disputed: new Set(spot.disputed), issue: spot.issue || "" }])) };
+  }
+  const api = { tone, orderedSpots, timeline, cellAt, viewAxis, followAxis, visibleEnds, shade, hourLabel, record, remember, recall, FAILED };
   if (typeof module !== "undefined") module.exports = api;
   else root.SurfHeatmap = api;
   if (typeof document === "undefined") return;
@@ -189,37 +228,38 @@
     }
     async function load(force = false) {
       const token = ++generation;
+      // Ratings of the whole coast from the last 15 minutes (here or from "Pokaż najlepsze") show at once.
+      const saved = !force && recall(M);
+      if (saved && catalog.every(spot => saved.records.has(spot.id))) {
+        loading = false; completed = catalog.length; loadedAt = saved.snapshotTime; snapshotTime = Date.now();
+        records.clear(); for (const spot of catalog) records.set(spot.id, saved.records.get(spot.id));
+        setView(FULL);
+        times = timeline([...records.values()].map(record => record.scores), snapshotTime);
+        status(); render();
+        return;
+      }
       loading = true; completed = 0; loadedAt = 0; snapshotTime = Date.now(); records.clear(); setView(FULL);
       status();
+      // One file for the whole coast; each spot then reads it from memory.
+      await root.SurfAPI.coast(force);
       let index = 0;
       await Promise.all(Array.from({ length: 4 }, async () => {
         while (index < catalog.length && token === generation && active()) {
           const spot = catalog[index++];
-          let scores = new Map(), disputed = new Set(), issue = "";
+          let entry = { scores: new Map(), disputed: new Set(), issue: FAILED };
           try {
-            const [forecast, simulation] = await Promise.all([
-              root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly: true }),
-              root.SurfAPI.nearshore(spot, force)
-            ]);
-            const rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0 });
-            scores = new Map(rows.filter(row => row.simulation && validScore(row.score)).map(row => [row.time, row.score]));
-            disputed = new Set(rows.filter(row => row.disputedWind).map(row => row.time));
-            const issues = [];
-            if (!forecast.weather) issues.push("Brak aktualnego wiatru.");
-            if (!rows.some(row => row.simulation)) issues.push("Brak aktualnej prognozy fal dla tego punktu.");
-            if (forecast.weather?.stale || simulation.stale) issues.push("Dane z pamięci; ostatnie pobranie nie powiodło się.");
-            if (simulation.refreshPending) issues.push("Trwa przeliczanie fal. Przeładuj stronę za chwilę, aby zobaczyć nowsze oceny.");
-            if (simulation.refreshError) issues.push(simulation.refreshError);
-            issue = issues.join(" ");
-          } catch { issue = "Nie udało się pobrać prognozy. Przeładuj stronę, aby spróbować ponownie."; }
+            const [forecast, simulation] = await root.SurfAPI.coastal(spot, force);
+            entry = record(M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0 }), forecast, simulation, snapshotTime);
+          } catch { /* The spot keeps the failure note. */ }
           if (token !== generation || !active()) return;
-          records.set(spot.id, { scores, disputed, issue }); completed++;
+          records.set(spot.id, entry); completed++;
           status();
         }
       }));
       if (token !== generation || !active()) return;
       loading = false; loadedAt = Date.now();
       times = timeline([...records.values()].map(record => record.scores), snapshotTime);
+      remember(records, snapshotTime, M);
       status();
       render();
     }
