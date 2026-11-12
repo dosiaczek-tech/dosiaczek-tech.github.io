@@ -22,8 +22,8 @@ test('errors sit collapsed in "Dodatkowe informacje" next to what they concern',
   assert.match(html, /<summary>Dodatkowe informacje<\/summary>\n\s*<p id="surfSimulationErrors" class="surf-small" hidden><\/p>\n\s*<div id="surfSimulationDetails">/);
 });
 
-test('the weather fetch times and sources sit collapsed right under the hourly table, with problems shown above them', () => {
-  assert.match(html, /id="surfHoursScroll"[^\n]*\n\s*<p id="surfWeatherAlert"[^\n]* hidden><\/p>\n\s*<details class="surf-info">\n\s*<summary>Dodatkowe informacje<\/summary>\n\s*<p id="surfWeatherStatus"[^\n]*\n\s*<p class="surf-small surf-weather-source">[^\n]*\n\s*<\/details>\n\s*<\/section>/);
+test('the weather fetch times, problems and sources sit collapsed right under the hourly table', () => {
+  assert.match(html, /id="surfHoursScroll"[^\n]*\n\s*<details class="surf-info">\n\s*<summary>Dodatkowe informacje<\/summary>\n\s*<p id="surfWeatherStatus"[^\n]*\n\s*<p class="surf-small surf-weather-source">[^\n]*\n\s*<\/details>\n\s*<\/section>/);
 });
 
 test('the spot forecast sources sit collapsed at the very bottom of the forecast tab', () => {

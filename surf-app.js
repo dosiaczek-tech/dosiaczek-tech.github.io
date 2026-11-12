@@ -229,13 +229,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const status = $("surfWeatherStatus");
     status.dataset.state = !conditions ? "loading" : stale ? "stale" : conditions.errors.length ? "error" : "ready";
     const fetched = ([label, source]) => `${label}: ${source.stale ? "dane z pamięci — odświeżenie nie powiodło się; " : ""}pobrano ${day(source.fetchedAt / 1000)} ${hour(source.fetchedAt / 1000)}.`;
-    // Errors stay in the collapsed "Dodatkowe informacje", always in Polish.
+    // Errors and cached data stay in the collapsed "Dodatkowe informacje", always in Polish.
     status.textContent = !conditions ? "Pobieram pogodę dla wybranego spotu…" : [...sources.map(fetched), ...conditions.errors].join(" ");
     status.hidden = !status.textContent;
-    // A failed refresh shown from the cached copy also appears under the table, outside the collapsed details.
-    const problems = sources.filter(([, source]) => source.stale).map(fetched);
-    $("surfWeatherAlert").textContent = problems.join(" ");
-    $("surfWeatherAlert").hidden = !problems.length;
   }
 
   function scrollToForecastDay(value) {
@@ -714,10 +710,12 @@ document.addEventListener("DOMContentLoaded", () => {
       : !sessionRequest?.day ? rows.find(r => r.time * 1000 <= Date.now() && r.time * 1000 > Date.now() - 3600000) : null;
     const stale = loaded.weather?.stale;
     const stamps = [loaded.weather].filter(Boolean).map(r => r.fetchedAt);
-    // Wind errors are not in the status line itself but collapsed below it, in Polish; a refresh served from the cached copy is still announced.
-    $("surfStatus").dataset.state = stale ? "stale" : "ready";
-    statusErrors([...loaded.errors, loaded.weather?.error].filter(Boolean).map(text => `Wiatr: ${SurfAPI.lowerFirst(text)}`));
-    $("surfStatus").textContent = `${stale ? "UWAGA: dane z pamięci, odświeżenie nie powiodło się. " : ""}Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu.`;
+    // Wind problems, cached data included, are not in the status line itself but collapsed below it, in Polish.
+    $("surfStatus").dataset.state = "ready";
+    statusErrors([
+      ...(stale ? [`Wiatr: dane z pamięci — odświeżenie nie powiodło się.${loaded.weather.error ? ` Przyczyna: ${SurfAPI.lowerFirst(loaded.weather.error)}` : ""}`] : []),
+      ...loaded.errors.map(text => `Wiatr: ${SurfAPI.lowerFirst(text)}`)]);
+    $("surfStatus").textContent = `Wiatr pobrano: ${stamps.map(t => `${day(t / 1000)} ${hour(t / 1000)}`).join(" / ") || "brak danych"}. ${loaded.weather?.sourceType === "scheduled" ? "BS Wind 8, aktualizacja serwerowa co 3 h" : loaded.weather?.sourceType === "local" ? "BS Wind 8, lokalne odświeżenie Open-Meteo" : "BS Wind 8, pobranie bezpośrednie"}. ${rows.filter(r => r.simulation).length}/${rows.length} godzin z prognozą fal do 500 m od brzegu.`;
     if (simulation?.sourceType === "local") $("surfStatus").textContent += " Fale: lokalne obliczenia SWAN.";
     const refreshMessage = waveRefreshMessage();
     if (refreshMessage) {
