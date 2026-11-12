@@ -223,9 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const status = $("surfWeatherStatus");
     status.dataset.state = !conditions ? "loading" : stale ? "stale" : conditions.errors.length ? "error" : "ready";
     const fetched = ([label, source]) => `${label}: ${source.stale ? "dane z pamięci — odświeżenie nie powiodło się; " : ""}pobrano ${day(source.fetchedAt / 1000)} ${hour(source.fetchedAt / 1000)}.`;
-    status.textContent = !conditions ? "Pobieram pogodę dla wybranego spotu…" : [...sources.map(fetched), ...conditions.errors].join(" ");
-    // Problems also show under the table, outside the collapsed details.
-    const problems = conditions ? [...sources.filter(([, source]) => source.stale).map(fetched), ...conditions.errors] : [];
+    // Download errors (e.g. "Failed to fetch") are never shown; a source that failed simply has no fetch time.
+    status.textContent = !conditions ? "Pobieram pogodę dla wybranego spotu…" : sources.map(fetched).join(" ");
+    status.hidden = !status.textContent;
+    // A failed refresh shown from the cached copy also appears under the table, outside the collapsed details.
+    const problems = sources.filter(([, source]) => source.stale).map(fetched);
     $("surfWeatherAlert").textContent = problems.join(" ");
     $("surfWeatherAlert").hidden = !problems.length;
   }

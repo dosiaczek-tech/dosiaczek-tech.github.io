@@ -36,7 +36,7 @@
 .surf-table-scroll.is-dragging { scroll-behavior: auto; }
 .surf-table-scroll.is-dragging, .surf-table-scroll.is-dragging * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 .surf-weather-source { margin-bottom: 0; }
-#surfWeatherStatus[data-state="stale"], #surfWeatherStatus[data-state="error"], #surfWeatherAlert { color: #905523; }
+#surfWeatherStatus[data-state="stale"], #surfWeatherAlert { color: #905523; }
 .surf-spot-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
 .surf-spot-facts p { margin: 0; font-size: 12px; }
 .surf-spot-facts strong { display: block; font-size: 11px; color: var(--sea); }
