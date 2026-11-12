@@ -790,7 +790,8 @@
       const centre = mark.left + mark.width / 2 - box.left, width = hint.offsetWidth;
       const left = Math.max(0, Math.min(box.width - width, centre - width / 2));
       hint.style.left = `${left}px`; hint.style.top = `${mark.bottom - box.top + 10}px`;
-      hint.style.setProperty("--arrow", `${centre - left}px`);
+      // The arrow stays clear of the rounded corners.
+      hint.style.setProperty("--arrow", `${Math.max(14, Math.min(width - 14, centre - left))}px`);
     }
     $("compareLegendInfo").addEventListener("click", () => legendHint($("compareLegendHint").hidden));
     document.addEventListener("pointerdown", event => { if (!event.target.closest?.("#compareLegendInfo")) legendHint(false); }, true);

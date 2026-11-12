@@ -330,6 +330,12 @@
 #compareRankingTitle { font-size: 20px; }
 @media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .compare-body { padding: 16px; } .compare-actions { width: 100%; } .compare-actions .filter { flex: 1; min-height: 44px; } .compare-manual-actions { width: 100%; } .compare-picker-button { min-height: 44px; font-size: 16px; } .compare-picker-option { min-height: 44px; } .compare-ranking { grid-template-columns: 1fr; } }
+/* On phones the "i" sits above the frame's right corner, so the frame keeps the full width. */
+@media (max-width: 640px) {
+  .compare-legend-box { flex-direction: column; align-items: stretch; gap: 6px; }
+  .compare-legend { flex: none; padding: 10px; }
+  .compare-legend-info { order: -1; align-self: flex-end; }
+}
 .surf-session { margin: 18px 0; scroll-margin-top: 20px; }
 .surf-session h3 { margin: 0 0 8px; font-size: 18px; }
 .surf-session strong { font-size: clamp(20px, 3vw, 28px); }

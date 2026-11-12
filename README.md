@@ -35,7 +35,8 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   chowają się pod nią, zamiast przesuwać się wolniej i nagle znikać.
   Kliknięcie spotu w legendzie wykresu otwiera jego „Prognozę godzinową” w dniu wybranym przyciskiem
   pod wykresem, od godziny 00:00 (`#surf/<id>?time=…`, jak link z heat mapy). Legenda jest w ramce,
-  a mówi o tym dymek znaczka „i” obok ramki: otwiera się po dotknięciu, zamyka po ponownym dotknięciu,
+  a mówi o tym dymek znaczka „i” obok ramki (na telefonie nad jej prawym rogiem, żeby ramka miała
+  całą szerokość): otwiera się po dotknięciu, zamyka po ponownym dotknięciu,
   dotknięciu w innym miejscu albo klawiszem Esc.
 - **Gdzie warto jechać**: po jednym kafelku na każdy porównywany spot w dniu wybranym przyciskiem pod
   wykresem — jego najlepsze trzygodzinne okno dzienne, od najwyższej oceny. Okno zostaje na liście, dopóki
