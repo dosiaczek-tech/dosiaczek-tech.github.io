@@ -9,7 +9,7 @@ from unittest import mock
 import requests
 
 import nearshore
-from nearshore import (DX, LENGTH, SEA_LEVEL, SPINUP_HOURS, HISTORY_HOURS, WIND_MODELS, available_end, boundary_models,
+from nearshore import (DX, ICE, LENGTH, SEA_LEVEL, SPINUP_HOURS, HISTORY_HOURS, WIND_MODELS, available_end, boundary_models,
                        calculation_grid, central_model, coverage_points, dmi_forecast, install_engine, merge_dmi, models_agree,
                        parse_output, prepare_run, simulate, swan_time, wave_members)
 
@@ -127,10 +127,10 @@ class DmiData(unittest.TestCase):
                 response.json.return_value = {"instances": [{"id": "2026-11-13T060000Z"}, {"id": "2026-11-13T120000Z"}, {"id": "2026-11-12T180000Z"}]}
             elif "2026-11-13T120000Z" in url:
                 response.json.return_value = coverage([latest + i * 3600 for i in range(3)], [18.4, 18.5], [54.8, 54.9],
-                                                      {"sea-mean-deviation": lambda t, y, x: .4})
+                                                      {"sea-mean-deviation": lambda t, y, x: .4, "ice-concentration": lambda t, y, x: .2})
             elif "2026-11-12T180000Z" in url:
                 response.json.return_value = coverage([older + i * 3600 for i in range(6)], [18.4, 18.5], [54.8, 54.9],
-                                                      {"sea-mean-deviation": lambda t, y, x: .1})
+                                                      {"sea-mean-deviation": lambda t, y, x: .1, "ice-concentration": lambda t, y, x: 0})
             else:
                 raise AssertionError(url)
             return response
@@ -145,6 +145,8 @@ class DmiData(unittest.TestCase):
         self.assertEqual(entry["seaLevel"], {older: .1, older + 3600: .1, older + 7200: .1, self.times[0]: .1, self.times[1]: .4,
                                              self.times[1] + 3600: .4, self.times[1] + 7200: .4})
         self.assertEqual(len(get.call_args_list), 4, "One request per grid, not per spot")
+        self.assertEqual(entry["ice"][self.times[1]], .2, "Sea ice comes with the sea level")
+        self.assertEqual(entry["ice"][self.times[0]], 0)
 
     def test_a_failed_source_is_left_out_without_inventing_it(self):
         with mock.patch.object(nearshore, "request", side_effect=self.respond(failing=("wam_nsb",))), mock.patch.object(nearshore.time, "sleep"):
@@ -163,11 +165,12 @@ class DmiData(unittest.TestCase):
         bundle = {"fetchedAt": 100, "data": {"hourly": {"time": [self.times[0] - 3600, *self.times], "wave_height_ecmwf_wam": [1] * 4}}}
         extra = {"fetchedAt": 90, "waves": {"time": self.times[:2], "wave_height_dmi_wam_nsb": [1.1, 1.2],
                                             "wave_period_dmi_wam_nsb": [6, 6], "wave_direction_dmi_wam_nsb": [330, 331]},
-                 "seaLevel": {self.times[1]: .3}}
+                 "seaLevel": {self.times[1]: .3}, "ice": {self.times[0]: .4}}
         merged = merge_dmi(bundle, extra)
         hourly = merged["data"]["hourly"]
         self.assertEqual(hourly["wave_height_dmi_wam_nsb"], [None, 1.1, 1.2, None])
         self.assertEqual(hourly[SEA_LEVEL], [None, None, .3, None])
+        self.assertEqual(hourly[ICE], [None, .4, None, None])
         self.assertEqual(merged["dmiFetchedAt"], 90)
         self.assertNotIn("wave_height_dmi_wam_nsb", bundle["data"]["hourly"], "The downloaded bundle stays as it was")
         self.assertIs(merge_dmi(bundle, {"fetchedAt": 90}), bundle)
@@ -237,7 +240,7 @@ class SwanInput(unittest.TestCase):
             path = Path(temp) / "profile.tbl"
             path.write_text(self.table(spot, bath, timestamp, level))
             return parse_output(path, spot, bath, timestamp, timestamp, levels={timestamp: level},
-                                choices={timestamp: {"model": "ecmwf_wam", "models": 2, "agree": True}})[0]
+                                choices={timestamp: {"model": "ecmwf_wam", "models": 2, "agree": True}}, ice={timestamp: .2})[0]
 
     def test_a_raised_sea_level_deepens_the_point_and_keeps_the_shore_at_zero(self):
         row = self.parse(.4)
@@ -245,6 +248,7 @@ class SwanInput(unittest.TestCase):
         self.assertAlmostEqual(row["depth"], .5 + 400 * .0018 + .4, places=3)
         self.assertEqual(row["seaLevel"], .4)
         self.assertEqual(row["boundary"]["model"], "ecmwf_wam")
+        self.assertEqual(row["ice"], .2)
         self.assertEqual(row["profile"][0]["kind"], "land-boundary")
         self.assertTrue(all(p["kind"] == "swan-node" for p in row["profile"][1:]))
 

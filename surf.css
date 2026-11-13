@@ -431,3 +431,6 @@
 .surfer-profile select { min-width: 190px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
 .heatmap-heading .surfer-profile { margin-top: 0; }
 @media (max-width: 640px) { .surfer-profile select { font-size: 16px; } }
+#surfLocalBody h4 { margin: 14px 0 4px; font-size: 14px; }
+.surf-hazards { margin: 4px 0; padding-left: 20px; font-size: 13px; }
+.surf-hazards li { margin: 3px 0; }

@@ -154,6 +154,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - **Profil surfera**: średniozaawansowany (domyślny), początkujący, zaawansowany albo longboard. Wybór nad
   „Gdzie warto jechać?” i na heat mapie zmienia ocenę wszędzie: w prognozie spotu, porównaniu i heat mapie;
   pamięta go przeglądarka. Szczegóły: [SURFING.md](SURFING.md).
+- **Bezpieczeństwo i komfort**: wiersz „Pianka” w tabeli godzinowej (z temperatury wody i powietrza),
+  zagrożenia przy spocie z OpenStreetMap (wejście do portu, ujście rzeki, falochron lub molo, ostrogi;
+  `surf-hazards.js` z `model/hazards.py`) i lód na morzu z DMI DKSS. Szczegóły: [SURFING.md](SURFING.md).
 - **Osłona od wiatru**: przeszkody przy spocie (falochrony, molo, wydmy, las, budynki) z lotniczego
   skanu laserowego GUGiK (NMPT) osłabiają w ocenie wiatr, od którego zasłaniają — np. w Kołobrzegu
   wiatr z W za falochronem portu. Dane w `surf-shelter.js` generuje `model/shelter.py` (ok. 50 minut;

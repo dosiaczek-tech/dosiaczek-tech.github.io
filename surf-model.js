@@ -91,14 +91,25 @@
 
   // Diagnostyka poprzednich 24 h; żadnego odczytu przyszłości ani tworzenia fali z wiatru.
   // To lokalny proxy fazy nawiania, nie obliczenie fetchu i propagacji przez cały Bałtyk.
+  // Nawiewa wiatr z wyraźną składową na brzeg albo, gdy przy spocie jest fala, wiatr od morza lub wzdłuż brzegu
+  // (sztorm z NW buduje fale także na plaży zwróconej na NNE). Wywiewka to wiatr przy spocie, po osłonie przeszkód:
+  // do 7 m/s od lądu (cross-off, offshore) albo słabnący poniżej 3 m/s z dowolnej strony.
   function detectCleanup(series, index, spot) {
     const row = series[index];
     const validWind = r => r?.wind && finite(r.wind.speed) && r.wind.speed >= 0 &&
       (r.wind.speed < 0.5 || finite(r.wind.direction));
-    const isBuilding = r => validWind(r) && finite(r.wind.direction) && r.wind.speed >= 5 &&
-      angle(r.wind.direction, spot.normal) <= 60 && r.wind.speed * Math.cos(radians(angle(r.wind.direction, spot.normal))) >= 4;
-    const isClearing = r => validWind(r) && r.wind.speed <= 7 && (!finite(r.wind.gust) || r.wind.gust < 12) &&
-      (r.wind.speed < 1.5 || angle(r.wind.direction, spot.normal) >= 135);
+    const isClearing = r => {
+      if (!validWind(r)) return false;
+      const shelter = windShelter(spot, r.wind.direction), speed = r.wind.speed * (1 - shelter);
+      const gust = finite(r.wind.gust) ? r.wind.gust * (1 - shelter) : null;
+      return speed <= 7 && (!finite(gust) || gust < 12) && (speed < 3 || angle(r.wind.direction, spot.normal) >= 112.5);
+    };
+    // Behind a breakwater a strong wind still builds waves out at sea, but at the spot it is already a clean-up.
+    const isBuilding = r => {
+      if (!validWind(r) || !finite(r.wind.direction) || r.wind.speed < 5 || isClearing(r)) return false;
+      const a = angle(r.wind.direction, spot.normal);
+      return (a <= 60 && r.wind.speed * Math.cos(radians(a)) >= 4) || (a <= 112.5 && r.wind.speed >= 6 && finite(r.height) && r.height >= .5);
+    };
     const unknown = { state: "unknown", label: "Niepełna historia / dane", buildingHours: 0, clearingHours: 0, waveSupport: 0 };
     if (!row || !validWind(row)) return unknown;
     const start = Math.max(0, index - 24);
@@ -243,7 +254,9 @@
     const heightQuality = interpolate(height, profile.height);
     const periodQuality = interpolate(wave.period, [[3, .1], [4, .35], [5, .6], [6, .8], [7, 1]]);
     const type = windRelative(wind, spot);
-    const windAngle = finite(wind.direction) ? angle(wind.direction, spot.normal) : 0;
+    // Half relative to the beach (the water the wind crosses), half to the incoming wave (the faces it blows on).
+    const windAngle = !finite(wind.direction) ? 0 : incidence >= 85 ? angle(wind.direction, spot.normal)
+      : (angle(wind.direction, spot.normal) + angle(wind.direction, wave.direction)) / 2;
     // The wind at the spot: the models' wind, weakened by the obstacles that shield the spot from it.
     const shelter = windShelter(spot, wind.direction);
     const speed = wind.speed * (1 - shelter), gust = finite(wind.gust) ? wind.gust * (1 - shelter) : null;
@@ -443,10 +456,15 @@
       if (row.simulation && (row.simulation.depth > 4 || row.simulation.depth < 1 || row.simulation.shoreDistance > 300)) reasons.push("Punkt może słabiej reprezentować strefę surfowania");
       if (row.simulationWind?.fallback) reasons.push("Wiatr zastępczy w symulacji");
       if (!row.simulation) reasons.push("Brak prognozy przybrzeżnej");
+      // Sea ice off the beach (DMI DKSS): SWAN does not know it, while ice damps the waves and is dangerous itself.
+      const ice = finite(row.simulation?.ice) ? row.simulation.ice : 0;
+      if (ice >= .1) reasons.push("Lód na morzu — model fal go nie uwzględnia");
+      const iceFlags = ice >= .3 ? ["Lód na morzu — fale tłumione, surfing niemożliwy lub niebezpieczny"] : ice >= .1 ? ["Uwaga: kra na morzu"] : [];
       const confidence = { level: reasons.length ? "niska" : "średnia", reasons: reasons.length ? reasons : ["Zgodny wiatr; pojedyncza symulacja fal i przybliżone dno"] };
+      const score = rating?.score ?? row.score;
       return { ...row, cleanup, confidence, components: rating?.components, disputedWind: Boolean(rating?.disputed),
-        score: rating?.score ?? row.score,
-        flags: rating ? [...rating.flags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
+        score: ice >= .3 && finite(score) ? Math.min(score, 1) : score,
+        flags: rating ? [...rating.flags, ...iceFlags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }

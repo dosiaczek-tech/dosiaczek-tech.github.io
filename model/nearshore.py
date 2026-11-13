@@ -82,6 +82,8 @@ DMI_API = "https://opendataapi.dmi.dk/v1/forecastedr/collections"
 DMI_WAVES = {"significant-wave-height": "wave_height_dmi_wam_nsb", "mean-wave-period": "wave_period_dmi_wam_nsb",
              "mean-wave-dir": "wave_direction_dmi_wam_nsb"}
 SEA_LEVEL = "sea_level_dmi_dkss_nsbs"
+# Sea ice from the same DKSS runs (0-1); SWAN ignores ice, the app warns about it and holds the rating down.
+ICE = "ice_dmi_dkss_nsbs"
 # A grid cell farther than this from the boundary point does not represent it.
 DMI_CELL_RADIUS = 10000
 # Wave models agree when, leaving out the one farthest from the central model, every other one differs from it by at most
@@ -429,7 +431,8 @@ def dmi_forecast(points):
             runs = sorted(run["id"] for run in request(f"{DMI_API}/dkss_nsbs/instances", None, session).json()["instances"])
             for run in dict.fromkeys([runs[-1], runs[0]]):
                 try:
-                    grids = coverage_points(dmi_cube(session, "dkss_nsbs", ["sea-mean-deviation"], bbox, run), points, {"sea-mean-deviation": SEA_LEVEL})
+                    grids = coverage_points(dmi_cube(session, "dkss_nsbs", ["sea-mean-deviation", "ice-concentration"], bbox, run), points,
+                                            {"sea-mean-deviation": SEA_LEVEL, "ice-concentration": ICE})
                 except (requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
                     # Without the latest run there is no sea level; an older run only adds the past day.
                     warnings.append(f"DMI DKSS run {run} download failed: {type(error).__name__}")
@@ -438,10 +441,11 @@ def dmi_forecast(points):
                     continue
                 for entry, series in zip(result, grids):
                     if series:
-                        levels = entry.setdefault("seaLevel", {})
-                        for t, value in zip(series["time"], series[SEA_LEVEL]):
-                            if value is not None:
-                                levels.setdefault(t, value)
+                        for key, name in (("seaLevel", SEA_LEVEL), ("ice", ICE)):
+                            values = entry.setdefault(key, {})
+                            for t, value in zip(series["time"], series[name]):
+                                if value is not None:
+                                    values.setdefault(t, value)
         except (requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
             warnings.append(f"DMI DKSS download failed: {type(error).__name__}")
     finally:
@@ -462,6 +466,8 @@ def merge_dmi(bundle, extra):
             hourly[key] = [extra["waves"][key][index[t]] if t in index else None for t in hourly["time"]]
     if extra.get("seaLevel"):
         hourly[SEA_LEVEL] = [extra["seaLevel"].get(t) for t in hourly["time"]]
+    if extra.get("ice"):
+        hourly[ICE] = [extra["ice"].get(t) for t in hourly["time"]]
     return {**bundle, "data": {**bundle["data"], "hourly": hourly}, "dmiFetchedAt": extra["fetchedAt"]}
 
 
@@ -615,17 +621,18 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
     mh = marine["data"]["hourly"]
     indices = {t: i for i, t in enumerate(mh["time"])}
     times = list(range(start, end + 1, 3600))
-    levels_series = mh.get(SEA_LEVEL) or []
+    levels_series, ice_series = mh.get(SEA_LEVEL) or [], mh.get(ICE) or []
     # Every hour one wave model (see boundary_models), never one model's height with another's period.
     hours = [wave_members(mh, indices[t]) if t in indices else [] for t in times]
     if not all(hours):
         raise ValueError("Incomplete offshore boundary for requested horizon")
-    boundary, choices, levels = ["TPAR"], {}, {}
+    boundary, choices, levels, ice = ["TPAR"], {}, {}, {}
     for t, members, chosen in zip(times, hours, boundary_models(hours)):
         i = indices[t]
         level = levels_series[i] if i < len(levels_series) and finite(levels_series[i]) else None
         choices[t] = {"model": chosen["model"], "models": len(members), "agree": models_agree(members)}
         levels[t] = None if level is None else round(level, 3)
+        ice[t] = round(ice_series[i], 2) if i < len(ice_series) and finite(ice_series[i]) else None
         boundary.append(f"{swan_time(t)} {chosen['height']:.5f} {max(chosen['period'], 1):.5f} {local_direction(chosen['direction'], spot['normal']):.5f} 30")
     (directory / "boundary.tpar").write_text("\n".join(boundary) + "\n")
     _, _, depths = calculation_grid(spot, bath)
@@ -671,7 +678,7 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
         chunks.append({"input": "\n".join(commands) + "\n", "table": f"profile.{number}.tbl", "start": times[first]})
     # The archived INPUT holds every part in order, so the forcing hash covers the whole run.
     (directory / "INPUT").write_text("".join(chunk["input"] for chunk in chunks))
-    return {"choices": choices, "levels": levels}, used, chunks
+    return {"choices": choices, "levels": levels, "ice": ice}, used, chunks
 
 
 def run_chunks(directory, executable, chunks):
@@ -720,8 +727,9 @@ def summary_location(coast, distances, depths):
     return min(candidates, key=lambda p: (round(abs(p[1] - SUMMARY_DEPTH), 6), -p[0]))[0]
 
 
-def parse_output(path, spot, bath, start, end, levels=None, choices=None):
-    """levels: the sea level of every hour (None = 0); choices: the hour's boundary wave model, for the record."""
+def parse_output(path, spot, bath, start, end, levels=None, choices=None, ice=None):
+    """levels: the sea level of every hour (None = 0); choices: the hour's boundary wave model and ice: the sea ice
+    off the beach (0-1), both for the record."""
     by_time = {}
     for line in path.read_text().splitlines():
         if not line.strip() or line.lstrip().startswith("%"):
@@ -795,6 +803,8 @@ def parse_output(path, spot, bath, start, end, levels=None, choices=None):
             extra["seaLevel"] = levels.get(timestamp)
         if choices is not None:
             extra["boundary"] = choices.get(timestamp)
+        if ice is not None:
+            extra["ice"] = ice.get(timestamp)
         raw_target = by_time[timestamp].get(target_x)
         if target is None and raw_target is not None and raw_target[1] <= 0 and grid_depths[grid_distances.index(target_distance)] + level <= .05:
             # A low sea level has left the point dry: no wave this hour (depth 0 marks it unavailable), not a failed run.

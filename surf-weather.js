@@ -83,6 +83,18 @@
       cloudCover, cloudLabel: cloudLabel(cloudCover), weatherCode: Number.isInteger(code) ? code : null,
       sunrise, sunset, daylight };
   }
-  const api = { dayKey, hours, selectTime, atTime, cloudLabel, weatherSymbol, interval, sunTimes };
+  // Wetsuit by the water temperature, thicker extras when the air is cold: the usual advice for the Baltic.
+  function wetsuit(water, air = null) {
+    if (!finite(water)) return null;
+    const cold = finite(air) && air < 8, cool = finite(air) && air < 12;
+    if (water < 6) return "6/5 mm, buty, rękawice, kaptur";
+    if (water < 10) return "5/4 mm, buty, rękawice, kaptur";
+    if (water < 13) return cold ? "5/4 mm, buty, rękawice" : "5/4 mm, buty";
+    if (water < 16) return cool ? "4/3 mm, buty" : "4/3 mm";
+    if (water < 19) return "3/2 mm";
+    if (water < 22) return "2 mm lub shorty";
+    return "lycra";
+  }
+  const api = { dayKey, hours, selectTime, atTime, cloudLabel, weatherSymbol, interval, sunTimes, wetsuit };
   if (typeof module !== "undefined") module.exports = api; else root.SurfWeather = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

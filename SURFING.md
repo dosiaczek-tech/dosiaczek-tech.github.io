@@ -204,8 +204,8 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
   ekspozycja, nie numeryczny fetch ani model cienia falowego.
 - Wiatr: cisza / słaby <1,5 m/s; kąt od normalnej 0–22,5°: onshore,
   do 67,5°: cross-on, do 112,5°: cross, poniżej 157,5°: cross-off,
-  pozostałe: offshore. Pod komórkami pokazujemy osobno taką relację względem
-  kierunku fali. Słaby offshore jest korzystniejszy, silny jest karany.
+  pozostałe: offshore. Słaby offshore jest korzystniejszy, silny jest karany. Do oceny kąt wiatru
+  liczymy po połowie względem plaży (woda, nad którą wieje) i względem nadchodzącej fali (jej ściany).
 - `potencjał = jakość_wysokości × (0,55 + 0,45 × jakość_okresu)`.
 - `score = 10 × potencjał × (0,45 + 0,35 × jakość_wiatru + 0,20 × uporządkowanie)`.
   Energia i moc nie są ponownie punktowane. Nie ma limitu dla fal poniżej 1 m.
@@ -284,14 +284,17 @@ porównujemy z konkretnym spotem, a nie z jedną regułą dla całego wybrzeża.
 
 Detektor `detectCleanup` analizuje ostatnie 24 h przed daną godziną:
 
-1. Szuka co najmniej **4 kolejnych godzin** wiatru ≥5 m/s, w sektorze ±60° od
-   normalnej i ze składową do brzegu ≥4 m/s. To wskaźnik lokalnej fazy nawiania,
-   nie obliczenie energii wiatru nad całym akwenem.
+1. Szuka co najmniej **4 kolejnych godzin** nawiewania: wiatru ≥5 m/s w sektorze ±60° od
+   normalnej ze składową do brzegu ≥4 m/s albo — gdy przy spocie jest fala ≥0,5 m — wiatru ≥6 m/s
+   od morza lub wzdłuż brzegu (do 112,5° od normalnej). Tak sztorm z NW buduje fale także na plaży
+   zwróconej na NNE, jak w Chałupach. Godzina, w której przy spocie jest już wywiewka (pkt 3), nie
+   nawiewa. To wskaźnik lokalnej fazy nawiania, nie obliczenie energii wiatru nad całym akwenem.
 2. Wymaga ciągłych danych od tej fazy do ocenianej godziny. Brak danych nie
    oznacza ciszy. Przy braku takiej sekwencji i niepełnej historii wynik jest
    „niepełna historia”, a nie „nie było nawiania”.
-3. Słaby offshore lub bardziej odbrzegowy cross-off (sektor ±45° wokół kierunku od lądu, prędkość ≤7 m/s, znane
-   porywy <12 m/s) albo cisza / słaby wiatr <1,5 m/s rozpoczynają zmianę fazy.
+3. Wiatr **przy spocie** (po osłonie przeszkód) od lądu — cross-off lub offshore, od 112,5° od normalnej —
+   do 7 m/s przy porywach <12 m/s, albo słabnący poniżej 3 m/s z dowolnej strony rozpoczyna zmianę fazy.
+   Za falochronem mocny wiatr z boku jest więc przy spocie już wywiewką.
    Pierwsza godzina jest „świeżą zmianą”; dwie kolejne mogą utworzyć okno.
 4. **Przybrzeżny SWAN** musi nadal pokazywać Hs ≥0,4 m i ≥35% swojego maksimum
    z fazy nawiania, okres ≥4 s i kierunek w sektorze ekspozycji plaży.
@@ -308,6 +311,17 @@ ani nie dodajemy drugiej premii punktowej za offshore**. Detektor opisuje fazę,
 umożliwia filtr „Tylko wywiewka po nawianiu” i rozstrzyga remis ocen okien.
 Filtr wymaga trzech kolejnych dziennych godzin ze zgodnie potwierdzoną sekwencją.
 Bez filtra ranking nadal uwzględnia dobre okna bez lokalnego nawiania.
+
+### Bezpieczeństwo i komfort (osobno od oceny)
+
+- **Pianka** — wiersz tabeli godzinowej z temperatury wody (i chłodu powietrza): poniżej 6 °C 6/5 mm z butami,
+  rękawicami i kapturem; do 10 °C 5/4 mm z kompletem; do 13 °C 5/4 mm z butami (+ rękawice przy powietrzu <8 °C);
+  do 16 °C 4/3 mm (+ buty przy powietrzu <12 °C); do 19 °C 3/2 mm; do 22 °C 2 mm lub shorty; powyżej lycra.
+- **Zagrożenia przy spocie** (`surf-hazards.js`, skrypt `model/hazards.py`, OpenStreetMap): wejście do portu
+  (port z falochronem do 1,5 km), ujście rzeki lub kanału (do 800 m), falochron lub molo (do 300 m),
+  ostrogi brzegowe (do 200 m). Pokazujemy je w opisie spotu; nie zmieniają oceny fal.
+- **Lód na morzu** (DMI DKSS, ok. 5 dni): od 10% kry dopisek i niska pewność, od 30% ocena najwyżej 1 —
+  SWAN nie uwzględnia lodu, który tłumi fale.
 
 ### 6. Energia i moc fal — obliczenia pomocnicze i wynik przy spocie
 

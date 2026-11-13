@@ -187,7 +187,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const s = currentSpot, body = $("surfLocalBody");
     $("surfLocalTitle").textContent = s.community ? `${s.town} — ${s.name}` : `Orientacja plaży dla spotu ${s.town}`;
     body.replaceChildren();
-    body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej ok. 3 knts wiatr jest słaby. Pod komórkami fal pokazujemy dodatkowo wiatr względem kierunku samej fali.`, "surf-small"));
+    body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej ok. 3 knts wiatr jest słaby. Ocena liczy kąt wiatru po połowie względem plaży i względem kierunku nadchodzącej fali.`, "surf-small"));
+    // Hazards near the spot from OpenStreetMap (model/hazards.py), only for the position they were found for.
+    const hazards = window.SurfHazards?.[s.id];
+    if (hazards?.notes?.length && hazards.lat === s.lat && hazards.lon === s.lon) {
+      const list = node("ul", undefined, "surf-hazards");
+      list.append(...hazards.notes.map(text => node("li", text)));
+      body.append(node("h4", "Bezpieczeństwo"), list, node("p", "Na podstawie OpenStreetMap (© OpenStreetMap contributors). Sprawdź oznakowanie i komunikaty na miejscu.", "surf-small"));
+    }
     const c = s.community;
     if (c) {
       const facts = node("div", undefined, "surf-spot-facts");
@@ -473,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }],
       ["waterTemperature", "Temp. wody", r => M.finite(r.weather.waterTemperature) ? `${fmt(r.weather.waterTemperature)} °C` : null, "weather"],
       ["airTemperature", "Temp. powietrza", r => M.finite(r.weather.airTemperature) ? `${fmt(r.weather.airTemperature)} °C` : null, "weather"],
+      ["wetsuit", "Pianka", r => SurfWeather.wetsuit(r.weather.waterTemperature, r.weather.airTemperature), "weather"],
       ["cloudCover", "Zachmurzenie", r => {
         const symbol = SurfWeather.weatherSymbol(r.weather, r.daylight);
         const hasCover = M.finite(r.weather.cloudCover);

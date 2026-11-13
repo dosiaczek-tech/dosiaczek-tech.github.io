@@ -105,6 +105,9 @@ czyli dno plus poziom: punkt na dnie 2 m ma przy spiętrzeniu +0,4 m ok. 2,4 m w
 Każda godzina wyniku zapisuje użyty poziom (`seaLevel`, `null` oznacza 0), a dokument
 źródło (`seaLevelModel`). Bez danych DKSS przebieg jest dokładnie taki jak wcześniej.
 
+Z tych samych przebiegów DKSS pobieramy koncentrację lodu (0–1) w punkcie granicy. SWAN jej nie uwzględnia;
+godzina zapisuje ją w polu `ice`, a ocena ostrzega przed lodem i od 30% ogranicza wynik (SURFING.md).
+
 ### Wiatr BS Wind 8
 
 - Osiem modeli przez Open-Meteo: siedem globalnych — DWD ICON, NOAA GFS, ECMWF IFS,
