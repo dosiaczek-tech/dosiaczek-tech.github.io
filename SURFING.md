@@ -107,7 +107,7 @@ dla nauki kitesurfingu. Vättern jest jeziorem, nie częścią katalogu bałtyck
 
 | Dane | Źródło / dostęp | Zastosowanie |
 | --- | --- | --- |
-| Hs, średni okres, kierunek fal | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam,ncep_gfswave025`; [DMI Forecast EDR API](https://www.dmi.dk/friedata/), `wam_nsb` (CC BY 4.0) | Cztery prognozy na granicy SWAN; co godzinę jedna z nich, bez udawania niezależnych obserwacji |
+| Hs, średni okres, kierunek fal; osobno martwa fala i fala wiatrowa (bez ECMWF WAM) | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam,ncep_gfswave025`; [DMI Forecast EDR API](https://www.dmi.dk/friedata/), `wam_nsb` (CC BY 4.0) | Cztery prognozy na granicy SWAN; co godzinę jedna z nich, bez udawania niezależnych obserwacji; martwa fala i wiatrowa jako dwa szczyty widma |
 | Poziom morza | [DMI Forecast EDR API](https://www.dmi.dk/friedata/), `dkss_nsbs`, `sea-mean-deviation` (CC BY 4.0) | Głębokość wody w SWAN przez około 5 dni |
 | Wiatr 10 m, porywy, dzień/noc | [Open-Meteo Weather](https://open-meteo.com/en/docs), `icon_seamless,gfs_seamless,ecmwf_ifs025,ecmwf_aifs025_single,ukmo_seamless,jma_seamless,gem_seamless,dmi_harmonie_arome_europe` | Konsensus wiatru i wybór okien dziennych |
 | Głębokość | [EMODnet Bathymetry WMS](https://ows.emodnet-bathymetry.eu/wms?service=WMS&request=GetCapabilities), warstwa `emodnet:mean`, `GetFeatureInfo` | Sześć próbek profilu poprzecznego do brzegu |
@@ -197,8 +197,16 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
 - Wysokość Hs z SWAN w punkcie do 500 m: interpolacja punktów
   `0,2→0; 0,4→0,25; 0,6→0,55; 0,8→0,8; 1–1,5→1; 1,8→0,85;
   2,2→0,65; 3→0,2; 4→0`. Większa fala nie zawsze lepiej pasuje do profilu.
-- Średni okres z SWAN (nie okres szczytowy): interpolacja
-  `3 s→0,1; 4→0,35; 5→0,6; 6→0,8; ≥7→1`.
+- Okres szczytowy z SWAN w tym samym punkcie, czyli okres pasma z największą energią (przy fali
+  mieszanej często martwej fali): interpolacja `4 s→0,1; 5→0,3; 6→0,55; 7→0,75; 8→0,9; ≥9→1`.
+  Starsze wyniki bez okresu szczytowego używają dawnych progów średniego okresu
+  `3 s→0,1; 4→0,35; 5→0,6; 6→0,8; ≥7→1`. Na pięciu spotach (prognoza z 13.11.2026, ten sam
+  przebieg SWAN) mediana zmiany oceny wyniosła 0–0,1. Co dziesiąta godzina zyskała 0,3–0,7
+  (dłuższa martwa fala), a co dziesiąta straciła 0,1–0,3 (sama krótka fala wiatrowa).
+  Dopiski: „dłuższy okres fal” od 7 s, „Krótka, wiatrowa fala” poniżej 5 s.
+- **Martwa fala**: udział martwej fali w energii na granicy SWAN (`boundary.swell`, MODEL.md). Od 50%
+  godzina ma dopisek „przeważa martwa fala”, a tabela pokazuje jej przybliżoną wysokość przy spocie,
+  `wysokość × √udział`. Sam udział nie zmienia oceny; martwa fala działa przez widmo SWAN i okres szczytowy.
 - Ekspozycja: θ to kąt nadejścia względem lokalnej normalnej.
   Fala pod kątem ≥85° jest poza przyjętym sektorem — ocena 0. To uproszczona
   ekspozycja, nie numeryczny fetch ani model cienia falowego.
@@ -245,7 +253,7 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
   (offshore przy 10 kn 0,7 zamiast 1, przy 16 kn 0,3 zamiast 0,65), a od 10 kn dostaje dopisek „Uwaga: wiatr od lądu
   odpycha od brzegu”. Longboardowi wiatr szybciej psuje gładką powierzchnię. Każdy profil ma osobną historię
   porównania i osobne zapamiętane oceny heat mapy.
-- Okres poniżej 3,5 s ogranicza ocenę do 3.
+- Okres szczytowy poniżej 4 s (w starszych wynikach średni poniżej 3,5 s) ogranicza ocenę do 3.
 - Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 2.
 - Wynik ma jedno miejsce po przecinku. Pełne dzienne okna trzygodzinne:
   `0,7 × średnia ocen + 0,3 × najniższa ocena`. Brak danych nie oznacza zera.

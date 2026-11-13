@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const dayKeyFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw", year: "numeric", month: "2-digit", day: "2-digit" });
   const dayKey = t => dayKeyFormat.format(new Date(t * 1000));
   const compass = d => M.finite(d) ? `${["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(d / 45) % 8]} ${Math.round(d)}°` : "—";
+  // The peak period at the spot when the SWAN result has it (as surf forecasts and buoys give it), else the mean one.
+  const periodOf = simulation => M.finite(simulation?.peakPeriod) ? simulation.peakPeriod : simulation?.period;
   function node(tag, text, className) {
     const el = document.createElement(tag);
     if (text !== undefined) el.textContent = text;
@@ -463,7 +465,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
       }],
       ["height", "Wysokość fal przy spocie", r => M.finite(r.simulation?.height) ? `~${fmt(r.simulation.height)} m` : null],
-      ["period", "Czas między falami", r => M.finite(r.period) ? `${fmt(r.period)} s` : null],
+      ["period", "Czas między falami", r => r.simulation && M.finite(periodOf({ ...r.simulation, period: r.period })) ? `${fmt(periodOf({ ...r.simulation, period: r.period }))} s` : null],
+      ["swell", "Martwa fala", r => M.finite(r.simulation?.boundary?.swell) && M.finite(r.simulation?.height)
+        ? `~${fmt(r.simulation.height * Math.sqrt(r.simulation.boundary.swell))} m` : null],
       ["energy", "Energia fal · kJ/m²", r => M.finite(r.energyKJm2) ? `~${fmt(r.energyKJm2, 2)} kJ/m²` : null],
       ["power", "Moc fal · kW/m", r => M.finite(r.powerKWm) ? `~${fmt(r.powerKWm, 2)} kW/m` : null],
       ["direction", "Fale nadchodzą z", r => {
@@ -620,7 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const s = row.simulation;
     $("surfProfileTime").value = String(row.time);
     const summary = node("p");
-    summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy spocie ~${fmt(s.height)} m`), document.createTextNode(` · około ${Math.round(s.shoreDistance)} m od brzegu · głębokość ${fmt(s.depth)} m · czas między falami ${fmt(s.period)} s · moc ${fmt(s.powerKWm, 2)} kW/m.`));
+    summary.append(node("strong", `${day(row.time)} ${hour(row.time)} · fala przy spocie ~${fmt(s.height)} m`), document.createTextNode(` · około ${Math.round(s.shoreDistance)} m od brzegu · głębokość ${fmt(s.depth)} m · czas między falami ${fmt(periodOf(s))} s · moc ${fmt(s.powerKWm, 2)} kW/m.`));
     details.append(summary);
     details.append(node("p", "Punkt do oceny wybieramy od strony morza, przy pierwszym dojściu profilu dna do głębokości około 2 m, w strefie do 500 m od brzegu. Wysokość znacząca z modelu nie jest pomiarem ściany łamiącej się fali.", "surf-small"));
     details.append(node("p", s.breaking ? `Modelowa strefa załamania: fala ~${fmt(s.breaking.height)} m, głębokość ${fmt(s.breaking.depth)} m, około ${Math.round(s.breaking.shoreDistance)} m od brzegu. Kryterium: co najmniej 10% fal załamujących się.`
@@ -687,7 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const w = chosenSession, first = w.rows[0];
       box.append(node("strong", `${fmt(w.score)} / 10 · ${w.historical ? "Historia prognozy" : quality(w.score)}`),
         node("p", `${hour(w.start)}–${hour(w.end)} · pewność: ${w.confidence}`),
-        node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => r.period)))} s · wiatr ${windKnots(M.median(w.rows.map(r => r.wind?.speed)))}`),
+        node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => periodOf({ ...r.simulation, period: r.period }))))} s · wiatr ${windKnots(M.median(w.rows.map(r => r.wind?.speed)))}`),
         node("p", `Wiatr na początku sesji: ${M.windRelative(first.wind, currentSpot) || "brak kierunku"}. Mapa i parametry poniżej pokazują wybraną godzinę.`));
       for (const flag of w.flags.filter(f => f.startsWith("Na "))) box.append(node("p", flag));
       if (w.historical) box.append(node("p", "Wcześniejsze okno — wynik modelowy, nie pomiar ani rekomendacja wyjazdu teraz."));
@@ -734,7 +738,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfMapLink").textContent = point ? "Punkt prognozy na mapie ↗" : "Położenie spotu ↗";
     const items = [
       [now ? `Wysokość fal przy spocie · ${hour(now.time)}` : "Wysokość fal przy spocie", now?.simulation ? `~${fmt(now.height)} m` : "—", now?.simulation ? `Około ${Math.round(now.simulation.shoreDistance)} m od brzegu · głębokość ${fmt(now.simulation.depth)} m` : "Brak danych dla strefy do 500 m"],
-      ["Czas między falami przy spocie", now?.simulation ? `${fmt(now.period)} s` : "—", now?.simulation ? `Fale nadchodzą z ${compass(now.direction)}` : "Brak prognozy przy brzegu"],
+      ["Czas między falami przy spocie", now?.simulation ? `${fmt(periodOf({ ...now.simulation, period: now.period }))} s` : "—", now?.simulation ? `Fale nadchodzą z ${compass(now.direction)}` : "Brak prognozy przy brzegu"],
       ["Wiatr przy plaży", windKnots(now?.wind?.speed), `Z ${compass(now?.wind?.direction)} · porywy ${windKnots(now?.wind?.gust)}`, SurfDirections.wind(now?.wind, currentSpot)],
       ["Moc fal przy spocie", M.finite(now?.powerKWm) ? `~${fmt(now.powerKWm, 2)} kW/m` : "—", "W tym samym punkcie, do 500 m od brzegu"],
       ["Energia fal przy spocie", M.finite(now?.energyKJm2) ? `~${fmt(now.energyKJm2, 2)} kJ/m²` : "—", "Na m² powierzchni wody w punkcie prognozy"],
@@ -759,7 +763,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const wave = now?.simulation;
     $("surfWaveDescription").textContent = wave && M.finite(wave.direction) && M.finite(wave.height)
       ? wave.height <= .001 ? "Fale: praktycznie brak fali — bez animacji."
-        : `Fale z ${compass(wave.direction)} → ku ${compass((wave.direction + 180) % 360)} · ~${fmt(wave.height)} m · okres ${fmt(wave.period)} s.`
+        : `Fale z ${compass(wave.direction)} → ku ${compass((wave.direction + 180) % 360)} · ~${fmt(wave.height)} m · okres ${fmt(periodOf(wave))} s.`
       : "Fale: brak kierunku z prognozy przy brzegu — bez animacji.";
     const wind = now?.wind;
     $("surfWindDescription").textContent = `${now ? `${day(now.time)} ${hour(now.time)} · ` : ""}${M.finite(wind?.direction) && M.finite(wind?.speed) && wind.speed >= .5 ? `Wiatr z ${compass(wind.direction)} → ku ${compass((wind.direction + 180) % 360)}, ${windKnots(wind.speed)} · ${M.windRelative(wind, currentSpot)}.` : M.finite(wind?.speed) && wind.speed < .5 ? "Cisza — bez strzałki kierunku." : "Brak pewnego kierunku wiatru — bez strzałki."}`;

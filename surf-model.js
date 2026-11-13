@@ -252,7 +252,13 @@
     const local = localOverride || transform(wave, spot, bathymetry);
     const height = local ? local.height : wave.height;
     const heightQuality = interpolate(height, profile.height);
-    const periodQuality = interpolate(wave.period, [[3, .1], [4, .35], [5, .6], [6, .8], [7, 1]]);
+    // The peak period at the spot (SWAN), as surf forecasts and buoys give it; results without it use the mean period.
+    const peak = finite(local?.peakPeriod) && local.peakPeriod > 0 ? local.peakPeriod : null;
+    const periodQuality = peak !== null ? interpolate(peak, [[4, .1], [5, .3], [6, .55], [7, .75], [8, .9], [9, 1]])
+      : interpolate(wave.period, [[3, .1], [4, .35], [5, .6], [6, .8], [7, 1]]);
+    const short = peak !== null ? peak < 4 : wave.period < 3.5, choppy = peak !== null ? peak < 5 : wave.period < 4;
+    // The swell's share of the energy offshore, when the boundary model tells swell and wind sea apart.
+    const swell = finite(local?.boundary?.swell) ? local.boundary.swell : null;
     const type = windRelative(wind, spot);
     // Half relative to the beach (the water the wind crosses), half to the incoming wave (the faces it blows on).
     const windAngle = !finite(wind.direction) ? 0 : incidence >= 85 ? angle(wind.direction, spot.normal)
@@ -268,7 +274,7 @@
     const potential = heightQuality * (1 - profile.period + profile.period * periodQuality);
     let score = 10 * potential * (.45 + .35 * windQuality + .2 * order.value);
     if (incidence >= 85) score = 0;
-    if (wave.period < 3.5) score = Math.min(score, 3);
+    if (short) score = Math.min(score, 3);
     const strong = speed >= profile.limits.wind || (finite(gust) && gust >= profile.limits.gust) || wave.height >= profile.limits.height;
     if (strong) score = Math.min(score, 2);
     const flags = [];
@@ -277,7 +283,8 @@
     const best = profile.height.find(([, quality]) => quality === 1)[0];
     if (heightQuality >= .8) flags.push(named ? `Na plus: wysokość dopasowana do ${named}` : "Na plus: wysokość dopasowana do rekreacyjnej sesji");
     else flags.push(height < best ? "Na minus: mała fala" : named ? `Na minus: duża fala dla ${named}` : "Na minus: duża fala dla profilu rekreacyjnego");
-    if (wave.period >= 6) flags.push("Na plus: dłuższy okres fal");
+    if (peak !== null ? peak >= 7 : wave.period >= 6) flags.push("Na plus: dłuższy okres fal");
+    if (swell !== null && swell >= .5) flags.push("Na plus: przeważa martwa fala");
     if (shelter >= .15 && wind.speed >= 3) flags.push("Na plus: przeszkody osłaniają spot od tego wiatru");
     if (windQuality >= .8) flags.push("Na plus: wiatr sprzyja jakości fali");
     if (windQuality < .5) flags.push("Na minus: kierunek, siła lub porywy wiatru pogarszają falę");
@@ -287,10 +294,10 @@
     if (profile === PROFILES.beginner && ["offshore", "cross-off"].includes(type) && speed >= 5)
       flags.push("Uwaga: wiatr od lądu odpycha od brzegu");
     if (incidence >= 85) flags.push("Fala spoza sektora ekspozycji");
-    if (wave.period < 4) flags.push("Krótka, wiatrowa fala");
+    if (choppy) flags.push("Krótka, wiatrowa fala");
     if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
     return { score: Math.round(clamp(score, 0, 10) * 10) / 10, height, local, windType: type, powerKWm: power,
-      components: { potential, heightQuality, periodQuality, windQuality, order: order.value, shelter }, flags };
+      components: { potential, heightQuality, periodQuality, windQuality, order: order.value, shelter, peakPeriod: peak, swell }, flags };
   }
 
   function scoreLabel(score, height = null) {

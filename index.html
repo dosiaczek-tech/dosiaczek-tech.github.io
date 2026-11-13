@@ -262,7 +262,7 @@
   <script defer src="surf-shelter.js?v=shelter-v1"></script>
   <script defer src="surf-spots.js?v=wind-shelter-v1"></script>
   <script defer src="surf-search.js?v=spot-search-v1"></script>
-  <script defer src="surf-model.js?v=safety-v1"></script>
+  <script defer src="surf-model.js?v=peak-swell-v1"></script>
   <script defer src="surf-surfer.js?v=profiles-v1"></script>
   <script defer src="surf-map-gestures.js?v=two-fingers-v1"></script>
   <script defer src="surf-wind-map.js?v=two-fingers-v1"></script>
@@ -276,7 +276,7 @@
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
   <script defer src="surf-reports.js?v=reports-v1"></script>
-  <script defer src="surf-app.js?v=reports-v1"></script>
+  <script defer src="surf-app.js?v=peak-swell-v1"></script>
   <script defer src="surf-compare.js?v=profiles-v1"></script>
   <script defer src="surf-heatmap.js?v=profiles-v1"></script>
 </head>
@@ -528,7 +528,7 @@
           <p class="surf-small">Niebieskie ruchome linie to grzbiety fal — przemieszczają się w kierunku ich propagacji. Ruch jest schematyczny: jego tempo i odstępy linii nie odwzorowują prędkości ani długości fal. Pokazujemy średni kierunek fal z prognozy SWAN dla wybranej godziny.</p>
           <p class="surf-small">Biała strzałka na obwodzie wieje w stronę środka; żółty wycinek wskazuje, skąd nadchodzi wiatr. 0° = północ, 90° = wschód, 180° = południe, 270° = zachód. Środek koła to brzeg przyjęty w modelu, a przy braku jego współrzędnych — punkt spotu. Zdjęcie satelitarne jest podkładem orientacyjnym, nie bieżącym obrazem fal.</p>
           <p class="surf-small"><strong>Wysokość fal (m)</strong> opisuje ich rozmiar od doliny do grzbietu. W prognozie używamy wysokości znaczącej (Hs): w przybliżeniu średniej wysokości jednej trzeciej najwyższych fal. Pojedyncze fale mogą być większe, a przy brzegu ich rozmiar się zmienia — to nie jest dokładna wysokość fali, na której będziesz surfować.</p>
-          <p class="surf-small"><strong>Czas między falami (s)</strong> to średni odstęp między kolejnymi grzbietami mijającymi ten sam punkt. Np. 5 s oznacza falę średnio co 5 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. <strong>Czy warto jechać? 0–10</strong> łączy potencjał wysokości i okresu z jakością wiatru i przybliżonym uporządkowaniem fal. Profil: średniozaawansowany surfer na desce do bałtyckich fal. Czysta fala poniżej 1 m może dać dobrą sesję; sam wiatr nie wystarczy. Okna trzygodzinne premiują stabilność: 70% średniej i 30% najsłabszej godziny. Pewność podajemy osobno. To heurystyka wymagająca kalibracji, nie ocena bezpieczeństwa.</p>
+          <p class="surf-small"><strong>Czas między falami (s)</strong> to okres szczytowy: odstęp między grzbietami fal, które niosą najwięcej energii — ten okres zwykle podają prognozy surfingowe i boje pomiarowe. Np. 7 s oznacza dominujące fale co 7 sekund. Dłuższy czas oznacza rzadsze fale, niekoniecznie wyższe. <strong>Martwa fala</strong> to część fali, której wiatr już nie podsyca — zwykle dłuższa i czystsza; jej udział podają modele fal na morzu, które rozdzielają ją od fali wiatrowej. „Teraz” to prognoza dla bieżącej godziny, nie pomiar. <strong>Czy warto jechać? 0–10</strong> łączy potencjał wysokości i okresu z jakością wiatru i przybliżonym uporządkowaniem fal. Profil: średniozaawansowany surfer na desce do bałtyckich fal. Czysta fala poniżej 1 m może dać dobrą sesję; sam wiatr nie wystarczy. Okna trzygodzinne premiują stabilność: 70% średniej i 30% najsłabszej godziny. Pewność podajemy osobno. To heurystyka wymagająca kalibracji, nie ocena bezpieczeństwa.</p>
           <p class="surf-small"><strong>Energia fal (kJ/m²)</strong> oznacza ilość energii na metr kwadratowy powierzchni morza. <strong>Moc fal (kW/m)</strong> opisuje jej przepływ w ciągu sekundy na metr szerokości grzbietu. Wyższa fala niesie więcej energii: przy podwojeniu wysokości energia rośnie około czterokrotnie. To nie jest siła uderzenia fali ani energia jednej konkretnej fali. Większa moc nie musi oznaczać lepszych warunków do surfingu.</p>
           <p class="surf-small">Wysokość, czas między falami, kierunek, moc i energia dotyczą tego samego punktu przy spocie — do 500 m od oszacowanego brzegu. Moc pochodzi z obliczonego widma fal SWAN. Jeśli brakuje poprawnej prognozy przy brzegu, wyświetlamy brak danych, a nie wartości z dalszego morza.</p>
         </details>

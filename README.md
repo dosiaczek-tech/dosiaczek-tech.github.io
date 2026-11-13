@@ -151,6 +151,10 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Poziom morza
   (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
   oba modele bez klucza na licencji CC BY 4.0. Szczegóły: [MODEL.md](MODEL.md).
+- **Martwa fala i okres szczytowy**: gdy model rozdziela martwą falę i falę wiatrową (DMI WAM, DWD EWAM,
+  GFS Wave), SWAN dostaje widmo z dwoma szczytami. „Czas między falami” to okres szczytowy przy spocie;
+  ocena okresu i dopiski używają go zamiast średniego, z progami przeliczonymi na okres szczytowy.
+  Tabela ma wiersz „Martwa fala”, a godzina z jej przewagą dopisek „przeważa martwa fala”.
 - **Profil surfera**: średniozaawansowany (domyślny), początkujący, zaawansowany albo longboard. Wybór nad
   „Gdzie warto jechać?” i na heat mapie zmienia ocenę wszędzie: w prognozie spotu, porównaniu i heat mapie;
   pamięta go przeglądarka. Szczegóły: [SURFING.md](SURFING.md).

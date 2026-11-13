@@ -77,11 +77,30 @@ razem, nigdy wysokość z jednego, a okres z drugiego.
   fal na morzu”. W pierwszych 72 godzinach dotyczyło to ok. 3% godzin; dalej pewność i tak
   jest niska.
 
-Każda godzina wyniku zapisuje model, liczbę modeli i zgodność (`boundary`).
-Wysokość, średni okres i kierunek są przekształcane przez SWAN w widmo JONSWAP
-(`gamma=3.3`, średni okres `MEAN`, rozrzut 30°). To **zrekonstruowane widmo**, nie pełne
-widmo pobrane z modelu regionalnego. Modele różnie definiują okres średni; porównujemy
-podane przez nie wartości. SWAN wpuszcza tylko składowe nadchodzące do domeny.
+Każda godzina wyniku zapisuje model, liczbę modeli, zgodność i udział martwej fali (`boundary`).
+
+### Widmo na granicy: martwa fala i fala wiatrowa
+
+Widmo na granicy składamy sami i podajemy SWAN w pliku `boundary.sp2`
+(`BOUNDSPEC SIDE W CONSTANT FILE`), na jego siatce 32 częstotliwości i 36 kierunków.
+
+- DMI WAM, DWD EWAM i GFS Wave podają osobno martwą falę (fala, której wiatr już nie
+  podsyca) i falę wiatrową, każdą z wysokością, okresem i kierunkiem. Taki model daje dwa
+  szczyty JONSWAP (`gamma=3.3`): martwą falę z rozrzutem 20° i wiatrową z rozrzutem 30°.
+  Obie skalujemy tak, żeby razem dawały całkowitą wysokość modelu.
+- ECMWF WAM w Open-Meteo podaje tylko falę całkowitą. Wtedy, jak dotąd, widmo ma jeden
+  szczyt z rozrzutem 30°.
+- Modele podają okres średni, a szczyt widma wyznacza okres szczytowy. Na tej siatce okres
+  średni Tm01 widma JONSWAP to ok. 0,84 okresu szczytowego. Dla jednej fali plik daje przy
+  brzegu to samo co dawne `BOUND SHAPE JONSWAP 3.3 MEAN` (wysokość różni się o 0–0,3%,
+  w jednym z porównań o 3%).
+- Udział martwej fali w energii (`boundary.swell`, 0–1) pochodzi z wybranego modelu.
+  Gdy ten ich nie rozdziela, bierzemy medianę udziałów modeli, które to robią, a widmo
+  wybranego modelu zostaje jednym szczytem, niezmieszanym z innymi modelami.
+
+To nadal **zrekonstruowane widmo**, nie pełne widmo pobrane z modelu regionalnego. Modele
+różnie definiują okres średni; porównujemy podane przez nie wartości. SWAN wpuszcza tylko
+składowe nadchodzące do domeny.
 
 ### Poziom morza: DMI DKSS
 
@@ -156,8 +175,8 @@ były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafnośc
 
 ## Wyniki dla surferów
 
-- Wysokość znacząca, okres średni, okres energetyczny, kierunek i moc pochodzą
-  z **jednego, stałego w czasie węzła SWAN**, wybranego z głębokości dna.
+- Wysokość znacząca, okres średni, okres energetyczny, okres szczytowy, kierunek i moc
+  pochodzą z **jednego, stałego w czasie węzła SWAN**, wybranego z głębokości dna.
   Od zewnętrznej krawędzi potwierdzonej strefy do 500 m idziemy w stronę lądu
   do pierwszego węzła o głębokości ≤2 m, włącznie. Tylko na tym morskim odcinku
   wybieramy punkt z zakresu 0,3–4 m najbliższy głębokości 2 m; remis rozstrzygamy
@@ -173,6 +192,9 @@ były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafnośc
   punkcie pozostaje spokojna; błędny wynik nie przenosi punktu do innej komórki.
   Cały profil nadal pokazuje tłumienie za rewą. Pierwsza izobata 2 m nie zawsze
   jest miejscem surfowania; rozdzielczość dna i poziom LAT nadal ograniczają model.
+- Okres szczytowy (`peakPeriod`, wyjście SWAN `TPS`) to okres pasma widma z największą energią.
+  Przy fali mieszanej może przypaść na dłuższą martwą falę, choć niesie ona mniej niż połowę
+  energii. Tabela i ocena go używają; okres średni (`period`) zostaje w wyniku.
 - Pierwsze od morza miejsce w tej strefie, gdzie SWAN przewiduje `QB >= 0.1`
   (co najmniej 10% fal załamujących się), z wysokością, głębokością i odległością.
   Brak takiego punktu oznacza brak rozpoznanego załamania, nie arbitralnie wyznaczony break.

@@ -121,8 +121,11 @@ class DmiData(unittest.TestCase):
                 raise requests.ConnectionError("down")
             response = mock.Mock()
             if url.endswith("/wam_nsb/cube"):
-                response.json.return_value = coverage(self.times, [18.4, 18.5], [54.8, 54.9], {
-                    "significant-wave-height": lambda t, y, x: 1 + t / 10, "mean-wave-period": lambda t, y, x: 6, "mean-wave-dir": lambda t, y, x: 330})
+                values = {"significant-wave-height": lambda t, y, x: 1 + t / 10, "mean-wave-period": lambda t, y, x: 6, "mean-wave-dir": lambda t, y, x: 330,
+                          "significant-totalswell-height": lambda t, y, x: .4, "mean-totalswell-period": lambda t, y, x: 7, "mean-totalswell-dir": lambda t, y, x: 340,
+                          "significant-windwave-height": lambda t, y, x: .8, "mean-windwave-period": lambda t, y, x: 4, "mean-windwave-dir": lambda t, y, x: 300}
+                asked = params["parameter-name"].split(",")
+                response.json.return_value = coverage(self.times, [18.4, 18.5], [54.8, 54.9], {name: values[name] for name in asked})
             elif url.endswith("/dkss_nsbs/instances"):
                 response.json.return_value = {"instances": [{"id": "2026-11-13T060000Z"}, {"id": "2026-11-13T120000Z"}, {"id": "2026-11-12T180000Z"}]}
             elif "2026-11-13T120000Z" in url:
@@ -144,7 +147,9 @@ class DmiData(unittest.TestCase):
         older = self.times[0] - 3 * 3600
         self.assertEqual(entry["seaLevel"], {older: .1, older + 3600: .1, older + 7200: .1, self.times[0]: .1, self.times[1]: .4,
                                              self.times[1] + 3600: .4, self.times[1] + 7200: .4})
-        self.assertEqual(len(get.call_args_list), 4, "One request per grid, not per spot")
+        self.assertEqual(len(get.call_args_list), 6, "One request per grid, not per spot: three for the waves, three for the sea level")
+        self.assertEqual(entry["waves"]["swell_wave_height_dmi_wam_nsb"], [.4, .4, .4])
+        self.assertEqual(entry["waves"]["wind_wave_period_dmi_wam_nsb"], [4, 4, 4])
         self.assertEqual(entry["ice"][self.times[1]], .2, "Sea ice comes with the sea level")
         self.assertEqual(entry["ice"][self.times[0]], 0)
 
@@ -205,8 +210,11 @@ class SwanInput(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             directory = Path(temp)
             boundary, _, chunks = prepare_run(directory, spot, bath, marine, winds, times[0], times[-1])
-            tpar = (directory / "boundary.tpar").read_text().splitlines()
-            self.assertEqual(tpar[1].split()[1], "1.00000", "DMI WAM is the central one: 0.4 m is far off and ECMWF WAM comes from 20°")
+            spectra = (directory / "boundary.sp2").read_text()
+            self.assertTrue(spectra.startswith("SWAN   1"))
+            self.assertEqual(spectra.count("FACTOR"), 4, "One spectrum per hour")
+            # DMI WAM is the central one: 0.4 m is far off and ECMWF WAM comes from 20°.
+            self.assertIn("boundary.sp2", chunks[0]["input"])
             self.assertEqual(boundary["choices"][times[0]], {"model": "dmi_wam_nsb", "models": 4, "agree": True})
             self.assertEqual(boundary["levels"], {times[0]: None, times[1]: .35, times[2]: None, times[3]: .2})
             self.assertIn("INPGRID WLEVEL REGULAR", chunks[0]["input"])

@@ -79,8 +79,15 @@ WAVE_MODELS = ["ecmwf_wam", "dmi_wam_nsb", "dwd_ewam", "ncep_gfswave025"]
 MARINE_MODELS = ["dwd_ewam", "ecmwf_wam", "ncep_gfswave025"]
 # DMI open data (CC BY 4.0, no key): WAM NSB waves (~5 km, ~5.5 days) and the DKSS NSBS storm surge model (~5 days).
 DMI_API = "https://opendataapi.dmi.dk/v1/forecastedr/collections"
-DMI_WAVES = {"significant-wave-height": "wave_height_dmi_wam_nsb", "mean-wave-period": "wave_period_dmi_wam_nsb",
-             "mean-wave-dir": "wave_direction_dmi_wam_nsb"}
+# DMI's WAM in three requests (the whole coast with every parameter at once is too large for the service): the total
+# wave, then swell and wind sea apart.
+DMI_WAVE_GROUPS = [
+    {"significant-wave-height": "wave_height_dmi_wam_nsb", "mean-wave-period": "wave_period_dmi_wam_nsb", "mean-wave-dir": "wave_direction_dmi_wam_nsb"},
+    {"significant-totalswell-height": "swell_wave_height_dmi_wam_nsb", "mean-totalswell-period": "swell_wave_period_dmi_wam_nsb",
+     "mean-totalswell-dir": "swell_wave_direction_dmi_wam_nsb"},
+    {"significant-windwave-height": "wind_wave_height_dmi_wam_nsb", "mean-windwave-period": "wind_wave_period_dmi_wam_nsb",
+     "mean-windwave-dir": "wind_wave_direction_dmi_wam_nsb"}]
+DMI_WAVES = {parameter: key for group in DMI_WAVE_GROUPS for parameter, key in group.items()}
 SEA_LEVEL = "sea_level_dmi_dkss_nsbs"
 # Sea ice from the same DKSS runs (0-1); SWAN ignores ice, the app warns about it and holds the rating down.
 ICE = "ice_dmi_dkss_nsbs"
@@ -93,6 +100,13 @@ AGREE_HEIGHT_SHARE = .3
 AGREE_DIRECTION = 45
 # Changing the boundary model costs as much as an hour on a model 0.25 m, 1 s or 30° farther from the others.
 SWITCH_COST = 1
+# The boundary spectrum: the solver's 32 frequencies (0.05-1 Hz) and 36 directions. A model that gives swell and
+# wind sea apart (DMI WAM, DWD EWAM, GFS Wave) enters as two JONSWAP peaks; one without (ECMWF WAM) as one.
+SPECTRUM_FREQUENCIES = [0.05 * 20 ** (i / 31) for i in range(32)]
+SPECTRUM_DIRECTIONS = list(range(0, 360, 10))
+# JONSWAP (gamma 3.3) on this grid: the mean period Tm01 is 0.84 of the peak period.
+MEAN_TO_PEAK = .84
+SEA_SPREAD, SWELL_SPREAD = 30, 20
 # BS Wind 8: seven global models and the regional DMI HARMONIE (about 2 km, first ~2 days).
 # ICON stays first: it is the marked substitute when the directions conflict.
 WIND_MODELS = ["icon_seamless", "gfs_seamless", "ecmwf_ifs025", "ecmwf_aifs025_single", "ukmo_seamless", "jma_seamless", "gem_seamless",
@@ -321,7 +335,8 @@ def bulk_forecast(points, marine=False, cache=None):
             params = {"latitude": ",".join(str(p[0]) for p in batch), "longitude": ",".join(str(p[1]) for p in batch),
                       "past_days": 2, "forecast_days": 16, "timeformat": "unixtime", "timezone": "GMT"}
             if marine:
-                params.update(hourly="wave_height,wave_direction,wave_period", models=",".join(MARINE_MODELS), cell_selection="sea")
+                params.update(hourly="wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,swell_wave_direction,"
+                              "wind_wave_height,wind_wave_period,wind_wave_direction", models=",".join(MARINE_MODELS), cell_selection="sea")
                 url = "https://marine-api.open-meteo.com/v1/marine"
             else:
                 params.update(hourly="wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
@@ -382,12 +397,16 @@ def coverage_points(coverage, points, names):
     times = [int(datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp()) for t in axes["t"]["values"]]
     xs, ys = coverage_axis(axes["x"]), coverage_axis(axes["y"])
     cells = len(xs) * len(ys)
-    ranges = {key: coverage["ranges"][parameter] for parameter, key in names.items()}
+    # The first parameter is required; the others (e.g. swell apart from the total) only if the service sent them.
+    first_parameter = next(iter(names))
+    ranges = {key: coverage["ranges"][parameter] for parameter, key in names.items() if parameter == first_parameter or parameter in coverage["ranges"]}
     for grid in ranges.values():
         if grid.get("axisNames") != ["t", "y", "x"] or grid.get("shape") != [len(times), len(ys), len(xs)] or len(grid["values"]) != len(times) * cells:
             raise ValueError("Unexpected DMI grid layout")
-    # Land cells have no values; a sea cell has every parameter in the first hour.
-    sea = [cell for cell in range(cells) if all(finite(grid["values"][cell]) for grid in ranges.values())]
+    # Land cells have no values; a sea cell has the first parameter (the total) in the first hour. A part such as
+    # swell may be missing where there is none.
+    first = ranges[names[first_parameter]]
+    sea = [cell for cell in range(cells) if finite(first["values"][cell])]
     result = []
     for lat, lon in points:
         def distance(cell):
@@ -423,8 +442,21 @@ def dmi_forecast(points):
     session = requests.Session()
     try:
         try:
-            for entry, series in zip(result, coverage_points(dmi_cube(session, "wam_nsb", list(DMI_WAVES), bbox), points, DMI_WAVES)):
+            totals, *parts = DMI_WAVE_GROUPS
+            for entry, series in zip(result, coverage_points(dmi_cube(session, "wam_nsb", list(totals), bbox), points, totals)):
                 entry["waves"] = series
+            for group in parts:
+                try:
+                    grids = coverage_points(dmi_cube(session, "wam_nsb", list(group), bbox), points, group)
+                except (requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
+                    # Without the parts the wave enters SWAN as one peak.
+                    warnings.append(f"DMI WAM {next(iter(group.values())).split('_')[0]} download failed: {type(error).__name__}")
+                    continue
+                for entry, series in zip(result, grids):
+                    if entry.get("waves") and series:
+                        index = {t: i for i, t in enumerate(series["time"])}
+                        for key in group.values():
+                            entry["waves"][key] = [series[key][index[t]] if t in index else None for t in entry["waves"]["time"]]
         except (requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
             warnings.append(f"DMI WAM download failed: {type(error).__name__}")
         try:
@@ -463,7 +495,8 @@ def merge_dmi(bundle, extra):
     if extra.get("waves"):
         index = {t: i for i, t in enumerate(extra["waves"]["time"])}
         for key in DMI_WAVES.values():
-            hourly[key] = [extra["waves"][key][index[t]] if t in index else None for t in hourly["time"]]
+            if key in extra["waves"]:
+                hourly[key] = [extra["waves"][key][index[t]] if t in index else None for t in hourly["time"]]
     if extra.get("seaLevel"):
         hourly[SEA_LEVEL] = [extra["seaLevel"].get(t) for t in hourly["time"]]
     if extra.get("ice"):
@@ -484,8 +517,89 @@ def wave_members(hourly, index):
             values.append(series[index] if index < len(series) else None)
         height, period, direction = values
         if all(finite(v) for v in values) and height >= 0 and (height == 0 or period > 0):
-            members.append({"model": model, "height": height, "period": period, "direction": direction % 360})
+            member = {"model": model, "height": height, "period": period, "direction": direction % 360}
+            parts = [wave_part(hourly, name, model, index) for name in ("swell_wave", "wind_wave")]
+            if all(parts) and parts[0]["height"] + parts[1]["height"] > 0:
+                member["swell"], member["sea"] = parts
+            members.append(member)
     return members
+
+
+def wave_part(hourly, name, model, index):
+    """Swell or wind sea of a model, if it gives them apart."""
+    values = []
+    for variable in ("height", "period", "direction"):
+        series = hourly.get(f"{name}_{variable}_{model}") or []
+        values.append(series[index] if index < len(series) else None)
+    height, period, direction = values
+    if finite(height) and height == 0:
+        return {"height": 0, "period": 1, "direction": 0}
+    if all(finite(v) for v in values) and height > 0 and period > 0:
+        return {"height": height, "period": period, "direction": direction % 360}
+    return None
+
+
+def swell_share(member):
+    """The swell's share of the wave energy, for a member that tells swell and wind sea apart."""
+    swell, sea = member["swell"]["height"] ** 2, member["sea"]["height"] ** 2
+    return swell / (swell + sea)
+
+
+def jonswap(height, peak):
+    """JONSWAP (gamma 3.3) variance density on SPECTRUM_FREQUENCIES, scaled to the variance height²/16."""
+    fp = 1 / peak
+    shape = [f ** -5 * math.exp(-1.25 * (fp / f) ** 4) * 3.3 ** math.exp(-((f - fp) ** 2) / (2 * (.07 if f <= fp else .09) ** 2 * fp ** 2))
+             for f in SPECTRUM_FREQUENCIES]
+    f = SPECTRUM_FREQUENCIES
+    variance = sum((shape[i] + shape[i + 1]) / 2 * (f[i + 1] - f[i]) for i in range(len(f) - 1))
+    return [value * height ** 2 / 16 / variance for value in shape]
+
+
+def spreading(direction, spread):
+    """cos^m around the direction, with the directional spread (degrees) as SWAN's DSPR; per degree."""
+    power = 2 / math.radians(spread) ** 2 - 1
+    weights = [math.cos(math.radians(direction_difference(d, direction))) ** power if direction_difference(d, direction) < 90 else 0
+               for d in SPECTRUM_DIRECTIONS]
+    total = sum(weights) * (SPECTRUM_DIRECTIONS[1] - SPECTRUM_DIRECTIONS[0])
+    return [w / total for w in weights]
+
+
+def boundary_spectrum(member, normal):
+    """The hour's 2D spectrum (m²/Hz/degree) in the transect's local nautical directions: swell and wind sea as two
+    peaks when the model gives them, scaled together to its total height; otherwise one peak."""
+    parts = [(member, SEA_SPREAD)]
+    if member.get("swell"):
+        swell, sea = member["swell"], member["sea"]
+        scale = member["height"] / math.hypot(swell["height"], sea["height"])
+        parts = [({**swell, "height": swell["height"] * scale}, SWELL_SPREAD), ({**sea, "height": sea["height"] * scale}, SEA_SPREAD)]
+    spectrum = [[0.0] * len(SPECTRUM_DIRECTIONS) for _ in SPECTRUM_FREQUENCIES]
+    for part, spread in parts:
+        if part["height"] <= 0:
+            continue
+        density = jonswap(part["height"], max(part["period"], 1) / MEAN_TO_PEAK)
+        weights = spreading(local_direction(part["direction"], normal), spread)
+        for i, value in enumerate(density):
+            for j, weight in enumerate(weights):
+                spectrum[i][j] += value * weight
+    return spectrum
+
+
+def write_spectra(path, times, spectra):
+    """SWAN's standard 2D spectral file: one location, the spectrum of every hour."""
+    lines = ["SWAN   1", "$ Baltic Surf boundary: the chosen wave model, swell and wind sea", "TIME", "     1", "LOCATIONS", "     1",
+             "       0.0000       0.0000", "AFREQ", f"    {len(SPECTRUM_FREQUENCIES)}", *[f"    {f:.6f}" for f in SPECTRUM_FREQUENCIES],
+             "NDIR", f"    {len(SPECTRUM_DIRECTIONS)}", *[f"    {d:.4f}" for d in SPECTRUM_DIRECTIONS],
+             "QUANT", "     1", "VaDens", "m2/Hz/degr", "   -0.9900E+02"]
+    for t, spectrum in zip(times, spectra):
+        lines.append(swan_time(t))
+        peak = max(max(row) for row in spectrum)
+        if peak <= 0:
+            lines.append("ZERO")
+            continue
+        factor = peak / 99999
+        lines += ["FACTOR", f"   {factor:.8E}"]
+        lines += [" ".join(f"{round(value / factor):6d}" for value in row) for row in spectrum]
+    path.write_text("\n".join(lines) + "\n")
 
 
 def wave_distance(members):
@@ -626,15 +740,20 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
     hours = [wave_members(mh, indices[t]) if t in indices else [] for t in times]
     if not all(hours):
         raise ValueError("Incomplete offshore boundary for requested horizon")
-    boundary, choices, levels, ice = ["TPAR"], {}, {}, {}
+    spectra, choices, levels, ice = [], {}, {}, {}
     for t, members, chosen in zip(times, hours, boundary_models(hours)):
         i = indices[t]
         level = levels_series[i] if i < len(levels_series) and finite(levels_series[i]) else None
-        choices[t] = {"model": chosen["model"], "models": len(members), "agree": models_agree(members)}
+        # The swell's share of the energy offshore: from the chosen model if it tells swell and wind sea apart, else
+        # the median of the models that do. The chosen model's spectrum then stays one peak, unmixed with theirs.
+        shares = [swell_share(m) for m in ([chosen] if chosen.get("swell") else members) if m.get("swell")]
+        swell = statistics.median(shares) if shares else None
+        choices[t] = {"model": chosen["model"], "models": len(members), "agree": models_agree(members),
+                      **({"swell": round(swell, 2)} if swell is not None else {})}
         levels[t] = None if level is None else round(level, 3)
         ice[t] = round(ice_series[i], 2) if i < len(ice_series) and finite(ice_series[i]) else None
-        boundary.append(f"{swan_time(t)} {chosen['height']:.5f} {max(chosen['period'], 1):.5f} {local_direction(chosen['direction'], spot['normal']):.5f} 30")
-    (directory / "boundary.tpar").write_text("\n".join(boundary) + "\n")
+        spectra.append(boundary_spectrum(chosen, spot["normal"]))
+    write_spectra(directory / "boundary.sp2", times, spectra)
     _, _, depths = calculation_grid(spot, bath)
     cells = len(depths) - 1
     domain_length = cells * COMPUTE_DX
@@ -644,7 +763,7 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
     header = ["PROJECT 'BalticSurf' '0001'", "MODE NONSTATIONARY ONEDIMENSIONAL",
                 "SET depmin=0.05 inrhog=1 NAUTICAL", f"CGRID REGULAR 0 0 0 {domain_length} 0 {cells} 0 CIRCLE 36 0.05 1.0 31",
                 f"INPGRID BOTTOM REGULAR 0 0 0 {cells} 0 {COMPUTE_DX} 1", "READINP BOTTOM 1 'bottom.dat' 3 0 FREE",
-                "BOUND SHAPESPEC JONSWAP 3.3 MEAN DSPR DEGREES", "BOUNDSPEC SIDE W CONSTANT FILE 'boundary.tpar' 1",
+                "BOUNDSPEC SIDE W CONSTANT FILE 'boundary.sp2' 1",
                 "INPGRID WIND REGULAR 0 0 0 3 0 2500 1", *([f"INPGRID WLEVEL REGULAR 0 0 0 1 0 {domain_length} 1"] if with_level else []),
                 "GEN3 KOMEN", "BREAKING CONSTANT 1.0 0.73",
                 "FRICTION JONSWAP 0.038", "TRIAD", "PROP BSBT", f"CURVE 'PROFILE' 0 0 {cells} {domain_length} 0"]
@@ -672,7 +791,7 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
         part = steps[first:first + CHUNK_HOURS]
         last = first + len(part) >= len(steps)
         commands = header + ([f"INIT HOTSTART SINGLE 'hot{number - 1}' UNFORMATTED"] if number else []) + [
-            f"TABLE 'PROFILE' NOHEADER 'profile.{number}.tbl' TIME XP DEPTH HSIGN TM01 TMM10 DIR QB TRANSP OUTPUT {swan_time(times[first])} 1 HR"]
+            f"TABLE 'PROFILE' NOHEADER 'profile.{number}.tbl' TIME XP DEPTH HSIGN TM01 TMM10 DIR QB TRANSP TPS OUTPUT {swan_time(times[first])} 1 HR"]
         commands += [command for step in part for command in step]
         commands += ([] if last else [f"HOTFILE 'hot{number}' UNFORMATTED"]) + ["STOP"]
         chunks.append({"input": "\n".join(commands) + "\n", "table": f"profile.{number}.tbl", "start": times[first]})
@@ -735,7 +854,8 @@ def parse_output(path, spot, bath, start, end, levels=None, choices=None, ice=No
         if not line.strip() or line.lstrip().startswith("%"):
             continue
         parts = line.split()
-        if len(parts) != 10:
+        # 11 columns with the peak period; tables written before it have 10.
+        if len(parts) not in (10, 11):
             raise ValueError("Unexpected SWAN table columns")
         timestamp = int(datetime.strptime(parts[0], "%Y%m%d.%H%M%S").replace(tzinfo=timezone.utc).timestamp())
         values = list(map(float, parts[1:]))
@@ -766,7 +886,8 @@ def parse_output(path, spot, bath, start, end, levels=None, choices=None, ice=No
                     "shoreDistanceMin": round(distance - coast["waterDistance"], 1),
                     "shoreDistanceMax": round(distance - coast["landDistance"], 1), "lat": lat, "lon": lon,
                     "breakingFraction": round(p[6], 4), "energyKJm2": round(1025 * 9.81 * p[2] ** 2 / 16000, 4),
-                    "powerKWm": round(math.hypot(p[7], p[8]) / 1000, 4)}
+                    "powerKWm": round(math.hypot(p[7], p[8]) / 1000, 4),
+                    **({"peakPeriod": round(p[9], 3) if p[9] > 0 else None} if len(p) > 9 else {})}
         profile = [{"distance": LENGTH - int(p[0]), "shoreDistance": round(LENGTH - p[0] - coast["distance"], 1),
                     "shoreDistanceMin": round(LENGTH - p[0] - coast["waterDistance"], 1),
                     "shoreDistanceMax": round(LENGTH - p[0] - coast["landDistance"], 1),
@@ -864,7 +985,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
                 row["profile"] = []
         history = parse_output(directory / "profile.tbl", spot, bath, history_start, forecast_start - 3600, **boundary)
         forcing = sorted(directory.glob("wind*.dat")) + sorted(directory.glob("level*.dat"))
-        input_hash = hashlib.sha256((directory / "INPUT").read_bytes() + (directory / "boundary.tpar").read_bytes() +
+        input_hash = hashlib.sha256((directory / "INPUT").read_bytes() + (directory / "boundary.sp2").read_bytes() +
                                    (directory / "bottom.dat").read_bytes() + b"".join(p.read_bytes() for p in forcing)).hexdigest()
         archive_dir = cache / "reproducibility"
         archive_dir.mkdir(parents=True, exist_ok=True)
@@ -886,7 +1007,7 @@ def simulate(spot, bath, marine, winds, executable, cache, now, hours=HORIZON_HO
             "windModels": WIND_MODELS, "windName": "BS Wind 8", "inputHash": input_hash, "engineArchiveSha256": ENGINE_SHA256,
             "sourceCommit": os.environ.get("GITHUB_SHA"),
             "grid": {"lengthM": LENGTH - shoreline_reference(spot, bath)["distance"], "offshoreDistanceM": LENGTH, "spacingM": COMPUTE_DX, "bathymetrySamplingM": DX, "timeStepMinutes": DT_MINUTES, "directions": 36, "frequencies": 32, "spinupHours": SPINUP_HOURS},
-            "assumptions": ["1D transect, no harbour shadow/diffraction", "reconstructed JONSWAP boundary from mean period; spreading 30 deg",
+            "assumptions": ["1D transect, no harbour shadow/diffraction", "reconstructed JONSWAP boundary (peak period = mean / 0.84): swell (spreading 20 deg) and wind sea (30 deg) as two peaks where the model gives them, else one peak (30 deg)",
                             "one offshore wave model per hour, the one closest to the others", "sea level from DMI DKSS where available, otherwise 0 relative to LAT; no currents or ice",
                             "regional DTM, not current sandbar survey"],
             "bathymetry": bath, "windUsed": used, "history": history, "hourly": hourly}
