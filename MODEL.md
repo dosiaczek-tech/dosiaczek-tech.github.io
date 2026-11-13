@@ -168,10 +168,59 @@ ewolucję i generuje lokalne składowe na ostatnich kilometrach.
 
 `GEN3 KOMEN`, `BREAKING CONSTANT 1.0 0.73`, `FRICTION JONSWAP 0.038`, `TRIAD`.
 Głębokości względem LAT; poziom wody z DMI DKSS (wyżej), a poza jego zasięgiem 0 w tym
-układzie. Brak prądów, lodu, osłony i dyfrakcji fal wokół falochronów. Osłonę od wiatru przez falochrony,
-molo, wydmy, las i budynki uwzględnia tylko ocena przy spocie (SURFING.md), nie wymuszenie SWAN. Przekrój 1D
-zakłada niezmienność wzdłuż brzegu; nie jest domeną portową 2D. Parametry nie
+układzie. Brak prądów, lodu i dyfrakcji fal wokół falochronów; osłonę fal przez falochrony liczy tylko SWAN 2D
+w sześciu obszarach (niżej). Osłonę od wiatru przez falochrony, molo, wydmy, las i budynki uwzględnia tylko ocena
+przy spocie (SURFING.md), nie wymuszenie SWAN. Przekrój 1D zakłada niezmienność wzdłuż brzegu. Parametry nie
 były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafności.
+
+### SWAN 2D w sześciu obszarach (pierwsze 5 dni)
+
+Przy portach, mieliznach i na zakrzywionym brzegu fala skręca i chowa się za przeszkodami, czego jedna linia
+prostopadła do brzegu nie policzy. W sześciu obszarach `model/swan2d.py` liczy więc SWAN 2D:
+
+| Obszar | Spoty |
+| --- | --- |
+| Kołobrzeg | 13 punktów miejskich, od Military Point po Ecopark |
+| Mielno | Mielno (Channel Island nie ma rozpoznanego brzegu) |
+| Jastrzębia Góra | Faleza |
+| Władysławowo–Chałupy | Władysławowo, Rurociąg, Chałupy |
+| Sobieszewo | Hotel Orle, Tawerna Łosoś |
+| Stegna–Sztutowo | Stegna, Sztutowo |
+
+- **Siatka:** prostokąt ustawiony wzdłuż brzegu, komórki 100 m (mniej więcej rozdzielczość dna EMODnet),
+  od 600 m w głąb lądu do 5 km w morze i 3 km poza skrajnymi spotami. Kierunek wyznacza linia przez brzegi
+  spotów, gdy rozkładają się co najmniej na 2 km; inaczej średnia normalna spotów. Układ: metry na wschód
+  i północ od środka obszaru.
+- **Dno:** EMODnet DTM (1/16′) interpolowany między środkami komórek; komórki bez danych pomijamy.
+- **Falochrony:** z OpenStreetMap (`man_made=breakwater`, także obrysy i relacje), uproszczone do 5 m. W SWAN
+  to `OBSTACLE TRANSM 0 REFL 0`: fala przez nie nie przechodzi i się od nich nie odbija. Molo na palach nie jest
+  przeszkodą. Dane OpenStreetMap trzymamy 30 dni.
+- **Fala na granicy:** co godzinę ta sama co w przebiegu 1D środkowego spotu obszaru (jeden model, martwa
+  i wiatrowa fala jako dwa szczyty), bez obracania kierunków. Wchodzi przez krawędź od morza i przez krótkie
+  boki tam, gdzie woda ma co najmniej 6 m (jedna linia `BOUNDSPEC SEGMENT`); płytsze części boków fali nie
+  wpuszczają, stąd 3 km zapasu do spotów.
+- **Wiatr i poziom morza:** wiatr jednorodny w obszarze: średnia prędkość i kierunek wektorowy konsensusu
+  BS Wind 8 w punktach 5 i 2,5 km od brzegu wszystkich spotów obszaru. Poziom morza DKSS jak w 1D.
+- **Czas:** 6 h rozbiegu (fala przechodzi obszar w mniej niż godzinę), 24 h historii i 120 h prognozy, krok
+  30 min, nowy wiatr i poziom co godzinę. Każdy obszar liczy się na jednym rdzeniu, a obszary równolegle:
+  wszystkie sześć zajmuje ok. 38 minut pracy procesora, czyli ok. 10 minut na czterech rdzeniach.
+- **Wynik:** w 11 punktach przekroju każdego spotu (0–500 m od brzegu oszacowanego jak w 1D) te same wielkości
+  co w 1D. Punkt prognozy wybiera ta sama reguła (pierwszy punkt nie głębszy niż 2 m od strony morza, 0,3–4 m),
+  ale na dnie, które podał SWAN: punkt w komórce stykającej się z lądem SWAN pomija, choć dno pod nim jest mokre.
+  Punkt bywa więc w innym miejscu niż w 1D. Gdy wybrany punkt jest suchy w ponad 10% godzin, spot zostaje przy 1D.
+  Punkt 0 m pozostaje granicą lądu modelu.
+- **Publikacja:** w pliku spotu godziny 2D (historia i 120 h prognozy) zastępują godziny 1D; pole `area2d`
+  podaje obszar i zakres, dalsze godziny są z 1D. Obszar liczymy ponownie, gdy w tym przebiegu przeliczyły się
+  jego spoty; inaczej bierzemy wynik z tego samego 12-godzinnego cyklu. Brak lub niepełny wynik 2D dla spotu
+  zostawia jego 1D, a `status.json` dostaje ostrzeżenie.
+- **Porównanie z 1D** (prognoza z 14.11.2026): 500 m od brzegu obie wersje dają podobną falę. Bliżej brzegu
+  fala 2D bywa niższa: dno 2D jest tam głębsze niż w przekroju 1D, więc punkt prognozy wypada bliżej brzegu,
+  a w Kołobrzegu fala z NW skręca wokół portu. Kierunek fali przy brzegu jest w 2D o 15–30° bliższy prostopadłej
+  do brzegu, bo model widzi rzeczywisty bieg brzegu i mielizny. Na przejściu z 2D na 1D (po 5 dniach) wynik może
+  więc skoczyć. Test z prawdziwym SWAN sprawdza, że za falochronem na prostej plaży
+  fala jest o ponad 40% niższa niż obok.
+- **Ograniczenia:** bez dyfrakcji (SWAN uśrednia fazę; cień za falochronem rozmywa tylko rozrzut kierunków),
+  dno co ok. 100 m bez aktualnych rew, wiatr jednakowy w obszarze, falochrony tak dokładne jak OpenStreetMap.
 
 ## Wyniki dla surferów
 

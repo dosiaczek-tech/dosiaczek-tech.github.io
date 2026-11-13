@@ -736,7 +736,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     $("surfSpotTitle").textContent = `${currentSpot.town} — ${currentSpot.name}`;
     const point = now?.simulation || rows.find(r => r.simulation)?.simulation;
-    $("surfSpotMeta").textContent = point ? `Punkt prognozy: około ${Math.round(point.shoreDistance)} m od brzegu · głębokość ${fmt(point.depth)} m · strefa do 500 m · godziny polskie`
+    // SWAN 2D over the spot's area for the first days (model/swan2d.py); later hours come from the 1D transect.
+    const area = simulation?.area2d, twoD = area && M.finite(area.to) && M.finite(point?.time) && point.time <= area.to;
+    $("surfSpotMeta").textContent = point ? `Punkt prognozy: około ${Math.round(point.shoreDistance)} m od brzegu · głębokość ${fmt(point.depth)} m · strefa do 500 m · godziny polskie${
+      twoD ? ` · fale do ${day(area.to)} ${hour(area.to)} z modelu 2D obszaru ${area.name}, później z przekroju 1D` : ""}`
       : "Prognoza dotyczy wyłącznie strefy do 500 m od brzegu. Brak potwierdzonego wyniku dla tego miejsca.";
     const lat = point?.lat ?? currentSpot.lat, lon = point?.lon ?? currentSpot.lon;
     $("surfMapLink").href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;

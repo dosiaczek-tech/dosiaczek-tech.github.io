@@ -31,6 +31,10 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
   oraz poziom morza DMI DKSS. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
 - Raster dna **EMODnet WCS**, niestacjonarny model SWAN z rzeczywistym wymuszeniem
   wiatrowym w trzech punktach przekroju, transportem widma, tarciem i załamywaniem.
+- **SWAN 2D** w sześciu obszarach (Kołobrzeg, Mielno, Jastrzębia Góra, Władysławowo–Chałupy, Sobieszewo,
+  Stegna–Sztutowo) przez pierwsze 5 dni: siatka co 100 m wzdłuż brzegu z falochronami z OpenStreetMap, więc fala
+  skręca wokół falochronów i mielizn i słabnie za falochronem. Dalej, jak wszędzie, przekrój 1D. Opis spotu
+  podaje, do kiedy fale pochodzą z modelu 2D. Szczegóły: [MODEL.md](MODEL.md).
 - Osadzana mapa **fal Windy**, ładowana automatycznie po otwarciu prognozy; link do Windy
   i lokalizacji na OpenStreetMap. Dane z iframe nie są wejściem modelu.
 - Osobna **mapa wyboru spotów** (Leaflet + OpenStreetMap): znaczniki otwierają

@@ -151,6 +151,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Poziom morza
   (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
   oba modele bez klucza na licencji CC BY 4.0. Szczegóły: [MODEL.md](MODEL.md).
+- **SWAN 2D** w sześciu obszarach (Kołobrzeg, Mielno, Jastrzębia Góra, Władysławowo–Chałupy, Sobieszewo,
+  Stegna–Sztutowo) przez pierwsze 5 dni: siatka 100 m wzdłuż brzegu z falochronami z OpenStreetMap
+  (`model/swan2d.py`); później przekrój 1D. Szczegóły: [MODEL.md](MODEL.md).
 - **Martwa fala i okres szczytowy**: gdy model rozdziela martwą falę i falę wiatrową (DMI WAM, DWD EWAM,
   GFS Wave), SWAN dostaje widmo z dwoma szczytami. „Czas między falami” to okres szczytowy przy spocie;
   ocena okresu i dopiski używają go zamiast średniego, z progami przeliczonymi na okres szczytowy.

@@ -19,6 +19,7 @@ from pathlib import Path
 import statistics
 import subprocess
 import socket
+import sys
 import tarfile
 import tempfile
 import time
@@ -1031,7 +1032,10 @@ def main():
         if len(spots) != len(ids):
             raise ValueError("Unknown spot ID")
     now = time.time()
-    code_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    # The 2D areas import this module: run as a script it must be the same module, not a second copy.
+    sys.modules.setdefault("nearshore", sys.modules[__name__])
+    import swan2d
+    code_hash = hashlib.sha256(Path(__file__).read_bytes() + Path(swan2d.__file__).read_bytes()).hexdigest()
     old = {s["id"]: load(args.cache / "results" / f'{s["id"]}.json') for s in spots}
     needed = [s for s in spots if args.force or not old[s["id"]] or old[s["id"]].get("codeHash") != code_hash or
               old[s["id"]].get("geometryKey") != geometry_key(s) or old[s["id"]].get("cycle") != int(now // 43200) * 43200 or
@@ -1115,12 +1119,54 @@ def main():
             statuses.append({"id": id, "error": error})
             print(f'{id}: {"OK" if not error else "FAILED " + error[:180]}', flush=True)
     errors = {s["id"]: s["error"] for s in statuses if s["error"]}
+    # SWAN 2D over the busiest areas for the first five days, after their spots' 1D runs of this cycle. An area runs
+    # again only when its spots did; otherwise the result of the same cycle is reused. Without it the spots stay 1D.
+    cycle = int(now // 43200) * 43200
+    recomputed = {s["id"] for s in statuses if not s["error"]}
+    areas2d = {}
+
+    def work2d(area):
+        members = [s for s in spots if s["id"] in area["spots"]]
+        path = args.cache / "results2d" / f'{area["id"]}.json'
+        if not any(s["id"] in recomputed for s in members):
+            cached = load(path)
+            return area["id"], cached if cached and cached.get("cycle") == cycle and cached.get("codeHash") == code_hash else None, None
+        try:
+            baths = {}
+            for s in members:
+                try:
+                    baths[s["id"]] = bathymetry(s, args.cache)
+                except ValueError:
+                    continue
+            # The waves enter as in the 1D run of the area's middle spot.
+            with_waves = sorted((s for s in members if marine_by_spot.get(s["id"])), key=lambda s: s["lon"])
+            if not with_waves:
+                raise ValueError("Brak fali na granicy dla obszaru 2D")
+            reference = with_waves[len(with_waves) // 2]
+            winds = [wind_by_spot[s["id"]] for s in members if wind_by_spot.get(s["id"])]
+            result = swan2d.simulate_area(area, members, baths, marine_by_spot[reference["id"]], winds, executable, args.cache, now)
+            result.update(cycle=cycle, codeHash=code_hash, reference=reference["id"])
+            dump(path, result)
+            return area["id"], result, None
+        except Exception as error:
+            return area["id"], None, str(error)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
+        for id, result, error in pool.map(work2d, [a for a in swan2d.AREAS if any(s["id"] in a["spots"] for s in spots)]):
+            areas2d[id] = result
+            if error:
+                refresh_warnings.append(f"SWAN 2D {id} failed: {error[:160]}")
+            print(f'2D {id}: {"FAILED " + error[:180] if error else "OK, " + str(len(result["spots"])) + " spots, " + str(result["seconds"]) + " s" if result else "nothing to do"}', flush=True)
+    area_of = {id: area["id"] for area in swan2d.AREAS for id in area["spots"]}
     ready = 0
     ready_input_stamps = []
     for s in spots:
         result = results[s["id"]]
         if result and result.get("schema") == 2 and result.get("version") == VERSION and result.get("geometryKey") == geometry_key(s):
             document = {**result, "lastAttemptError": errors.get(s["id"])}
+            area = areas2d.get(area_of.get(s["id"]))
+            if area and area.get("cycle") == result.get("cycle"):
+                document = swan2d.merge(document, area)
             if all(finite(result.get(k)) and -300 <= time.time() - result[k] <= 18 * 3600
                    for k in ("generatedAt", "windFetchedAt", "boundaryFetchedAt")):
                 ready += 1
@@ -1138,6 +1184,7 @@ def main():
         "oldestWaveInputAt": min(ready_input_stamps, default=None),
         "oldestWindFetchedAt": min(wind_stamps, default=None),
         "reusedInputSpots": sorted(reused), "refreshWarnings": refresh_warnings,
+        "areas2d": {id: len(result["spots"]) if result else 0 for id, result in areas2d.items()},
         "windScheduleHours": 3, "simulationMaxAgeHours": 12})
     print(f"Published {ready}/{len(spots)} simulations to {args.output}", flush=True)
     if not ready or not wind_available:
