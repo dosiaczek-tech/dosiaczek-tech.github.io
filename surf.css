@@ -434,3 +434,17 @@
 #surfLocalBody h4 { margin: 14px 0 4px; font-size: 14px; }
 .surf-hazards { margin: 4px 0; padding-left: 20px; font-size: 13px; }
 .surf-hazards li { margin: 3px 0; }
+.surf-report-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0; }
+.surf-report-form > label, .surf-report-comment { display: grid; gap: 5px; font-size: 11px; color: var(--muted); }
+.surf-report-form input[type=datetime-local], .surf-report-form select, .surf-report-form textarea { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
+.surf-report-rating { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; border: 0; }
+.surf-report-rating legend { width: 100%; margin-bottom: 5px; font-size: 11px; color: var(--muted); }
+.surf-report-rating label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; }
+.surf-report-rating label:has(input:checked) { border-color: var(--sea); background: color-mix(in srgb, var(--sea) 12%, white); }
+.surf-report-comment, .surf-report-actions { grid-column: 1 / -1; }
+.surf-report-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.surf-report-heading { margin: 14px 0 6px; font-size: 14px; }
+.surf-report-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.surf-report-list li { padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.surf-report-list small { display: block; margin-top: 3px; color: var(--muted); }
+@media (max-width: 640px) { .surf-report-form input[type=datetime-local], .surf-report-form select, .surf-report-form textarea { font-size: 16px; } }

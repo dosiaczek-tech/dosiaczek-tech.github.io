@@ -255,7 +255,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js" integrity="sha384-z+tuLqMWl1/cPv7O+39RO0EURSNvorimpcCaMgeNwU+qFBx+AlUIl7jaAwg0cYil" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
-  <link rel="stylesheet" href="surf.css?v=safety-v1">
+  <link rel="stylesheet" href="surf.css?v=reports-v1">
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
   <script defer src="surf-community.js"></script>
@@ -275,7 +275,8 @@
   <script defer src="surf-table-drag.js?v=hourly-columns-v1"></script>
   <script defer src="surf-map.js?v=no-default-spot-v1"></script>
   <script defer src="surf-session.js?v=heatmap-hour-v1"></script>
-  <script defer src="surf-app.js?v=safety-v1"></script>
+  <script defer src="surf-reports.js?v=reports-v1"></script>
+  <script defer src="surf-app.js?v=reports-v1"></script>
   <script defer src="surf-compare.js?v=profiles-v1"></script>
   <script defer src="surf-heatmap.js?v=profiles-v1"></script>
 </head>
@@ -532,7 +533,7 @@
           <p class="surf-small">Wysokość, czas między falami, kierunek, moc i energia dotyczą tego samego punktu przy spocie — do 500 m od oszacowanego brzegu. Moc pochodzi z obliczonego widma fal SWAN. Jeśli brakuje poprawnej prognozy przy brzegu, wyświetlamy brak danych, a nie wartości z dalszego morza.</p>
         </details>
         <div id="surfFlags" class="surf-flags"></div>
-        <section class="surf-box"><h3>Po nawianiu: czy nadchodzi wywiewka?</h3><div id="surfSequence" aria-live="polite"></div><p class="surf-small">Analiza poprzednich 24 godzin modelowych, nie pomiarów. Szukamy dłuższego onshore, później słabego offshore lub ciszy oraz utrzymującej się fali. Zmiana wiatru nie gwarantuje wygładzenia fali ani sesji następnego dnia.</p></section>
+        <section class="surf-box"><h3>Po nawianiu: czy nadchodzi wywiewka?</h3><div id="surfSequence" aria-live="polite"></div><p class="surf-small">Analiza poprzednich 24 godzin modelowych, nie pomiarów. Szukamy dłuższego wiatru od morza (także wzdłuż brzegu, gdy przy spocie jest fala), później słabego wiatru od lądu lub ciszy przy spocie, z uwzględnieniem osłony przez przeszkody, oraz utrzymującej się fali. Zmiana wiatru nie gwarantuje wygładzenia fali ani sesji następnego dnia.</p></section>
         <section class="surf-box"><span class="surf-spot-label"></span><div class="surf-table-heading"><h3>Najlepsze trzygodzinne okna</h3><label><input id="surfCleanupOnly" type="checkbox"> Tylko wywiewka po nawianiu</label></div><p class="surf-small">Tylko godziny dzienne. Ranking dotyczy wybranej plaży; także najlepsze okno może mieć słabe warunki. Filtr wywiewki wymaga potwierdzenia sekwencji przez wszystkie trzy godziny.</p><div id="surfWindows" class="surf-windows"></div></section>
         <details class="surf-box"><summary>Zmiany w kolejnych dniach w punkcie podsumowania<span class="surf-spot-label"></span></summary><div id="surfChart" class="surf-chart"></div><p class="surf-small">To dodatkowy wykres czasowy dla punktu podsumowania (jego odległość jest podana przy wysokości fali). Pełny przekrój od brzegu do 500 m znajduje się powyżej. Oś pozioma tutaj oznacza dzień i godzinę, a nie odległość. Przerwa w linii oznacza brak danych.</p></details>
       </div>
@@ -562,6 +563,27 @@
       <div id="surfDetailContent" hidden>
         <section class="surf-box"><span class="surf-spot-label"></span><h3>Dno przy spocie — do 500 m od brzegu</h3><div id="surfBathymetry"></div><p class="surf-small">EMODnet DTM, siatka 1/16 minuty (~115 m N–S), głębokości względem LAT. Mapa dna nie odwzorowuje na bieżąco przemieszczających się piaszczystych rew.</p></section>
         <section class="surf-box"><span class="surf-spot-label"></span><h3>Sprawdź obraz przed wyjazdem</h3><p class="surf-small">Kamery powiązane z morskim odcinkiem wybrzeża. Kamera obrotowa może chwilowo pokazywać inny kierunek.</p><div id="surfCameras" class="surf-camera-links"></div></section>
+        <section id="surfReports" class="surf-box" aria-labelledby="surfReportsTitle">
+          <span class="surf-spot-label"></span>
+          <div class="surf-table-heading"><h3 id="surfReportsTitle">Jak było na spocie?</h3><button id="surfReportOpen" class="filter" type="button" aria-expanded="false" aria-controls="surfReportForm">Zgłoś sesję</button></div>
+          <p class="surf-small">Zgłoszenia z sesji pomagają sprawdzać i poprawiać prognozę. Są anonimowe i widoczne dla wszystkich.</p>
+          <form id="surfReportForm" class="surf-report-form" hidden>
+            <label>Kiedy była sesja<input id="surfReportTime" type="datetime-local" step="3600" required></label>
+            <fieldset class="surf-report-rating"><legend>Jak było</legend>
+              <label><input type="radio" name="surfReportRating" value="1" required>1 · słabo</label>
+              <label><input type="radio" name="surfReportRating" value="2">2 · tak sobie</label>
+              <label><input type="radio" name="surfReportRating" value="3">3 · OK</label>
+              <label><input type="radio" name="surfReportRating" value="4">4 · dobrze</label>
+              <label><input type="radio" name="surfReportRating" value="5">5 · świetnie</label>
+            </fieldset>
+            <label>Wielkość fali<select id="surfReportWave"><option value="">Nie pamiętam</option><option value="0.2">Płasko (poniżej 0,3 m)</option><option value="0.4">0,3–0,5 m</option><option value="0.7">0,5–0,8 m</option><option value="1">0,8–1,2 m</option><option value="1.4">1,2–1,6 m</option><option value="1.8">1,6–2 m</option><option value="2.5">Ponad 2 m</option></select></label>
+            <label>Wiatr<select id="surfReportWind"><option value="">Nie pamiętam</option><option value="brak">Brak</option><option value="słaby">Słaby</option><option value="umiarkowany">Umiarkowany</option><option value="silny">Silny</option></select></label>
+            <label class="surf-report-comment">Komentarz (opcjonalnie)<textarea id="surfReportComment" maxlength="280" rows="2" placeholder="Np. fala zamykała się przy brzegu, prąd przy falochronie"></textarea></label>
+            <div class="surf-report-actions"><button class="primary-button" type="submit">Wyślij zgłoszenie</button><p id="surfReportStatus" class="surf-small" role="status" aria-live="polite"></p></div>
+          </form>
+          <h4 class="surf-report-heading">Zgłoszenia z ostatnich 14 dni</h4>
+          <ul id="surfReportList" class="surf-report-list" aria-live="polite"></ul>
+        </section>
       </div>
       <section id="surfWindy" class="surf-box" aria-labelledby="windyTitle">
         <span class="surf-spot-label"></span>

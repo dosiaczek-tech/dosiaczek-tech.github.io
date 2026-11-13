@@ -440,6 +440,12 @@ Archiwizować **każde wydanie prognozy przed terminem jej ważności** oraz lok
 raporty: czas UTC, pozycja, orientacyjna wysokość ściany fali, okres, jakość,
 wiatr, obserwator / kamera. Nie utożsamiać wysokości ściany z Hs modelowym.
 
+**„Jak było?”** zbiera takie raporty od surferów: przy spocie można zgłosić sesję z ostatnich 14 dni (ocena 1–5,
+wielkość fali, wiatr, komentarz do 280 znaków); zgłoszenie zapisuje też profil surfera i ocenę prognozy dla tej
+godziny. Trafiają do wspólnej bazy Supabase (`session_reports`; publiczny klucz pozwala tylko dodawać i czytać
+zgłoszenia z ostatnich dwóch tygodni) i są anonimowe. Kamery nie są źródłem obserwacji: regulamin webcamera.pl
+zastrzega prawa do obrazu i nie zezwala na jego automatyczne pobieranie.
+
 Podział trening/walidacja według dat i całych sztormów, nie losowych godzin.
 Porównać MAE/RMSE i bias Hs (tam, gdzie jest porównywalny pomiar), błąd kołowy
 kierunku, trafność dobrych okien; osobno 0–24, 24–48 i 48–120 h oraz sezony.

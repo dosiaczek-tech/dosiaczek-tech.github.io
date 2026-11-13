@@ -837,6 +837,36 @@ document.addEventListener("DOMContentLoaded", () => {
     updateChoice();
   }
 
+  // "Jak było?": the surfers' reports of this spot from the last two weeks, and the form to add one.
+  const SENT = "nad-morzem:reports-sent";
+  const sentReports = () => { try { return JSON.parse(localStorage.getItem(SENT)) || []; } catch { return []; } };
+  const localInput = t => { const d = new Date(t * 1000), two = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}T${two(d.getHours())}:00`; };
+  function resetReportForm() {
+    const now = Math.floor(Date.now() / 3600000) * 3600;
+    $("surfReportForm").hidden = true; $("surfReportOpen").setAttribute("aria-expanded", "false");
+    $("surfReportForm").reset(); $("surfReportStatus").textContent = "";
+    Object.assign($("surfReportTime"), { value: localInput(now), max: localInput(now), min: localInput(now - (SurfReports.DAYS - 1) * 86400) });
+  }
+  async function loadReports(spot) {
+    const list = $("surfReportList");
+    list.replaceChildren(node("li", "Wczytuję zgłoszenia…", "surf-small"));
+    let reports;
+    try { reports = await SurfReports.recent(spot.id); }
+    catch (error) { if (currentSpot === spot) list.replaceChildren(node("li", error.message, "surf-small")); return; }
+    if (currentSpot !== spot) return;
+    if (!reports.length) { list.replaceChildren(node("li", "Brak zgłoszeń. Pierwsza relacja z sesji pomoże sprawdzić prognozę.", "surf-small")); return; }
+    list.replaceChildren(...reports.map(report => {
+      const t = Date.parse(report.session_start) / 1000, item = node("li");
+      const parts = [`${day(t)}, ${hour(t)}`, `${"★".repeat(report.rating)}${"☆".repeat(5 - report.rating)}`];
+      if (M.finite(report.wave_height)) parts.push(`fala ~${fmt(report.wave_height)} m`);
+      if (report.wind) parts.push(`wiatr ${report.wind}`);
+      if (M.finite(report.forecast_score)) parts.push(`prognoza ${fmt(report.forecast_score)}/10`);
+      item.append(node("strong", parts.join(" · ")));
+      if (report.comment) item.append(node("small", report.comment));
+      return item;
+    }));
+  }
   async function loadSpot(spot, force = false) {
     const token = ++generation;
     clearTimeout(simulationRefreshTimer);
@@ -854,6 +884,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("surfSources").hidden = true;
     for (const id of ["surfLocalSection", "surfHourlySection", "surfWindy"]) $(id).hidden = false;
     updateChoice();
+    resetReportForm(); loadReports(spot);
     $("surfStatus").dataset.state = "loading";
     statusErrors([]);
     $("surfStatus").textContent = `Pobieram prognozę dla: ${spot.town}, ${spot.name}…`;
@@ -969,6 +1000,34 @@ document.addEventListener("DOMContentLoaded", () => {
   $("surfProfileTime").addEventListener("change", () => { simulationTime=Number($("surfProfileTime").value);render(); });
   // Another surfer profile rates the loaded forecast again.
   window.addEventListener("surfer-profile", () => render());
+  $("surfReportOpen").addEventListener("click", () => {
+    const open = $("surfReportForm").hidden;
+    $("surfReportForm").hidden = !open; $("surfReportOpen").setAttribute("aria-expanded", String(open));
+    if (open) $("surfReportTime").focus();
+  });
+  $("surfReportForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!currentSpot) return;
+    const spot = currentSpot, status = $("surfReportStatus");
+    const start = Math.floor(new Date($("surfReportTime").value).getTime() / 3600000) * 3600;
+    const rating = Number(new FormData($("surfReportForm")).get("surfReportRating"));
+    const key = `${spot.id}|${start}`;
+    if (sentReports().includes(key)) { status.textContent = "Ta sesja jest już zgłoszona z tego urządzenia."; return; }
+    const { report, error } = SurfReports.build({ spotId: spot.id, start, rating, waveHeight: parseFloat($("surfReportWave").value),
+      wind: $("surfReportWind").value, profile: SurfSurfer.current(), forecastScore: rows.find(row => row.time === start)?.score,
+      comment: $("surfReportComment").value });
+    if (error) { status.textContent = error; return; }
+    const button = $("surfReportForm").querySelector("button[type=submit]");
+    button.disabled = true; status.textContent = "Wysyłam…";
+    try {
+      await SurfReports.send(report);
+      try { localStorage.setItem(SENT, JSON.stringify([...sentReports(), key].slice(-200))); } catch { /* The report is saved anyway. */ }
+      if (currentSpot !== spot) return;
+      resetReportForm(); $("surfReportStatus").textContent = "Dziękuję! Zgłoszenie zapisane.";
+      loadReports(spot);
+    } catch (sendError) { status.textContent = sendError.message; }
+    finally { button.disabled = false; }
+  });
   $("surfCleanupOnly").addEventListener("change", render);
   window.addEventListener("hashchange", route);
   if (window.ResizeObserver) {
