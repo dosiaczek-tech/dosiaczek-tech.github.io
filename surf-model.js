@@ -4,7 +4,7 @@
 (function (root) {
   "use strict";
   const VERSION = "Bałtyk Surf 1.3 / punkt od strony morza";
-  const SIMULATION_VERSION = "BS-SWAN-1.3-seaward2m";
+  const SIMULATION_VERSION = "BS-SWAN-1.4-waves-sealevel";
   // Coastal SWAN runs cover 14 days (336 h); the current hour is the first forecast row.
   const FORECAST_HOURS = 336;
   const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
@@ -391,6 +391,8 @@
       if (!order.known) reasons.push("Niepełna historia uporządkowania fal");
       if (!row.wind || row.wind.count < 2) reasons.push("Ograniczona liczba modeli wiatru");
       if (row.wind && (row.wind.spread > 4 || row.wind.agreement < .7)) reasons.push("Rozbieżne prognozy wiatru");
+      // The SWAN run marks the hours when the offshore wave models (5 km out) differ strongly.
+      if (row.simulation?.boundary?.agree === false) reasons.push("Rozbieżne prognozy fal na morzu");
       const lead = row.time * 1000 - now;
       const models = row.wind?.count || 0;
       if (lead > 7 * 86400000) reasons.push(`Prognoza ponad 7 dni naprzód — orientacyjna; wiatr z ${models === 1 ? "1 modelu" : `${models} modeli`}, fale z jednego`);

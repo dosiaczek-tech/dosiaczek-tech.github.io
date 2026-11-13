@@ -1,4 +1,4 @@
-# BS-SWAN 1.3 — punkt prognozy od strony morza i pełny przekrój 0–500 m
+# BS-SWAN 1.4 — cztery modele fal na granicy, poziom morza, punkt od strony morza i pełny przekrój 0–500 m
 
 **Główny wykres pokazuje cały przekrój 0–500 m co 50 m**, z wyborem godziny.
 Podsumowanie i ocena sesji dotyczą oznaczonego punktu w tej strefie, a dodatkowy
@@ -33,9 +33,10 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   36 godzin przed bieżącą godziną, żeby także historia miała pełny rozbieg.
 - Koniec prognozy wyznaczają rzeczywiste dane wejściowe, nie ich dopełnienie pustymi
   wartościami: Open-Meteo zwraca 16 dni, ale DWD EWAM kończy się po ok. 3 dniach,
-  regionalny DMI HARMONIE po ok. 2,3, ICON i UKMO po ok. 7, GEM po ok. 9,5, JMA po ok. 11, a ECMWF WAM, ECMWF IFS i ECMWF AIFS
-  po ok. 14,5. Brzeg fali wyznacza najdłuższy kompletny model fal (w praktyce ECMWF WAM),
-  a wiatr wymaga co najmniej dwóch modeli; po 11. dniu konsensus tworzą GFS, ECMWF IFS
+  regionalny DMI HARMONIE po ok. 2,3, DMI WAM po ok. 5,5, ICON i UKMO po ok. 7, GEM po ok. 9,5, JMA po ok. 11,
+  a ECMWF WAM, ECMWF IFS i ECMWF AIFS po ok. 14,5; NOAA GFS Wave sięga 16 dni. Każda godzina
+  wymaga co najmniej jednego modelu fal (w drugim tygodniu ECMWF WAM i GFS Wave),
+  a wiatr co najmniej dwóch modeli; po 11. dniu konsensus tworzą GFS, ECMWF IFS
   i ECMWF AIFS. Godziny po 7. dniu są oznaczone w tabeli jako orientacyjne, a ich pewność
   jako niska.
 - SWAN przyjmuje najwyżej 300 poleceń COMPUTE w jednym uruchomieniu, a wymuszenie
@@ -47,14 +48,62 @@ czwórkowe i triady oraz głębokościowe załamywanie. Nie mierzymy fali kamer�
   (`profileHours`). Kopia offline w pamięci przeglądarki zachowuje go tylko
   dla pierwszych 120 godzin, bo `localStorage` mieści niewiele pełnych plików.
 
-### Granica od morza
+### Granica od morza: cztery modele fal
 
-Pełny, ciągły przebieg **DWD EWAM** jest wybierany jako warunek graniczny.
-Jeśli nie ma kompletu, używany jest ECMWF WAM. Nie mieszamy wysokości z jednego
-modelu z okresem drugiego. Wysokość, średni okres i kierunek są przekształcane
-przez SWAN w widmo JONSWAP (`gamma=3.3`, średni okres `MEAN`, rozrzut 30°).
-To **zrekonstruowane widmo**, nie pełne widmo pobrane z modelu regionalnego.
-SWAN wpuszcza tylko składowe nadchodzące do domeny.
+Falę 5 km od brzegu podają cztery modele: **ECMWF WAM**, **DWD EWAM** i **NOAA GFS Wave**
+(siatka 25 km) przez Open-Meteo Marine (`cell_selection=sea`) oraz **DMI WAM NSB**
+(ok. 5 km, ok. 5,5 doby) z otwartego API DMI, bez klucza. DMI pobieramy jednym zapytaniem
+o siatkę dla całego wybrzeża i bierzemy najbliższą komórkę morską do 10 km od punktu granicy.
+
+Co godzinę warunek brzegowy pochodzi z **jednego** modelu: wysokość, okres i kierunek
+razem, nigdy wysokość z jednego, a okres z drugiego.
+
+- Różnica fal dwóch modeli: 0,25 m wysokości (lub ćwierć typowej wysokości), 1 s okresu
+  albo 30° kierunku liczy się jako 1.
+- Przy co najmniej trzech modelach godzina „kosztuje” model tyle, o ile jest dalej
+  od pozostałych niż model środkowy (najbliższy wszystkim). Model odstający od reszty,
+  np. komórka GFS Wave 25 km nad Helem, praktycznie nie jest wybierany.
+- Zmiana modelu kosztuje 1 plus różnicę fal obu modeli w tej godzinie. Dla całego
+  przebiegu wybieramy najtańszy ciąg (programowanie dynamiczne): model zostaje, dopóki jest
+  blisko pozostałych, a zmiana wypada w godzinie, w której oba dają podobną falę — także
+  przed końcem danych modelu. Na danych z 13.11.2026 (91 spotów) model zmieniał się
+  w ok. 1% godzin. Wybór „najbliższego środka” osobno w każdej godzinie zmieniałby go
+  w 19% godzin, a fala na granicy skakałaby wtedy o ponad 0,25 m ok. czterokrotnie częściej.
+- Przy mniej niż trzech modelach falę daje pierwszy z listy ECMWF WAM, DMI WAM, DWD EWAM,
+  GFS Wave — w drugim tygodniu ECMWF WAM; GFS Wave wpływa wtedy tylko na pewność.
+- **Zgodność**: bez modelu najdalszego od środkowego (gdy są co najmniej trzy) pozostałe
+  różnią się od środkowego najwyżej o 0,5 m lub 30% wysokości oraz, przy falach od 0,3 m,
+  o 45° kierunku. Inaczej godzina ma w tabeli niską pewność z powodem „Rozbieżne prognozy
+  fal na morzu”. W pierwszych 72 godzinach dotyczyło to ok. 3% godzin; dalej pewność i tak
+  jest niska.
+
+Każda godzina wyniku zapisuje model, liczbę modeli i zgodność (`boundary`).
+Wysokość, średni okres i kierunek są przekształcane przez SWAN w widmo JONSWAP
+(`gamma=3.3`, średni okres `MEAN`, rozrzut 30°). To **zrekonstruowane widmo**, nie pełne
+widmo pobrane z modelu regionalnego. Modele różnie definiują okres średni; porównujemy
+podane przez nie wartości. SWAN wpuszcza tylko składowe nadchodzące do domeny.
+
+### Poziom morza: DMI DKSS
+
+Model spiętrzeń **DMI DKSS NSBS** (ok. 5 km, przebieg co 6 h, ok. 5 dni) podaje odchylenie
+poziomu morza od średniego. Łączymy najnowszy przebieg z najstarszym, który DMI jeszcze
+udostępnia; ten drugi pokrywa ostatnią dobę historii. Poziom jest jednakowy na całym
+przekroju i zmienia się co godzinę (`INPGRID WLEVEL`, `READINP WLEVEL`). Pływy Bałtyku
+są znikome, więc dodajemy go do głębokości względem LAT. SWAN podaje głębokość wody,
+czyli dno plus poziom: punkt na dnie 2 m ma przy spiętrzeniu +0,4 m ok. 2,4 m wody.
+
+- Godziny bez DKSS mają poziom 0 jak dotąd; po końcu prognozy DKSS zostaje stały
+  poziom, bez wymyślonego przejścia.
+- Punkt podsumowania nadal wynika z dna, nie z bieżącego poziomu.
+- Przy podniesionym poziomie węzeł 0 m (brzeg modelu) ma tyle wody, ile wynosi
+  spiętrzenie, i nadal jest brzegiem modelu. Gdy niski poziom osuszy punkt podsumowania,
+  ta godzina nie ma fali (głębokość 0 oznacza brak wyniku), zamiast odrzucać cały przebieg.
+- SWAN zapisuje godzinę kończącą krok z wodą tego kroku, więc każdy krok dostaje poziom
+  swojej końcowej godziny. Test z prawdziwym solverem sprawdza, że głębokość każdej
+  opublikowanej godziny odpowiada jej poziomowi.
+
+Każda godzina wyniku zapisuje użyty poziom (`seaLevel`, `null` oznacza 0), a dokument
+źródło (`seaLevelModel`). Bez danych DKSS przebieg jest dokładnie taki jak wcześniej.
 
 ### Wiatr BS Wind 8
 
@@ -96,8 +145,8 @@ ewolucję i generuje lokalne składowe na ostatnich kilometrach.
 ### Procesy i parametry
 
 `GEN3 KOMEN`, `BREAKING CONSTANT 1.0 0.73`, `FRICTION JONSWAP 0.038`, `TRIAD`.
-Głębokości względem LAT, poziom wody 0 w tym układzie. Brak prądów, lodu,
-osłony i dyfrakcji wokół falochronów oraz zmian poziomu morza. Przekrój 1D
+Głębokości względem LAT; poziom wody z DMI DKSS (wyżej), a poza jego zasięgiem 0 w tym
+układzie. Brak prądów, lodu, osłony i dyfrakcji wokół falochronów. Przekrój 1D
 zakłada niezmienność wzdłuż brzegu; nie jest domeną portową 2D. Parametry nie
 były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafności.
 
@@ -177,7 +226,7 @@ oznaczony `profileGridM: 50` i `profileReference: estimated-shoreline`.
 Niepełny profil nie jest sztucznie przedłużany na wykresie. Publikacja wymaga zgodnej
 wersji pakietu danych, dzięki czemu awaryjne przywrócenie starego artefaktu
 nie podmieni nowych wyników na dawne wartości z innego zakresu przestrzennego.
-Frontend przyjmuje wyłącznie `BS-SWAN-1.3-seaward2m`. Cache prognoz oraz historia
+Frontend przyjmuje wyłącznie `BS-SWAN-1.4-waves-sealevel`. Cache prognoz oraz historia
 ocen tabeli porównawczej są rozdzielone według wersji metody i geometrii.
 Heat mapa nie przechowuje historii — pokazuje godziny od bieżącej do końca prognozy.
 Stare oceny nie są domieszane do poprawionych wyników; archiwalny kolor pojawi się
@@ -195,7 +244,10 @@ Workflow `.github/workflows/forecast-pages.yml`:
 1. Uruchamia się po zmianie kodu, ręcznie lub o minucie 17 co 3 godziny (UTC).
 2. Pobiera nowe dane wiatrowe dla wszystkich spotów i publikuje `data/wind/ID.json`.
 3. Uruchamia SWAN, jeśli zmienił się cykl 00/12 UTC, kod modelu, geometria,
-   brakuje dostatecznego horyzontu albo ręcznie wybrano `force`.
+   brakuje dostatecznego horyzontu albo ręcznie wybrano `force`. Tylko dla liczonych spotów
+   pobiera fale z Open-Meteo oraz z DMI fale WAM i poziom morza DKSS (trzy zapytania o siatkę
+   całego wybrzeża, ok. 30 s). Gdy DMI nie odpowiada, liczy z pozostałymi modelami fal i stałym
+   poziomem, a `status.json` podaje to w `refreshWarnings`.
 4. Publikuje `data/nearshore/ID.json` i `data/status.json`, a potem cały frontend
    przez artefakt GitHub Pages. Wyniki nie trafiają jako automatyczne commity do Git.
    `model/build_site.py` składa też `data/coast-1.json` … `coast-4.json`: wiatr i fale wszystkich
@@ -291,9 +343,11 @@ wykrywa błędy algorytmu, ale nie mierzy trafności względem rzeczywistego mor
   i [dokumentacja fizyki](https://swanmodel.sourceforge.io/online_doc/swantech/swantech.html).
   Pobieramy oficjalną paczkę binarną 41.51 i weryfikujemy jej SHA256. Nie
   przedstawiamy kodu fizyki SWAN jako własnego wynalazku.
-- DWD EWAM / ECMWF WAM oraz ICON / NOAA GFS / ECMWF IFS przez Open-Meteo.
+- DWD EWAM / ECMWF WAM / NOAA GFS Wave oraz ICON / NOAA GFS / ECMWF IFS przez Open-Meteo.
+- DMI (Duński Instytut Meteorologiczny), [otwarte dane](https://www.dmi.dk/friedata/)
+  na licencji CC BY 4.0: fale WAM NSB i poziom morza DKSS NSBS (Forecast EDR API).
 - EMODnet Bathymetry Consortium, DTM 2024, warstwa `emodnet:mean` WCS,
   [DOI](https://doi.org/10.12770/cf51df64-56f9-4a99-b1aa-36b8d7b743a1).
 
-Najważniejszy kolejny krok jakościowy: pomiary rew, poziom morza i walidacja
-na raportach lokalnych, następnie domeny SWAN 2D dla portów i skomplikowanego brzegu.
+Najważniejszy kolejny krok jakościowy: pomiary rew i walidacja na raportach
+lokalnych, następnie domeny SWAN 2D dla portów i skomplikowanego brzegu.

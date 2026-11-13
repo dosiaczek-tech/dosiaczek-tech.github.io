@@ -7,7 +7,7 @@ from unittest import mock
 
 import nearshore
 
-from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, HISTORY_HOURS, WAVE_MODELS, WIND_MODELS, available_end, calculation_grid, consensus, install_engine,
+from nearshore import (DX, COMPUTE_DX, LENGTH, SPINUP_HOURS, HISTORY_HOURS, MARINE_MODELS, WAVE_MODELS, WIND_MODELS, available_end, calculation_grid, consensus, install_engine,
                        local_direction, offshore, parse_output, shoreline_reference, simulate, swan_time, wind_components)
 
 
@@ -55,7 +55,7 @@ class ModelUtilities(unittest.TestCase):
         wind = {"latitude": ",".join(["54"] * 18), "hourly": "wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day",
                 "models": ",".join(WIND_MODELS), "past_days": 2, "forecast_days": 16}
         self.assertAlmostEqual(nearshore.api_calls(wind), 18 * (4 * len(WIND_MODELS) / 10) * 18 / 14)
-        marine = {**wind, "hourly": "wave_height,wave_direction,wave_period", "models": ",".join(WAVE_MODELS)}
+        marine = {**wind, "hourly": "wave_height,wave_direction,wave_period", "models": ",".join(MARINE_MODELS)}
         self.assertAlmostEqual(nearshore.api_calls(marine), 18 * 18 / 14)
         # Spacing keeps a run below the free limit of 600 calls per minute.
         self.assertLessEqual(nearshore.api_calls(wind) / max(.3, nearshore.api_calls(wind) * 60 / nearshore.CALLS_PER_MINUTE) * 60, 600)

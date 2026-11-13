@@ -145,6 +145,12 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - **Bałtyk Surf 1.2 / SWAN**: rzeczywista, niestacjonarna symulacja widma fal
   przy brzegu, z regionalną falą na granicy, wiatrem BS Wind 8 (osiem modeli) i rastrem EMODnet.
   Wykres przekroju, fala w okolicy głębokości 2 m, okres, moc i strefa załamania.
+- Falę na granicy, 5 km od brzegu, podają cztery modele: ECMWF WAM, DMI WAM NSB, DWD EWAM
+  i NOAA GFS Wave. Co godzinę falę daje jeden z nich — najbliższy pozostałym — bez zbędnego
+  przeskakiwania między modelami; przy dwóch modelach jest to ECMWF WAM. Gdy modele mocno
+  się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Poziom morza
+  (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
+  oba modele bez klucza na licencji CC BY 4.0. Szczegóły: [MODEL.md](MODEL.md).
 - Główny wykres pokazuje **pełny przekrój 0, 50, 100, …, 500 m** i jest od razu
   widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
   jest zaznaczeniem na całej krzywej, nie początkiem wykresu.

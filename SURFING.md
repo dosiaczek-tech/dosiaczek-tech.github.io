@@ -27,7 +27,8 @@ główny kafelek przybrzeżny i ocena sesji korzystają z aktualnego wyniku SWAN
 - Pięć kolejnych dób, wartości godzinowe, porównanie modeli, trzy najlepsze
   niepokrywające się okna dzienne po trzy godziny dla wybranej plaży.
 - Fale przy spocie: **SWAN, strefa 0–500 m**. Dane wejściowe backendu:
-  DWD EWAM / ECMWF WAM. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
+  ECMWF WAM, DMI WAM, DWD EWAM i NOAA GFS Wave (co godzinę jeden z nich, najbliższy pozostałym)
+  oraz poziom morza DMI DKSS. Wiatr: **DWD ICON + NOAA GFS + ECMWF IFS**.
 - Raster dna **EMODnet WCS**, niestacjonarny model SWAN z rzeczywistym wymuszeniem
   wiatrowym w trzech punktach przekroju, transportem widma, tarciem i załamywaniem.
 - Osadzana mapa **fal Windy**, ładowana automatycznie po otwarciu prognozy; link do Windy
@@ -106,15 +107,16 @@ dla nauki kitesurfingu. Vättern jest jeziorem, nie częścią katalogu bałtyck
 
 | Dane | Źródło / dostęp | Zastosowanie |
 | --- | --- | --- |
-| Hs, średni okres, kierunek fal | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam` | Dwie równoległe prognozy, bez udawania niezależnych obserwacji |
+| Hs, średni okres, kierunek fal | [Open-Meteo Marine](https://open-meteo.com/en/docs/marine-weather-api), jawne modele `dwd_ewam,ecmwf_wam,ncep_gfswave025`; [DMI Forecast EDR API](https://www.dmi.dk/friedata/), `wam_nsb` (CC BY 4.0) | Cztery prognozy na granicy SWAN; co godzinę jedna z nich, bez udawania niezależnych obserwacji |
+| Poziom morza | [DMI Forecast EDR API](https://www.dmi.dk/friedata/), `dkss_nsbs`, `sea-mean-deviation` (CC BY 4.0) | Głębokość wody w SWAN przez około 5 dni |
 | Wiatr 10 m, porywy, dzień/noc | [Open-Meteo Weather](https://open-meteo.com/en/docs), `icon_seamless,gfs_seamless,ecmwf_ifs025,ecmwf_aifs025_single,ukmo_seamless,jma_seamless,gem_seamless,dmi_harmonie_arome_europe` | Konsensus wiatru i wybór okien dziennych |
 | Głębokość | [EMODnet Bathymetry WMS](https://ows.emodnet-bathymetry.eu/wms?service=WMS&request=GetCapabilities), warstwa `emodnet:mean`, `GetFeatureInfo` | Sześć próbek profilu poprzecznego do brzegu |
 | Dno SWAN | EMODnet WCS `emodnet:mean`, GeoTIFF 1/16 minuty | Pełny przekrój próbkowany co 100 m, a nie tylko sześć punktów |
 | Mapa pogody | [Windy](https://www.windy.com/), oficjalny embed | Wizualne porównanie, osobne od wyniku |
 | Położenie plaży | [OpenStreetMap](https://www.openstreetmap.org/) | Link do mapy, nie numeryczna maska brzegu |
 
-Według dokumentacji dostawcy DWD EWAM ma siatkę około 5 km, ECMWF WAM około
-9 km. To nie jest rozdzielczość surfbreaku. Open-Meteo może interpolować czas;
+Według dokumentacji dostawców DWD EWAM i DMI WAM NSB mają siatkę około 5 km, ECMWF WAM około
+9 km, a NOAA GFS Wave 25 km. To nie jest rozdzielczość surfbreaku. Open-Meteo może interpolować czas;
 godzinowa tabela nie oznacza niezależnego pomiaru co godzinę.
 
 EMODnet ma siatkę 1/16 minuty kątowej (~115 m w osi N–S, mniej w osi E–W

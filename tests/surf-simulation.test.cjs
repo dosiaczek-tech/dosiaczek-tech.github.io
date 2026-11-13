@@ -162,6 +162,18 @@ test('a fourteen-day coastal run reaches the table without being cut to the form
   assert.ok(forecast.at(-1).confidence.reasons.some(r=>r.includes('ponad 7 dni')));
 });
 
+test('strongly differing offshore wave models lower the confidence of that hour',()=>{
+  const hourly={time:[time]};
+  for(const model of Object.keys(M.WIND_MODELS)){
+    hourly[`wind_speed_10m_${model}`]=[3];
+    hourly[`wind_direction_10m_${model}`]=[180];
+  }
+  const rated=agree=>M.buildCoastalForecast(spot,{hourly},{...document,hourly:[{...result,boundary:{model:'dmi_wam_nsb',models:4,agree}}]},time*1000,{historyHours:0})[0];
+  assert.ok(rated(false).confidence.reasons.includes('Rozbieżne prognozy fal na morzu'));
+  assert.equal(rated(false).confidence.level,'niska');
+  assert.ok(!rated(true).confidence.reasons.includes('Rozbieżne prognozy fal na morzu'));
+  assert.equal(rated(true).score,rated(false).score,'the disagreement changes the confidence, not the score');
+});
 test('opposite wind directions still give a score: the median of the scores for each model wind, with low confidence',()=>{
   // Onshore, offshore and two cross winds cancel out: no common direction.
   const winds={icon_seamless:[6,0],gfs_seamless:[6,90],ecmwf_ifs025:[6,180],ecmwf_aifs025_single:[6,270]};

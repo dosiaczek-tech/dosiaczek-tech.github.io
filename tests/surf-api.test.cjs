@@ -100,7 +100,7 @@ test('older point-selection results cannot return through a response or saved fo
   const savedKey=`nad-morzem:surf-v2:swan-${model.SIMULATION_VERSION}-${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}-saved`;
   h.storage.set(savedKey,JSON.stringify(old));
   assert.equal((await h.api.nearshore(spot)).status,'unavailable');
-  assert.match(h.requests[0],/model=BS-SWAN-1\.3-seaward2m/);
+  assert.match(h.requests[0],/model=BS-SWAN-1\.4-waves-sealevel/);
   const current={...old,version:model.SIMULATION_VERSION,hourly:[{time:stamp,height:1.188}]};
   h.setSwan(current);
   assert.equal((await h.api.nearshore(spot)).hourly[0].height,1.188);
