@@ -151,6 +151,11 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Poziom morza
   (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
   oba modele bez klucza na licencji CC BY 4.0. Szczegóły: [MODEL.md](MODEL.md).
+- **Osłona od wiatru**: przeszkody przy spocie (falochrony, molo, wydmy, las, budynki) z lotniczego
+  skanu laserowego GUGiK (NMPT) osłabiają w ocenie wiatr, od którego zasłaniają — np. w Kołobrzegu
+  wiatr z W za falochronem portu. Dane w `surf-shelter.js` generuje `model/shelter.py` (ok. 50 minut;
+  uruchomić po dodaniu lub przesunięciu spotu). Symulacja SWAN nadal dostaje wiatr z modeli.
+  Szczegóły: [SURFING.md](SURFING.md).
 - Główny wykres pokazuje **pełny przekrój 0, 50, 100, …, 500 m** i jest od razu
   widoczny. Wybór godziny zmienia przekrój oraz podsumowanie. Punkt podsumowania
   jest zaznaczeniem na całej krzywej, nie początkiem wykresu.

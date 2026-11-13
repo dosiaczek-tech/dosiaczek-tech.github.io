@@ -3,7 +3,7 @@
  */
 (function (root) {
   "use strict";
-  const VERSION = "Bałtyk Surf 1.3 / punkt od strony morza";
+  const VERSION = "Bałtyk Surf 1.4 / osłona od wiatru";
   const SIMULATION_VERSION = "BS-SWAN-1.4-waves-sealevel";
   // Coastal SWAN runs cover 14 days (336 h); the current hour is the first forecast row.
   const FORECAST_HOURS = 336;
@@ -200,6 +200,16 @@
     return { value: clamp(value, 0, 1), known: true };
   }
 
+  // Obstacles upwind (breakwaters, piers, dunes, forest, buildings) weaken some winds where people surf, or leave
+  // too little open water for chop: surf-shelter.js, from model/shelter.py. 0 = open, at most 0.8.
+  function windShelter(spot, direction) {
+    const values = spot?.shelter;
+    if (!Array.isArray(values) || values.length !== 72 || !finite(direction)) return 0;
+    const position = (direction % 360 + 360) % 360 / 5, i = Math.floor(position) % 72, f = position - Math.floor(position);
+    const a = values[i], b = values[(i + 1) % 72];
+    return finite(a) && finite(b) ? clamp((a + (b - a) * f) / 100, 0, .8) : 0;
+  }
+
   function rate(wave, wind, spot, bathymetry, localOverride = null, order = { value: .5, known: false }) {
     if (!wind || ![wave.height, wave.period, wave.direction].every(finite) || wave.height < 0 || wave.period <= 0 ||
         !finite(wind.speed) || wind.speed < 0 || !finite(spot.normal) ||
@@ -211,22 +221,26 @@
     const periodQuality = interpolate(wave.period, [[3, .1], [4, .35], [5, .6], [6, .8], [7, 1]]);
     const type = windRelative(wind, spot);
     const windAngle = finite(wind.direction) ? angle(wind.direction, spot.normal) : 0;
+    // The wind at the spot: the models' wind, weakened by the obstacles that shield the spot from it.
+    const shelter = windShelter(spot, wind.direction);
+    const speed = wind.speed * (1 - shelter), gust = finite(wind.gust) ? wind.gust * (1 - shelter) : null;
     const windCurves = [[0, .35, .1, 0], [45, .45, .2, .05], [90, .6, .3, .1], [135, .85, .55, .2], [180, 1, .65, .25]];
     let windQuality = interpolate(windAngle, windCurves.map(([a, mild, fresh, strong]) =>
-      [a, interpolate(wind.speed, [[2, .95], [5, mild], [8, fresh], [12, strong], [17, 0]])]));
-    if (finite(wind.gust)) windQuality *= clamp(1 - Math.max(0, wind.gust - wind.speed - 3) / 15, .4, 1);
+      [a, interpolate(speed, [[2, .95], [5, mild], [8, fresh], [12, strong], [17, 0]])]));
+    if (finite(gust)) windQuality *= clamp(1 - Math.max(0, gust - speed - 3) / 15, .4, 1);
     const power = finite(local?.powerKWm) && local.powerKWm >= 0 ? local.powerKWm
       : waveEnergy({ height, period: wave.period }, finite(local?.depth) && local.depth > 0 ? local.depth : null).powerKWm;
     const potential = heightQuality * (.55 + .45 * periodQuality);
     let score = 10 * potential * (.45 + .35 * windQuality + .2 * order.value);
     if (incidence >= 85) score = 0;
     if (wave.period < 3.5) score = Math.min(score, 3);
-    const strong = wind.speed >= 12 || (finite(wind.gust) && wind.gust >= 17) || wave.height >= 3;
+    const strong = speed >= 12 || (finite(gust) && gust >= 17) || wave.height >= 3;
     if (strong) score = Math.min(score, 2);
     const flags = [];
     if (heightQuality >= .8) flags.push("Na plus: wysokość dopasowana do rekreacyjnej sesji");
     else flags.push(height < .8 ? "Na minus: mała fala" : "Na minus: duża fala dla profilu rekreacyjnego");
     if (wave.period >= 6) flags.push("Na plus: dłuższy okres fal");
+    if (shelter >= .15 && wind.speed >= 3) flags.push("Na plus: przeszkody osłaniają spot od tego wiatru");
     if (windQuality >= .8) flags.push("Na plus: wiatr sprzyja jakości fali");
     if (windQuality < .5) flags.push("Na minus: kierunek, siła lub porywy wiatru pogarszają falę");
     if (!order.known) flags.push("Uporządkowanie fal: brak pełnych danych, wartość neutralna");
@@ -236,7 +250,7 @@
     if (wave.period < 4) flags.push("Krótka, wiatrowa fala");
     if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
     return { score: Math.round(clamp(score, 0, 10) * 10) / 10, height, local, windType: type, powerKWm: power,
-      components: { potential, heightQuality, periodQuality, windQuality, order: order.value }, flags };
+      components: { potential, heightQuality, periodQuality, windQuality, order: order.value, shelter }, flags };
   }
 
   function scoreLabel(score, height = null) {
@@ -408,6 +422,6 @@
     })
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }
-  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

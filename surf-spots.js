@@ -98,6 +98,15 @@
   spots.find(s => s.id === "jelitkowo").requireWindGeometry = true;
   spots.find(s => s.id === "sopot").requireWindGeometry = true;
   spots.find(s => s.id === "kuznica").requireWindGeometry = true;
+  // Wind shelter by obstacles (model/shelter.py); it holds only for the position it was measured at.
+  const shelter = typeof module === "undefined" ? root.SurfShelter : (() => {
+    try { return require("./surf-shelter.js"); }
+    catch (error) { if (error.code === "MODULE_NOT_FOUND") return null; throw error; }
+  })();
+  for (const spot of spots) {
+    const entry = shelter?.[spot.id];
+    if (entry && entry.lat === spot.lat && entry.lon === spot.lon && entry.normal === spot.normal) spot.shelter = entry.shelter;
+  }
   if (typeof module !== "undefined") module.exports = spots;
   else root.SurfSpots = spots;
 })(typeof globalThis !== "undefined" ? globalThis : this);

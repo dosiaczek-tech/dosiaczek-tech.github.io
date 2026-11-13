@@ -146,7 +146,8 @@ ewolucję i generuje lokalne składowe na ostatnich kilometrach.
 
 `GEN3 KOMEN`, `BREAKING CONSTANT 1.0 0.73`, `FRICTION JONSWAP 0.038`, `TRIAD`.
 Głębokości względem LAT; poziom wody z DMI DKSS (wyżej), a poza jego zasięgiem 0 w tym
-układzie. Brak prądów, lodu, osłony i dyfrakcji wokół falochronów. Przekrój 1D
+układzie. Brak prądów, lodu, osłony i dyfrakcji fal wokół falochronów. Osłonę od wiatru przez falochrony,
+molo, wydmy, las i budynki uwzględnia tylko ocena przy spocie (SURFING.md), nie wymuszenie SWAN. Przekrój 1D
 zakłada niezmienność wzdłuż brzegu; nie jest domeną portową 2D. Parametry nie
 były dostrajane do lokalnych pomiarów. Nie deklarujemy niezmierzonej trafności.
 

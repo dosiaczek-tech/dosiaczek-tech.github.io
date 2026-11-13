@@ -214,6 +214,19 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
   `0,35/0,45/0,60/0,85/1`; przy 8: `0,1/0,2/0,3/0,55/0,65`;
   przy 12: `0/0,05/0,1/0,2/0,25`; przy ≥17: 0.
   Porywy przekraczające średnią o ponad 3 m/s stopniowo obniżają ten składnik.
+- **Osłona od wiatru** (`surf-shelter.js`, skrypt `model/shelter.py`). Z lotniczego skanu laserowego
+  GUGiK (NMPT: wysokości falochronów, mol, wydm, lasu i budynków) liczymy dla każdego spotu i co 5°
+  kierunku, jak bardzo przeszkody pod wiatr osłabiają wiatr tam, gdzie się surfuje: w punkcie spotu, co najmniej
+  75 m od linii wody (tam łamią się fale), zawsze po stronie morza — punkt na lądzie albo na jeziorze za mierzeją
+  przenosimy na linię od punktu SWAN do brzegu. Dwa efekty, większy wygrywa:
+  przeszkoda o wysokości H spowalnia wiatr do ok. 30 H za sobą (do 5 H o 70%, przy 10 H o 45%,
+  przy 20 H o 20%); przy wietrze od morza lub wzdłuż brzegu przeszkoda, która skraca otwartą wodę
+  przed spotem, nie daje urosnąć kipieli: `1 − √(woda / 2000 m)`. Liczy się tylko to, o ile woda jest
+  krótsza niż przy prostym brzegu — krótką wodę wiatru od lądu ocenia już kąt wiatru. Liczymy po pięć promieni w zakresie
+  ±10° i bierzemy średnią, najwyżej 80%. Ocena używa wiatru przy spocie `prędkość × (1 − osłona)`,
+  także dla porywów i progu silnego wiatru; kierunek wiatru, SWAN i wykrywanie wywiewki zostają przy
+  wietrze z modeli. Przykład: za wschodnim falochronem portu w Kołobrzegu wiatr z W słabnie o 70–80%.
+  Godzina z osłoną co najmniej 15% przy wietrze od 3 m/s ma dopisek „przeszkody osłaniają spot od tego wiatru”.
 - Uporządkowanie to proxy ze stabilności wysokości, okresu i kierunku w trzech
   kolejnych godzinach kończących się ocenianą godziną: `0,3 + 0,4 × stabilność`.
   Potwierdzona wywiewka dodaje 0,25 tylko tutaj; nawianie lub świeża zmiana
