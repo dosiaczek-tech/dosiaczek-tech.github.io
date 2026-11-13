@@ -244,6 +244,16 @@
     return finite(a) && finite(b) ? clamp((a + (b - a) * f) / 100, 0, .8) : 0;
   }
 
+  // A steep beach makes the waves that reach the shore dump onto the sand (shorebreak) instead of spilling. The beach
+  // slope comes from the LiDAR scan (surf-beach.js, model/beach.py); from STEEP_BEACH the beach counts as steep. There
+  // the surf similarity of the slope and the waves at the spot, slope / sqrt(H / L0) with L0 = g T² / 2π, tells when
+  // they plunge: from 0.5 (Battjes 1974). Smaller waves do no harm.
+  const STEEP_BEACH = 1 / 15, SHOREBREAK = .5, SHOREBREAK_HEIGHT = .5;
+  function shorebreak(slope, height, period) {
+    if (!finite(slope) || slope <= 0 || !finite(height) || height <= 0 || !finite(period) || period <= 0) return null;
+    return slope / Math.sqrt(height / (9.81 * period * period / (2 * Math.PI)));
+  }
+
   function rate(wave, wind, spot, bathymetry, localOverride = null, order = { value: .5, known: false }, profile = PROFILES.intermediate) {
     if (!wind || ![wave.height, wave.period, wave.direction].every(finite) || wave.height < 0 || wave.period <= 0 ||
         !finite(wind.speed) || wind.speed < 0 || !finite(spot.normal) ||
@@ -293,11 +303,15 @@
     if (strong) flags.push("Silny wiatr lub wysokie fale — trudne warunki");
     if (profile === PROFILES.beginner && ["offshore", "cross-off"].includes(type) && speed >= 5)
       flags.push("Uwaga: wiatr od lądu odpycha od brzegu");
+    // Only a warning: the score stays. The mean period of older results stands in for the peak one (JONSWAP).
+    const dumping = local ? shorebreak(spot.beachSlope, height, peak ?? wave.period / .84) : null;
+    if (incidence < 85 && spot.beachSlope >= STEEP_BEACH && dumping >= SHOREBREAK && height >= SHOREBREAK_HEIGHT)
+      flags.push("Uwaga: stromy brzeg — fala może rzucać tuż przy plaży");
     if (incidence >= 85) flags.push("Fala spoza sektora ekspozycji");
     if (choppy) flags.push("Krótka, wiatrowa fala");
     if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
     return { score: Math.round(clamp(score, 0, 10) * 10) / 10, height, local, windType: type, powerKWm: power,
-      components: { potential, heightQuality, periodQuality, windQuality, order: order.value, shelter, peakPeriod: peak, swell }, flags };
+      components: { potential, heightQuality, periodQuality, windQuality, order: order.value, shelter, peakPeriod: peak, swell, shorebreak: dumping }, flags };
   }
 
   function scoreLabel(score, height = null) {
@@ -475,6 +489,6 @@
     })
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }
-  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, PROFILES, profileOf, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, PROFILES, profileOf, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, STEEP_BEACH, SHOREBREAK, SHOREBREAK_HEIGHT, shorebreak, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

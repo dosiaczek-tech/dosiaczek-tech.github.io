@@ -103,9 +103,16 @@
     try { return require("./surf-shelter.js"); }
     catch (error) { if (error.code === "MODULE_NOT_FOUND") return null; throw error; }
   })();
+  // How steeply the beach rises out of the water (model/beach.py), likewise only for its own position.
+  const beaches = typeof module === "undefined" ? root.SurfBeach : (() => {
+    try { return require("./surf-beach.js"); }
+    catch (error) { if (error.code === "MODULE_NOT_FOUND") return null; throw error; }
+  })();
   for (const spot of spots) {
     const entry = shelter?.[spot.id];
     if (entry && entry.lat === spot.lat && entry.lon === spot.lon && entry.normal === spot.normal) spot.shelter = entry.shelter;
+    const beach = beaches?.[spot.id];
+    if (beach && beach.lat === spot.lat && beach.lon === spot.lon && beach.normal === spot.normal) spot.beachSlope = beach.slope;
   }
   if (typeof module !== "undefined") module.exports = spots;
   else root.SurfSpots = spots;

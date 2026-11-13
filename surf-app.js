@@ -192,10 +192,15 @@ document.addEventListener("DOMContentLoaded", () => {
     body.append(node("p", `Od lądu ku morzu: ${compass(s.normal)}. Onshore: wiatr z okolic ${compass(s.normal)} (±22,5°). Offshore: z okolic ${compass((s.normal + 180) % 360)} (±22,5°). Pomiędzy nimi rozróżniamy cross-on (boczny do brzegu), cross i cross-off (boczny od brzegu). Poniżej ok. 3 knts wiatr jest słaby. Ocena liczy kąt wiatru po połowie względem plaży i względem kierunku nadchodzącej fali.`, "surf-small"));
     // Hazards near the spot from OpenStreetMap (model/hazards.py), only for the position they were found for.
     const hazards = window.SurfHazards?.[s.id];
-    if (hazards?.notes?.length && hazards.lat === s.lat && hazards.lon === s.lon) {
+    const notes = hazards?.notes?.length && hazards.lat === s.lat && hazards.lon === s.lon ? hazards.notes : [];
+    // A steep beach from the LiDAR scan (model/beach.py): the waves may dump right at the shore.
+    const steep = M.finite(s.beachSlope) && s.beachSlope >= M.STEEP_BEACH;
+    if (notes.length || steep) {
       const list = node("ul", undefined, "surf-hazards");
-      list.append(...hazards.notes.map(text => node("li", text)));
-      body.append(node("h4", "Bezpieczeństwo"), list, node("p", "Na podstawie OpenStreetMap (© OpenStreetMap contributors). Sprawdź oznakowanie i komunikaty na miejscu.", "surf-small"));
+      list.append(...notes.map(text => node("li", text)));
+      if (steep) list.append(node("li", `Stromy brzeg: plaża wychodzi z wody z nachyleniem ok. 1:${Math.round(1 / s.beachSlope)}. Przy fali od ok. 0,5 m może ona rzucać tuż przy plaży — wtedy przy godzinie pojawia się ostrzeżenie.`));
+      const source = [notes.length ? "OpenStreetMap (© OpenStreetMap contributors)" : null, steep ? "lotniczego skanu GUGiK" : null].filter(Boolean).join(" i ");
+      body.append(node("h4", "Bezpieczeństwo"), list, node("p", `Na podstawie ${source}. Sprawdź oznakowanie i komunikaty na miejscu.`, "surf-small"));
     }
     const c = s.community;
     if (c) {

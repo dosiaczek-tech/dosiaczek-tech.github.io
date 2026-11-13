@@ -330,6 +330,16 @@ Bez filtra ranking nadal uwzględnia dobre okna bez lokalnego nawiania.
   ostrogi brzegowe (do 200 m). Pokazujemy je w opisie spotu; nie zmieniają oceny fal.
 - **Lód na morzu** (DMI DKSS, ok. 5 dni): od 10% kry dopisek i niska pewność, od 30% ocena najwyżej 1 —
   SWAN nie uwzględnia lodu, który tłumi fale.
+- **Stromy brzeg** (`surf-beach.js`, skrypt `model/beach.py`, lotniczy skan GUGiK NMPT co 1 m): mierzymy, jak stromo
+  plaża wychodzi z wody. Na siedmiu liniach w poprzek plaży, co 20 m, sprawdzamy, na jakiej odległości grunt
+  podnosi się od 0,3 do 1,3 m nad powierzchnię morza widoczną w skanie (tam fala wbiega na plażę), i bierzemy
+  medianę. Linię szukamy od strony lądu (pierwszy grunt, który przez 8 m trzyma się nad pasem), więc fale, kamienie
+  i pale w wodzie jej nie mylą; linie przecinające mur, narzut kamienny albo podnóże klifu (stromiej niż 1:5) pomijamy, a spot bez
+  co najmniej trzech linii nie ma wyniku. Plaża od 1:15 jest stroma: opis spotu ma wtedy notkę w części
+  „Bezpieczeństwo”, a godzina — ostrzeżenie „stromy brzeg — fala może rzucać tuż przy plaży”, gdy fala w punkcie
+  prognozy ma co najmniej 0,5 m, a liczba `nachylenie / √(H / L0)` (L0 = g T² / 2π z okresu szczytowego)
+  wynosi co najmniej 0,5: od tej wartości fala na takim zboczu się zawija (Battjes 1974). Ostrzeżenie nie zmienia
+  oceny. Skan pokazuje plażę z dnia nalotu; sztormy i pory roku ją zmieniają.
 
 ### 6. Energia i moc fal — obliczenia pomocnicze i wynik przy spocie
 

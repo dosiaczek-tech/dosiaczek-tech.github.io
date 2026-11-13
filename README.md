@@ -163,7 +163,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
   progów oceny (`surf-reports.js`). Szczegóły: [SURFING.md](SURFING.md).
 - **Bezpieczeństwo i komfort**: wiersz „Pianka” w tabeli godzinowej (z temperatury wody i powietrza),
   zagrożenia przy spocie z OpenStreetMap (wejście do portu, ujście rzeki, falochron lub molo, ostrogi;
-  `surf-hazards.js` z `model/hazards.py`) i lód na morzu z DMI DKSS. Szczegóły: [SURFING.md](SURFING.md).
+  `surf-hazards.js` z `model/hazards.py`), lód na morzu z DMI DKSS oraz stromy brzeg z lotniczego skanu GUGiK
+  z ostrzeżeniem, gdy fala może rzucać tuż przy plaży (`surf-beach.js` z `model/beach.py`; uruchomić po dodaniu
+  lub przesunięciu spotu). Szczegóły: [SURFING.md](SURFING.md).
 - **Osłona od wiatru**: przeszkody przy spocie (falochrony, molo, wydmy, las, budynki) z lotniczego
   skanu laserowego GUGiK (NMPT) osłabiają w ocenie wiatr, od którego zasłaniają — np. w Kołobrzegu
   wiatr z W za falochronem portu. Dane w `surf-shelter.js` generuje `model/shelter.py` (ok. 50 minut;
