@@ -73,21 +73,21 @@
   // them across reloads with its own limit, which the forecast history in the local storage cannot fill.
   const STORE = "nad-morzem:heatmap-ratings-v1", STORE_TTL = 15 * 60000;
   let stored = null;
-  function remember(records, snapshotTime, model) {
+  function remember(records, snapshotTime, model, profile = "intermediate") {
     const spots = {};
     for (const [id, { scores, disputed, issue }] of records) {
       const times = [...scores.keys()].sort((a, b) => a - b), from = times[0] ?? null;
       spots[id] = { from, scores: from === null ? [] : Array.from({ length: (times.at(-1) - from) / 3600 + 1 }, (_, i) => scores.get(from + i * 3600) ?? null),
         disputed: [...disputed], issue };
     }
-    stored = { version: `${model.VERSION}|${model.SIMULATION_VERSION}`, snapshotTime, spots };
+    stored = { version: `${model.VERSION}|${model.SIMULATION_VERSION}|${profile}`, snapshotTime, spots };
     try { sessionStorage.setItem(STORE, JSON.stringify(stored)); } catch { /* The copy in memory still works. */ }
   }
-  function recall(model, now = Date.now()) {
+  function recall(model, now = Date.now(), profile = "intermediate") {
     let value = stored;
     if (!value) try { value = JSON.parse(sessionStorage.getItem(STORE)); } catch { value = null; }
     const age = now - value?.snapshotTime;
-    if (!value?.spots || value.version !== `${model.VERSION}|${model.SIMULATION_VERSION}` || !(age >= 0 && age < STORE_TTL)) return null;
+    if (!value?.spots || value.version !== `${model.VERSION}|${model.SIMULATION_VERSION}|${profile}` || !(age >= 0 && age < STORE_TTL)) return null;
     stored = value;
     return { snapshotTime: value.snapshotTime, records: new Map(Object.entries(value.spots).map(([id, spot]) => [id, {
       scores: new Map(spot.scores.map((score, i) => [spot.from + i * 3600, score]).filter(([, score]) => validScore(score))),
@@ -229,7 +229,8 @@
     async function load(force = false) {
       const token = ++generation;
       // Ratings of the whole coast from the last 15 minutes (here or from "Pokaż najlepsze") show at once.
-      const saved = !force && recall(M);
+      const profile = root.SurfSurfer?.current() || "intermediate";
+      const saved = !force && recall(M, Date.now(), profile);
       if (saved && catalog.every(spot => saved.records.has(spot.id))) {
         loading = false; completed = catalog.length; loadedAt = saved.snapshotTime; snapshotTime = Date.now();
         records.clear(); for (const spot of catalog) records.set(spot.id, saved.records.get(spot.id));
@@ -249,7 +250,7 @@
           let entry = { scores: new Map(), disputed: new Set(), issue: FAILED };
           try {
             const [forecast, simulation] = await root.SurfAPI.coastal(spot, force);
-            entry = record(M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0 }), forecast, simulation, snapshotTime);
+            entry = record(M.buildCoastalForecast(spot, forecast.weather?.data, simulation, snapshotTime, { historyHours: 0, profile }), forecast, simulation, snapshotTime);
           } catch { /* The spot keeps the failure note. */ }
           if (token !== generation || !active()) return;
           records.set(spot.id, entry); completed++;
@@ -259,7 +260,7 @@
       if (token !== generation || !active()) return;
       loading = false; loadedAt = Date.now();
       times = timeline([...records.values()].map(record => record.scores), snapshotTime);
-      remember(records, snapshotTime, M);
+      remember(records, snapshotTime, M, profile);
       status();
       render();
     }
@@ -347,6 +348,8 @@
       if (!loading && (!loadedAt || Date.now() - loadedAt >= 15 * 60000)) load();
     }
     window.addEventListener("hashchange", route);
+    // Another surfer profile: new ratings, now if the map is open, else when it opens.
+    window.addEventListener("surfer-profile", () => { loadedAt = 0; if (active()) load(); });
     window.addEventListener("online", () => { if (active() && !loading) load(true); });
     window.addEventListener("app:resume", route);
     route();

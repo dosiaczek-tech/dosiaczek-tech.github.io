@@ -7,7 +7,30 @@
   const SIMULATION_VERSION = "BS-SWAN-1.4-waves-sealevel";
   // Coastal SWAN runs cover 14 days (336 h); the current hour is the first forecast row.
   const FORECAST_HOURS = 336;
-  const coastalHistoryKey = spot => `nad-morzem:compare-history:${SIMULATION_VERSION}:${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
+  // Each surfer profile keeps its own history; the original (intermediate) one keeps its old key.
+  const coastalHistoryKey = (spot, profile = "intermediate") => `nad-morzem:compare-history:${SIMULATION_VERSION}:${
+    profile !== "intermediate" && PROFILES[profile] ? `${profile}:` : ""}${spot.id}:${spot.lat}:${spot.lon}:${spot.normal}`;
+  // Surfer profiles: the waves and winds that suit each level and board; "intermediate" is the original rating.
+  // height: quality by the wave height at the spot; period: the share of the period in the wave potential;
+  // wind: quality by the angle to the beach normal (0 onshore … 180 offshore) at 5, 8 and 12 m/s;
+  // limits: from this wind (m/s), gusts or wave height (m) the score stays at most 2.
+  const PROFILES = {
+    intermediate: { label: "Średniozaawansowany", period: .45, limits: { wind: 12, gust: 17, height: 3 },
+      height: [[.2, 0], [.4, .25], [.6, .55], [.8, .8], [1, 1], [1.5, 1], [1.8, .85], [2.2, .65], [3, .2], [4, 0]],
+      wind: [[0, .35, .1, 0], [45, .45, .2, .05], [90, .6, .3, .1], [135, .85, .55, .2], [180, 1, .65, .25]] },
+    beginner: { label: "Początkujący", period: .35, limits: { wind: 9, gust: 13, height: 1.6 },
+      height: [[.15, 0], [.3, .45], [.5, 1], [.9, 1], [1.2, .6], [1.5, .3], [2, .05], [2.5, 0]],
+      // A wind from the land pushes a beginner away from the beach: only a light one helps.
+      wind: [[0, .35, .1, 0], [45, .45, .2, .05], [90, .6, .3, .1], [135, .7, .35, .1], [180, .7, .3, .05]] },
+    advanced: { label: "Zaawansowany", period: .5, limits: { wind: 14, gust: 20, height: 4 },
+      height: [[.3, 0], [.6, .3], [.9, .65], [1.2, 1], [2.2, 1], [2.8, .75], [3.5, .4], [4.5, 0]],
+      wind: [[0, .35, .1, 0], [45, .45, .2, .05], [90, .6, .3, .1], [135, .85, .55, .2], [180, 1, .65, .25]] },
+    // A long board catches small waves but needs them smooth and long: the period and a calm surface count more.
+    longboard: { label: "Longboard", period: .6, limits: { wind: 10, gust: 15, height: 2.5 },
+      height: [[.15, 0], [.3, .5], [.6, 1], [1.2, 1], [1.5, .7], [2, .35], [2.6, 0]],
+      wind: [[0, .3, .05, 0], [45, .4, .15, 0], [90, .55, .25, .05], [135, .85, .5, .15], [180, 1, .6, .2]] }
+  };
+  const profileOf = id => PROFILES[id] || PROFILES.intermediate;
   const WAVE_MODELS = { dwd_ewam: "DWD EWAM", ecmwf_wam: "ECMWF WAM" };
   // BS Wind 8: seven global models and the regional DMI HARMONIE (about 2 km) for the first ~2 days near the coast.
   // ICON and UKMO end after about a week, GEM and JMA after 10-11 days; GFS, ECMWF IFS and the
@@ -210,35 +233,37 @@
     return finite(a) && finite(b) ? clamp((a + (b - a) * f) / 100, 0, .8) : 0;
   }
 
-  function rate(wave, wind, spot, bathymetry, localOverride = null, order = { value: .5, known: false }) {
+  function rate(wave, wind, spot, bathymetry, localOverride = null, order = { value: .5, known: false }, profile = PROFILES.intermediate) {
     if (!wind || ![wave.height, wave.period, wave.direction].every(finite) || wave.height < 0 || wave.period <= 0 ||
         !finite(wind.speed) || wind.speed < 0 || !finite(spot.normal) ||
         (!finite(wind.direction) && wind.speed >= 0.5)) return null;
     const incidence = angle(wave.direction, spot.normal);
     const local = localOverride || transform(wave, spot, bathymetry);
     const height = local ? local.height : wave.height;
-    const heightQuality = interpolate(height, [[.2, 0], [.4, .25], [.6, .55], [.8, .8], [1, 1], [1.5, 1], [1.8, .85], [2.2, .65], [3, .2], [4, 0]]);
+    const heightQuality = interpolate(height, profile.height);
     const periodQuality = interpolate(wave.period, [[3, .1], [4, .35], [5, .6], [6, .8], [7, 1]]);
     const type = windRelative(wind, spot);
     const windAngle = finite(wind.direction) ? angle(wind.direction, spot.normal) : 0;
     // The wind at the spot: the models' wind, weakened by the obstacles that shield the spot from it.
     const shelter = windShelter(spot, wind.direction);
     const speed = wind.speed * (1 - shelter), gust = finite(wind.gust) ? wind.gust * (1 - shelter) : null;
-    const windCurves = [[0, .35, .1, 0], [45, .45, .2, .05], [90, .6, .3, .1], [135, .85, .55, .2], [180, 1, .65, .25]];
-    let windQuality = interpolate(windAngle, windCurves.map(([a, mild, fresh, strong]) =>
+    let windQuality = interpolate(windAngle, profile.wind.map(([a, mild, fresh, strong]) =>
       [a, interpolate(speed, [[2, .95], [5, mild], [8, fresh], [12, strong], [17, 0]])]));
     if (finite(gust)) windQuality *= clamp(1 - Math.max(0, gust - speed - 3) / 15, .4, 1);
     const power = finite(local?.powerKWm) && local.powerKWm >= 0 ? local.powerKWm
       : waveEnergy({ height, period: wave.period }, finite(local?.depth) && local.depth > 0 ? local.depth : null).powerKWm;
-    const potential = heightQuality * (.55 + .45 * periodQuality);
+    const potential = heightQuality * (1 - profile.period + profile.period * periodQuality);
     let score = 10 * potential * (.45 + .35 * windQuality + .2 * order.value);
     if (incidence >= 85) score = 0;
     if (wave.period < 3.5) score = Math.min(score, 3);
-    const strong = speed >= 12 || (finite(gust) && gust >= 17) || wave.height >= 3;
+    const strong = speed >= profile.limits.wind || (finite(gust) && gust >= profile.limits.gust) || wave.height >= profile.limits.height;
     if (strong) score = Math.min(score, 2);
     const flags = [];
-    if (heightQuality >= .8) flags.push("Na plus: wysokość dopasowana do rekreacyjnej sesji");
-    else flags.push(height < .8 ? "Na minus: mała fala" : "Na minus: duża fala dla profilu rekreacyjnego");
+    // The original texts stay for the intermediate profile; the others name the chosen profile.
+    const named = profile === PROFILES.intermediate ? null : `profilu „${profile.label}”`;
+    const best = profile.height.find(([, quality]) => quality === 1)[0];
+    if (heightQuality >= .8) flags.push(named ? `Na plus: wysokość dopasowana do ${named}` : "Na plus: wysokość dopasowana do rekreacyjnej sesji");
+    else flags.push(height < best ? "Na minus: mała fala" : named ? `Na minus: duża fala dla ${named}` : "Na minus: duża fala dla profilu rekreacyjnego");
     if (wave.period >= 6) flags.push("Na plus: dłuższy okres fal");
     if (shelter >= .15 && wind.speed >= 3) flags.push("Na plus: przeszkody osłaniają spot od tego wiatru");
     if (windQuality >= .8) flags.push("Na plus: wiatr sprzyja jakości fali");
@@ -246,6 +271,8 @@
     if (!order.known) flags.push("Uporządkowanie fal: brak pełnych danych, wartość neutralna");
     else if (order.value >= .8) flags.push("Na plus: stabilna fala i wywiewka po nawianiu");
     if (strong) flags.push("Silny wiatr lub wysokie fale — trudne warunki");
+    if (profile === PROFILES.beginner && ["offshore", "cross-off"].includes(type) && speed >= 5)
+      flags.push("Uwaga: wiatr od lądu odpycha od brzegu");
     if (incidence >= 85) flags.push("Fala spoza sektora ekspozycji");
     if (wave.period < 4) flags.push("Krótka, wiatrowa fala");
     if (!local) flags.push("Ocena z wysokości fal na morzu — brak danych do szacunku przy brzegu");
@@ -377,7 +404,8 @@
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 24 } = {}) {
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 24, profile = "intermediate" } = {}) {
+    const level = profileOf(profile);
     const lookback = finite(historyHours) ? clamp(historyHours, 0, 48) : 0;
     const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
       ...(Array.isArray(simulation?.hourly) ? simulation.hourly : []).map(r => r.time)])].filter(finite).sort((a, b) => a - b);
@@ -387,7 +415,7 @@
     // When the models' directions cancel out there is no common wind direction. Each model's wind is then
     // scored with the same waves, and the median of those scores is shown with low confidence.
     const disputedRating = (row, order) => {
-      const ratings = (row.wind.members || []).map(m => rate(row, { speed: m.speed, direction: m.direction, gust: m.gust }, spot, null, row.simulation, order))
+      const ratings = (row.wind.members || []).map(m => rate(row, { speed: m.speed, direction: m.direction, gust: m.gust }, spot, null, row.simulation, order, level))
         .filter(r => finite(r?.score)).sort((a, b) => a.score - b.score);
       if (!ratings.length) return null;
       const middle = ratings[Math.floor((ratings.length - 1) / 2)];
@@ -399,7 +427,7 @@
       const order = waveOrder(series, index, cleanup);
       const waves = row.simulation && row.height > .001;
       const disputed = waves && row.wind && !finite(row.wind.direction) && finite(row.wind.speed) && row.wind.speed >= 0.5;
-      const rating = !waves ? null : disputed ? disputedRating(row, order) : rate(row, row.wind, spot, null, row.simulation, order);
+      const rating = !waves ? null : disputed ? disputedRating(row, order) : rate(row, row.wind, spot, null, row.simulation, order, level);
       const reasons = [];
       if (rating?.disputed) reasons.push("Modele wiatru wskazują różne kierunki — ocena to mediana ocen z poszczególnych modeli");
       if (!order.known) reasons.push("Niepełna historia uporządkowania fal");
@@ -422,6 +450,6 @@
     })
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }
-  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, PROFILES, profileOf, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

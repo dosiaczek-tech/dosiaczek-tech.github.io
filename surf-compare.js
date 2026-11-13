@@ -396,6 +396,7 @@
     window.addEventListener("resize", () => { if (typing()) activePicker.place(); else closePicker(); });
     // Heat map ratings from the same rows: after "Pokaż najlepsze" the heat map needs no computing of its own.
     const ratings = new Map();
+    const profileId = () => root.SurfSurfer?.current() || "intermediate";
     async function fetchSpot(id, force = false, publishedOnly = false) {
       if (!cache.has(id)) {
         const spot = catalog.find(s => s.id === id);
@@ -403,7 +404,7 @@
         const task = (publishedOnly ? root.SurfAPI.coastal(spot, force)
           : Promise.all([root.SurfAPI.forecasts(spot, force, { coastalOnly: true, publishedOnly }), root.SurfAPI.nearshore(spot, force)]))
           .then(([forecast, simulation]) => {
-            const now = Date.now(), rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, now, { historyHours: 24 });
+            const now = Date.now(), rows = M.buildCoastalForecast(spot, forecast.weather?.data, simulation, now, { historyHours: 24, profile: profileId() });
             if (root.SurfHeatmap) ratings.set(id, root.SurfHeatmap.record(rows, forecast, simulation, now));
             // Notes stay in the status line; the Polish reasons of errors are collapsed below it.
             const issues = [], reasons = [];
@@ -422,7 +423,7 @@
             return [];
           })
           .then(rows => {
-            const key = M.coastalHistoryKey(spot);
+            const key = M.coastalHistoryKey(spot, profileId());
             let savedRows;
             try { savedRows = JSON.parse(localStorage.getItem(key)); } catch { /* Storage optional. */ }
             const retained = retainHistory(rows, savedRows);
@@ -932,7 +933,7 @@
       if (token !== autoGeneration) return;
       // The heat map reuses these ratings for 15 minutes instead of computing them again.
       if (root.SurfHeatmap && catalog.every(spot => ratings.has(spot.id)))
-        root.SurfHeatmap.remember(new Map(catalog.map(spot => [spot.id, ratings.get(spot.id)])), snapshot, M);
+        root.SurfHeatmap.remember(new Map(catalog.map(spot => [spot.id, ratings.get(spot.id)])), snapshot, M, profileId());
       finishLoad(entries);
     }
     selectors(); resetComparison();
@@ -942,6 +943,12 @@
       selectors(choices.length - 1); updateActions();
     });
     $("compareBest").addEventListener("click", () => selectBest(true));
+    // Another surfer profile: rate the same forecasts again, the shown comparison included.
+    window.addEventListener("surfer-profile", () => {
+      cache.clear(); ratings.clear();
+      if (!loading && !data.length) return;
+      if (manual) load(); else selectBest();
+    });
     $("compareRefresh").addEventListener("click", () => {
       ++autoGeneration; manual = true; ids = choices.filter(Boolean); load(true);
     });

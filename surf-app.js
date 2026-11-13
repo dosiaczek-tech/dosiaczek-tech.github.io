@@ -693,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function render() {
     if (!active) return;
     if (!loaded) { renderHours(); return; }
-    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation, Date.now());
+    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation, Date.now(), { profile: SurfSurfer.current() });
     chosenSession = SurfSession.resolve(rows, sessionRequest, M);
     if (chosenSession && simulationTime === null) simulationTime = chosenSession.start;
     $("surfContent").hidden = false;
@@ -959,6 +959,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("surfDaysLess").addEventListener("click", () => { hoursDayPages--; updateDayPages(); });
   $("surfDaysMore").addEventListener("click", () => { hoursDayPages++; updateDayPages(); });
   $("surfProfileTime").addEventListener("change", () => { simulationTime=Number($("surfProfileTime").value);render(); });
+  // Another surfer profile rates the loaded forecast again.
+  window.addEventListener("surfer-profile", () => render());
   $("surfCleanupOnly").addEventListener("change", render);
   window.addEventListener("hashchange", route);
   if (window.ResizeObserver) {

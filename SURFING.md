@@ -231,6 +231,20 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
   kolejnych godzinach kończących się ocenianą godziną: `0,3 + 0,4 × stabilność`.
   Potwierdzona wywiewka dodaje 0,25 tylko tutaj; nawianie lub świeża zmiana
   odejmują 0,2. Brak historii daje neutralne 0,5 i niższą pewność.
+- **Profil surfera** (wybór nad „Gdzie warto jechać?” i na heat mapie, pamięta go przeglądarka) zmienia krzywą
+  wysokości, wagę okresu, ocenę wiatru i limity. Średniozaawansowany to dotychczasowa ocena opisana wyżej.
+
+  | Profil | Najlepsza fala | Waga okresu | Ocena najwyżej 2 od |
+  | --- | --- | --- | --- |
+  | Średniozaawansowany (domyślny) | 1,0–1,5 m | 0,45 | wiatru 23 kn, porywów 33 kn, fali 3 m |
+  | Początkujący | 0,5–0,9 m | 0,35 | wiatru 17 kn, porywów 25 kn, fali 1,6 m |
+  | Zaawansowany | 1,2–2,2 m | 0,5 | wiatru 27 kn, porywów 39 kn, fali 4 m |
+  | Longboard | 0,6–1,2 m | 0,6 | wiatru 19 kn, porywów 29 kn, fali 2,5 m |
+
+  Waga okresu w potencjale: `(1 − waga) + waga × jakość_okresu`. Początkującemu wiatr od lądu pomaga tylko słaby
+  (offshore przy 10 kn 0,7 zamiast 1, przy 16 kn 0,3 zamiast 0,65), a od 10 kn dostaje dopisek „Uwaga: wiatr od lądu
+  odpycha od brzegu”. Longboardowi wiatr szybciej psuje gładką powierzchnię. Każdy profil ma osobną historię
+  porównania i osobne zapamiętane oceny heat mapy.
 - Okres poniżej 3,5 s ogranicza ocenę do 3.
 - Wiatr ≥12 m/s, porywy ≥17 m/s lub Hs w punkcie prognozy ≥3 m ograniczają ocenę do 2.
 - Wynik ma jedno miejsce po przecinku. Pełne dzienne okna trzygodzinne:

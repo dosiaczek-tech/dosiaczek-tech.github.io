@@ -427,3 +427,7 @@
 #compareContent { --compare-font: 14px; }
 @media (max-width: 599px) { #compareContent { --compare-font: 13px; } }
 .compare-zoom .filter, .compare-zoom .surf-small, .compare-legend, #compareDays .filter { font-size: var(--compare-font); }
+.surfer-profile { display: inline-grid; gap: 5px; margin-top: 14px; font-size: 11px; color: var(--muted); }
+.surfer-profile select { min-width: 190px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
+.heatmap-heading .surfer-profile { margin-top: 0; }
+@media (max-width: 640px) { .surfer-profile select { font-size: 16px; } }
