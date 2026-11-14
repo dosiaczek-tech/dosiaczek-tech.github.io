@@ -29,8 +29,8 @@ from PIL import Image
 import requests
 
 from nearshore import (COMPUTE_DX, HISTORY_HOURS, ICE, MAX_SHORE_DISTANCE, SEA_LEVEL, boundary_models, boundary_spectrum,
-                       consensus, dump, finite, load, models_agree, offshore, request, shoreline_reference, summary_location,
-                       swan_time, swell_share, wave_members, write_spectra)
+                       consensus, dump, finite, load, models_agree, offshore, offshore_heights, request, shoreline_reference,
+                       summary_location, swan_time, swell_share, wave_members, write_spectra)
 
 AREAS = [
     {"id": "kolobrzeg", "name": "Kołobrzeg", "spots": [
@@ -260,7 +260,7 @@ def prepare(directory, grid, bed, lines, outputs, marine, winds, start, end, his
         shares = [swell_share(m) for m in ([chosen] if chosen.get("swell") else members) if m.get("swell")]
         swell = statistics.median(shares) if shares else None
         choices[t] = {"model": chosen["model"], "models": len(members), "agree": models_agree(members),
-                      **({"swell": round(swell, 2)} if swell is not None else {})}
+                      **({"swell": round(swell, 2)} if swell is not None else {}), "heights": offshore_heights(members)}
         level = levels_series[i] if i < len(levels_series) and finite(levels_series[i]) else None
         levels[t] = None if level is None else round(level, 3)
         ice[t] = round(ice_series[i], 2) if i < len(ice_series) and finite(ice_series[i]) else None

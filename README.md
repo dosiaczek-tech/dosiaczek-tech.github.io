@@ -148,8 +148,9 @@ Jantar, Kąty Rybackie i dwa widoki z Krynicy Morskiej.
 - Falę na granicy, 5 km od brzegu, podają cztery modele: ECMWF WAM, DMI WAM NSB, DWD EWAM
   i NOAA GFS Wave. Co godzinę falę daje jeden z nich — najbliższy pozostałym — bez zbędnego
   przeskakiwania między modelami; przy dwóch modelach jest to ECMWF WAM. Gdy modele mocno
-  się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Poziom morza
-  (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
+  się różnią, tabela podaje niską pewność („Rozbieżne prognozy fal na morzu”). Wiersz „Wg modeli fal” pokazuje
+  zakres fali i oceny przy spocie, gdyby falę dał każdy z modeli (przybliżenie bez dodatkowych przebiegów SWAN).
+  Poziom morza (spiętrzenia) pochodzi z modelu DMI DKSS przez około 5 dni, dalej jest stały. DMI udostępnia
   oba modele bez klucza na licencji CC BY 4.0. Szczegóły: [MODEL.md](MODEL.md).
 - **SWAN 2D** w sześciu obszarach (Kołobrzeg, Mielno, Jastrzębia Góra, Władysławowo–Chałupy, Sobieszewo,
   Stegna–Sztutowo) przez pierwsze 5 dni: siatka 100 m wzdłuż brzegu z falochronami z OpenStreetMap

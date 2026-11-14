@@ -540,6 +540,13 @@ def wave_part(hourly, name, model, index):
     return None
 
 
+def offshore_heights(members):
+    """Every wave model's height offshore, in WAVE_MODELS order (None where it has none): the app spreads the forecast
+    between them."""
+    by_model = {m["model"]: m["height"] for m in members}
+    return [round(by_model[model], 2) if model in by_model else None for model in WAVE_MODELS]
+
+
 def swell_share(member):
     """The swell's share of the wave energy, for a member that tells swell and wind sea apart."""
     swell, sea = member["swell"]["height"] ** 2, member["sea"]["height"] ** 2
@@ -750,7 +757,7 @@ def prepare_run(directory, spot, bath, marine, winds, start, end, calm_test=Fals
         shares = [swell_share(m) for m in ([chosen] if chosen.get("swell") else members) if m.get("swell")]
         swell = statistics.median(shares) if shares else None
         choices[t] = {"model": chosen["model"], "models": len(members), "agree": models_agree(members),
-                      **({"swell": round(swell, 2)} if swell is not None else {})}
+                      **({"swell": round(swell, 2)} if swell is not None else {}), "heights": offshore_heights(members)}
         levels[t] = None if level is None else round(level, 3)
         ice[t] = round(ice_series[i], 2) if i < len(ice_series) and finite(ice_series[i]) else None
         spectra.append(boundary_spectrum(chosen, spot["normal"]))

@@ -384,6 +384,46 @@
     }
     return selected;
   }
+  // The four offshore wave models at the forecast point, approximately and without more SWAN runs: SWAN's ratio of the
+  // chosen model's wave at the point to the same wave offshore, applied to every model's offshore wave, at most what
+  // the depth at the point carries (Hs about 0.6 of the depth where the waves break). As in the boundary's agreement
+  // check, with three or more models the one farthest from the others is left out when it differs from their median
+  // by more than 0.5 m or 30% (a coarse model cell next to land can read 0 m); never the chosen one. Null while the
+  // chosen wave offshore is too small to give a ratio, or fewer than two models are left.
+  const DEPTH_LIMITED = .6;
+  function modelHeights(record, names) {
+    const heights = record?.boundary?.heights;
+    if (!Array.isArray(heights) || !Array.isArray(names) || heights.length !== names.length) return null;
+    const chosen = heights[names.indexOf(record.boundary.model)];
+    if (!finite(chosen) || chosen < .05 || !finite(record.height) || record.height <= .001 || !finite(record.depth)) return null;
+    let offshore = names.map((model, i) => ({ model, height: heights[i] })).filter(m => finite(m.height));
+    if (offshore.length >= 3) {
+      const gaps = offshore.map(m => {
+        const rest = median(offshore.filter(o => o !== m).map(o => o.height));
+        return { m, gap: Math.abs(m.height - rest), limit: Math.max(.5, .3 * rest) };
+      }).sort((a, b) => b.gap - a.gap);
+      if (gaps[0].gap > gaps[0].limit && gaps[0].m.model !== record.boundary.model) offshore = offshore.filter(m => m !== gaps[0].m);
+    }
+    const ratio = record.height / chosen, cap = Math.max(record.height, DEPTH_LIMITED * record.depth);
+    const models = offshore.map(m => ({ model: m.model, height: Math.round(Math.min(cap, m.height * ratio) * 1000) / 1000 }));
+    return models.length >= 2 ? models : null;
+  }
+
+  // A three-hour window by every model (the window rule of bestWindows on each model's scores): the range of the waves
+  // and of the window scores. Null unless every hour has the same models, at least two, all rated.
+  function modelWindow(rows) {
+    const sets = rows.map(r => r.models);
+    if (!sets.length || !sets.every(set => Array.isArray(set) && set.length >= 2)) return null;
+    const names = sets[0].map(m => m.model).filter(name => sets.every(set => set.some(m => m.model === name && finite(m.score) && finite(m.height))));
+    if (names.length < 2) return null;
+    const scores = names.map(name => {
+      const values = sets.map(set => set.find(m => m.model === name).score);
+      return Math.round(clamp(.7 * values.reduce((a, b) => a + b, 0) / values.length + .3 * Math.min(...values), 0, 10) * 10) / 10;
+    });
+    const heights = sets.flatMap(set => set.filter(m => names.includes(m.model)).map(m => m.height));
+    return { models: names.length, low: Math.min(...heights), high: Math.max(...heights), minScore: Math.min(...scores), maxScore: Math.max(...scores) };
+  }
+
   function simulationAge(document, now = Date.now()) {
     const stamps = [document?.generatedAt, document?.windFetchedAt, document?.boundaryFetchedAt];
     if (!stamps.every(t => finite(t) && t <= now / 1000 + 300)) return null;
@@ -427,7 +467,8 @@
           result.powerKWm < 0 || (result.height > .001 && (!finite(result.period) || result.period <= 0 || !finite(result.direction))))
         return { ...row, simulation: null, scoreSource: "unavailable", score: null, height: null, period: null, direction: null,
           powerKWm: null, energyKJm2: null, nearHeight: null, flags: ["Brak potwierdzonej prognozy w strefie 0–500 m od brzegu"] };
-      const local = { ...result, profile: fullProfile(result.profile, result), breaking: nominalWetPoint(result.breaking) ? result.breaking : null };
+      const local = { ...result, profile: fullProfile(result.profile, result), breaking: nominalWetPoint(result.breaking) ? result.breaking : null,
+        models: modelHeights(result, document.waveModels) };
       const rating = result.height <= .001 ? { score: 0, flags: ["SWAN: praktycznie brak fali przy brzegu"] } :
         rate({ height: result.height, period: result.period, direction: result.direction }, row.wind, spot, null,
           { ...result, basis: "SWAN", blocked: false });
@@ -438,7 +479,8 @@
         flags: [...(rating?.flags || []), ...(usedWind.get(row.time)?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] };
     });
   }
-  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 24, profile = "intermediate" } = {}) {
+  // byModel: also rate every offshore wave model's wave at the point (row.models), as the spot's own page shows it.
+  function buildCoastalForecast(spot, weather, simulation, now = Date.now(), { historyHours = 24, profile = "intermediate", byModel = false } = {}) {
     const level = profileOf(profile);
     const lookback = finite(historyHours) ? clamp(historyHours, 0, 48) : 0;
     const times = [...new Set([...(weather?.hourly?.time || []), ...(Array.isArray(simulation?.history) ? simulation.history : []).map(r => r.time),
@@ -483,12 +525,19 @@
       const iceFlags = ice >= .3 ? ["Lód na morzu — fale tłumione, surfing niemożliwy lub niebezpieczny"] : ice >= .1 ? ["Uwaga: kra na morzu"] : [];
       const confidence = { level: reasons.length ? "niska" : "średnia", reasons: reasons.length ? reasons : ["Zgodny wiatr; pojedyncza symulacja fal i przybliżone dno"] };
       const score = rating?.score ?? row.score;
+      // Each model's wave rated like the forecast: same wind, period, direction and order; not where the winds disagree.
+      const ratings = byModel && rating && !rating.disputed && row.simulation?.models ? row.simulation.models.map(m => {
+        const value = rate({ height: m.height, period: row.period, direction: row.direction }, row.wind, spot, null,
+          { ...row.simulation, height: m.height }, order, level)?.score;
+        return { ...m, score: finite(value) && ice >= .3 ? Math.min(value, 1) : value ?? null };
+      }) : null;
       return { ...row, cleanup, confidence, components: rating?.components, disputedWind: Boolean(rating?.disputed),
+        ...(ratings ? { models: ratings } : {}),
         score: ice >= .3 && finite(score) ? Math.min(score, 1) : score,
         flags: rating ? [...rating.flags, ...iceFlags, ...(row.simulationWind?.fallback ? ["Wiatr w symulacji: model zastępczy przy dużej rozbieżności"] : [])] : row.flags };
     })
       .filter(row => row.time * 1000 >= Math.floor(now / 3600000) * 3600000 - lookback * 3600000).slice(0, FORECAST_HOURS + 1 + lookback);
   }
-  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, PROFILES, profileOf, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, STEEP_BEACH, SHOREBREAK, SHOREBREAK_HEIGHT, shorebreak, rate, scoreLabel, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
+  const api = { VERSION, SIMULATION_VERSION, FORECAST_HOURS, coastalHistoryKey, PROFILES, profileOf, WAVE_MODELS, WIND_MODELS, finite, angle, median, windMatchesSpot, offshore, windConsensus, windRelative, windRelativeToWave, detectCleanup, dispersion, waveEnergy, transform, windShelter, STEEP_BEACH, SHOREBREAK, SHOREBREAK_HEIGHT, shorebreak, rate, scoreLabel, modelHeights, modelWindow, buildForecast, bestWindows, simulationAge, applySimulation, buildCoastalForecast };
   if (typeof module !== "undefined") module.exports = api; else root.SurfModel = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

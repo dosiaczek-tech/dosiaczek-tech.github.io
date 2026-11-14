@@ -69,7 +69,8 @@ class Spectrum(unittest.TestCase):
         # DMI WAM is chosen (see the sea level tests) but gives only the total: the median of the others' shares.
         parts("dwd_ewam", .6, .8)
         parts("ncep_gfswave025", .3, .3)
-        self.assertEqual(choice(), {"model": "dmi_wam_nsb", "models": 4, "agree": True, "swell": round((.36 + .5) / 2, 2)})
+        self.assertEqual(choice(), {"model": "dmi_wam_nsb", "models": 4, "agree": True, "swell": round((.36 + .5) / 2, 2),
+                                    "heights": [.9, 1.0, 1.05, .4]})
         parts("dmi_wam_nsb", .8, .6)
         self.assertEqual(choice()["swell"], .64, "The chosen model's own share wins")
 

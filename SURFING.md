@@ -208,6 +208,15 @@ nie model nauczony na danych. Progi wymagają kalibracji na raportach z sesji.
   przebieg SWAN) mediana zmiany oceny wyniosła 0–0,1. Co dziesiąta godzina zyskała 0,3–0,7
   (dłuższa martwa fala), a co dziesiąta straciła 0,1–0,3 (sama krótka fala wiatrowa).
   Dopiski: „dłuższy okres fal” od 7 s, „Krótka, wiatrowa fala” poniżej 5 s.
+- **Wg modeli fal** (wiersz tabeli godzinowej i zdanie w oknie sesji): fala i ocena przy spocie, gdyby falę na
+  morzu dał każdy z czterech modeli. To przybliżenie bez dodatkowych przebiegów SWAN. Stosunek fali przy spocie do
+  fali na morzu wybranego modelu (z SWAN) mnożymy przez falę każdego modelu na morzu, najwyżej do 0,6 głębokości
+  w punkcie, bo tyle niesie fala łamiąca się na tej głębokości. Przy co najmniej trzech modelach pomijamy jeden,
+  gdy odstaje od mediany pozostałych o ponad 0,5 m lub 30%, jak w ocenie zgodności modeli na granicy (np. zgrubna
+  komórka GFS Wave przy lądzie bywa na 0 m). Modelu, który liczył SWAN, nie pomijamy nigdy. Każdą falę oceniamy
+  jak prognozę: ten sam wiatr, okres, kierunek i uporządkowanie. Okno sesji wg modelu liczymy tą samą regułą,
+  0,7 × średnia + 0,3 × najsłabsza godzina. Okres i kierunek fali pozostałych modeli do przybliżenia nie wchodzą.
+  Przy rozbieżnych kierunkach wiatru ocen wg modeli nie liczymy.
 - **Martwa fala**: udział martwej fali w energii na granicy SWAN (`boundary.swell`, MODEL.md). Od 50%
   godzina ma dopisek „przeważa martwa fala”, a tabela pokazuje jej przybliżoną wysokość przy spocie,
   `wysokość × √udział`. Sam udział nie zmienia oceny; martwa fala działa przez widmo SWAN i okres szczytowy.

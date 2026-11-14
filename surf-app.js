@@ -470,6 +470,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
       }],
       ["height", "Wysokość fal przy spocie", r => M.finite(r.simulation?.height) ? `~${fmt(r.simulation.height)} m` : null],
+      // The wave and the score at the spot had each offshore wave model given the waves (M.modelHeights).
+      ["models", "Wg modeli fal", r => {
+        const heights = (r.models || []).map(m => m.height), scores = (r.models || []).map(m => m.score).filter(M.finite);
+        if (heights.length < 2) return null;
+        const value = node("span", `${fmt(Math.min(...heights))}–${fmt(Math.max(...heights))} m`);
+        if (scores.length >= 2) value.append(node("small", `ocena ${fmt(Math.min(...scores))}–${fmt(Math.max(...scores))}`, "surf-cell-wind"));
+        return value;
+      }],
       ["period", "Czas między falami", r => r.simulation && M.finite(periodOf({ ...r.simulation, period: r.period })) ? `${fmt(periodOf({ ...r.simulation, period: r.period }))} s` : null],
       ["swell", "Martwa fala", r => M.finite(r.simulation?.boundary?.swell) && M.finite(r.simulation?.height)
         ? `~${fmt(r.simulation.height * Math.sqrt(r.simulation.boundary.swell))} m` : null],
@@ -698,6 +706,8 @@ document.addEventListener("DOMContentLoaded", () => {
         node("p", `${hour(w.start)}–${hour(w.end)} · pewność: ${w.confidence}`),
         node("p", `Fale ${fmt(w.minHeight)}–${fmt(w.maxHeight)} m · okres ${fmt(M.median(w.rows.map(r => periodOf({ ...r.simulation, period: r.period }))))} s · wiatr ${windKnots(M.median(w.rows.map(r => r.wind?.speed)))}`),
         node("p", `Wiatr na początku sesji: ${M.windRelative(first.wind, currentSpot) || "brak kierunku"}. Mapa i parametry poniżej pokazują wybraną godzinę.`));
+      const spread = w.historical ? null : M.modelWindow(w.rows);
+      if (spread) box.append(node("p", `Wg ${spread.models} modeli fal: fala ${fmt(spread.low)}–${fmt(spread.high)} m · ocena ${fmt(spread.minScore)}–${fmt(spread.maxScore)}`));
       for (const flag of w.flags.filter(f => f.startsWith("Na "))) box.append(node("p", flag));
       if (w.historical) box.append(node("p", "Wcześniejsze okno — wynik modelowy, nie pomiar ani rekomendacja wyjazdu teraz."));
       const button = node("button", "Zobacz trzy godziny sesji ↓", "filter"); button.type = "button";
@@ -710,7 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function render() {
     if (!active) return;
     if (!loaded) { renderHours(); return; }
-    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation, Date.now(), { profile: SurfSurfer.current() });
+    rows = M.buildCoastalForecast(currentSpot, loaded.weather?.data, simulation, Date.now(), { profile: SurfSurfer.current(), byModel: true });
     chosenSession = SurfSession.resolve(rows, sessionRequest, M);
     if (chosenSession && simulationTime === null) simulationTime = chosenSession.start;
     $("surfContent").hidden = false;

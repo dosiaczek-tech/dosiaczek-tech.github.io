@@ -215,7 +215,9 @@ class SwanInput(unittest.TestCase):
             self.assertEqual(spectra.count("FACTOR"), 4, "One spectrum per hour")
             # DMI WAM is the central one: 0.4 m is far off and ECMWF WAM comes from 20°.
             self.assertIn("boundary.sp2", chunks[0]["input"])
-            self.assertEqual(boundary["choices"][times[0]], {"model": "dmi_wam_nsb", "models": 4, "agree": True})
+            self.assertEqual(boundary["choices"][times[0]], {"model": "dmi_wam_nsb", "models": 4, "agree": True,
+                                                             "heights": [.9, 1.0, 1.05, .4]},
+                             "Every model's offshore height in WAVE_MODELS order")
             self.assertEqual(boundary["levels"], {times[0]: None, times[1]: .35, times[2]: None, times[3]: .2})
             self.assertIn("INPGRID WLEVEL REGULAR", chunks[0]["input"])
             self.assertEqual(chunks[0]["input"].count("READINP WLEVEL"), 3)

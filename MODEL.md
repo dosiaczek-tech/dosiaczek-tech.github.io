@@ -77,7 +77,9 @@ razem, nigdy wysokość z jednego, a okres z drugiego.
   fal na morzu”. W pierwszych 72 godzinach dotyczyło to ok. 3% godzin; dalej pewność i tak
   jest niska.
 
-Każda godzina wyniku zapisuje model, liczbę modeli, zgodność i udział martwej fali (`boundary`).
+Każda godzina wyniku zapisuje model, liczbę modeli, zgodność i udział martwej fali (`boundary`), a także
+wysokość fali na morzu każdego z czterech modeli (`boundary.heights`, w kolejności `waveModels`, `null` bez
+danych). Aplikacja liczy z niej zakres „Wg modeli fal” (SURFING.md).
 
 ### Widmo na granicy: martwa fala i fala wiatrowa
 
