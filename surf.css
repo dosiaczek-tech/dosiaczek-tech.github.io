@@ -1,0 +1,504 @@
+.section-nav-bar { position: sticky; top: 0; z-index: 1600; padding: 8px 0; background: var(--paper); border-bottom: 1px solid var(--line); box-shadow: 0 3px 10px #18383e0a; }
+.section-nav { display: flex; gap: 8px; margin: 0; padding: 5px; background: #e7ece3; border-radius: 14px; width: fit-content; }
+.section-nav a { padding: 10px 19px; text-decoration: none; font-size: 13px; font-weight: 650; border-radius: 10px; }
+.section-nav a[aria-current="page"] { background: var(--sea); color: white; }
+.section-nav span { font-size: 9px; font-weight: 400; margin-left: 7px; opacity: .8; }
+.camera-surf-link { margin-top: 15px; color: var(--sea); font-size: 12px; font-weight: 650; }
+.surf-panel { padding-bottom: 38px; }
+.surf-status { padding: 10px 0; color: var(--muted); font-size: 12px; min-height: 36px; }
+.surf-status[data-state="error"], .surf-status[data-state="stale"] { color: #905523; }
+.surf-spot-heading { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.surf-spot-heading h2 { margin: 0; font: 400 30px / 1.2 Georgia, serif; }
+/* The spot's name with the heart of the favourites beside it (since 20.11.2026). */
+.surf-spot-title { display: flex; align-items: center; gap: 12px; }
+.surf-spot-title .icon-button { flex: none; }
+.surf-spot-heading p, .surf-spot-heading a { font-size: 11px; color: var(--muted); }
+.surf-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.surf-metric { padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: white; }
+.surf-metric:first-child { color: white; background: var(--sea-dark); border-color: var(--sea-dark); }
+.surf-metric small { display: block; font-size: 11px; }
+.surf-metric strong { display: block; font-size: 30px; line-height: 1.5; font-weight: 650; letter-spacing: -.8px; }
+.surf-metric p { margin: 2px 0 0; font-size: 11px; opacity: .8; }
+.surf-small { font-size: 11px; color: var(--muted); line-height: 1.8; }
+@media (hover: hover) and (pointer: fine) { .surf-table, .surf-table .surf-hour-interval { cursor: grab; } }
+.surf-table-scroll.is-dragging { scroll-behavior: auto; }
+.surf-table-scroll.is-dragging, .surf-table-scroll.is-dragging * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+.surf-weather-source { margin-bottom: 0; }
+#surfWeatherStatus[data-state="stale"], #surfWeatherStatus[data-state="error"] { color: #905523; }
+.surf-spot-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.surf-spot-facts p { margin: 0; font-size: 12px; }
+.surf-spot-facts strong { display: block; font-size: 11px; color: var(--sea); }
+.surf-sequence-label { display: inline-block; font-size: 14px; padding: 7px 10px; border-radius: 7px; background: #eef0e7; }
+.surf-sequence-label[data-state="clean"], .surf-sequence-cell[data-state="clean"] { color: #17653a; background: #d7ebd9; }
+.surf-sequence-cell { display: inline-block; max-width: 205px; white-space: normal; font-size: 11px; padding: 3px 6px; border-radius: 5px; }
+.surf-flags { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 15px; }
+.surf-flags span { border-radius: 6px; background: #f1e9d9; color: #806139; font-size: 11px; padding: 5px 9px; }
+.surf-box { padding: 23px; margin: 18px 0; border: 1px solid var(--line); border-radius: 17px; background: #ffffffc9; min-width: 0; }
+.surf-box h3 { margin: 0 0 10px; font-size: 17px; font-weight: 650; }
+.surf-spot-label { display: block; width: fit-content; max-width: 100%; margin: 0 0 10px; padding: 4px 11px; border-radius: 12px; background: var(--mint); color: var(--sea-dark); font-size: 13px; font-weight: 700; line-height: 1.4; }
+.surf-spot-label:empty { display: none; }
+.surf-box summary .surf-spot-label { margin: 8px 0 0; }
+.surf-box summary { font-weight: 650; cursor: pointer; font-size: 14px; }
+.surf-box > p, .surf-box li { font-size: 12px; }
+.surf-box a { color: var(--sea); text-underline-offset: 3px; }
+.surf-windows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.surf-window { text-align: left; background: #edf3e9; border: 1px solid #d7e4d0; border-radius: 12px; padding: 16px; }
+.surf-window strong { display: block; font-size: 21px; margin-top: 5px; }
+.surf-window span { display: block; font-size: 12px; }
+.surf-window small { color: var(--muted); }
+.surf-chart svg { display: block; width: 100%; height: 210px; }
+/* The day-by-day chart: the box follows the drawing, so the labels over and under it sit where they belong. */
+#surfChart svg { height: auto; aspect-ratio: 1000 / 182; }
+.surf-chart-plot { position: relative; margin-top: 12px; }
+.surf-chart-y { position: absolute; left: 0; transform: translateY(-50%); padding: 0 3px; border-radius: 3px; background: rgba(255, 255, 255, .8);
+  color: var(--muted); font-size: 11px; line-height: 1.2; }
+.surf-chart-days { position: relative; height: 30px; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.2; }
+.surf-chart-days span { position: absolute; top: 0; transform: translateX(-50%); }
+.surf-chart-days .surf-chart-month { top: 15px; }
+.surf-table-heading { display: flex; gap: 15px; justify-content: space-between; align-items: baseline; }
+.surf-table-heading label, .surf-table-heading a { font-size: 11px; }
+.surf-profile-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
+.surf-profile-selector { display: grid; gap: 4px; min-width: 0; grid-column: 2; grid-row: 1; }
+#surfSimulationProfile { min-width: 0; grid-column: 1; grid-row: 1; }
+.surf-profile-selector select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; }
+.surf-profile-selector > label { font-size: 11px; color: var(--muted); }
+.surf-profile-picker { position: relative; min-width: 0; }
+.surf-profile-chevron { flex: none; width: 7px; height: 7px; margin: -3px 2px 0; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.surf-profile-announce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.surf-profile-options { position: relative; height: auto; max-height: min(320px, 55vh); margin-top: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.surf-profile-options > .surf-small { margin: 6px; }
+.surf-profile-pages { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.surf-profile-pages .filter { min-height: 40px; font-size: 13px; font-weight: 700; }
+.surf-profile-pages .filter:disabled { opacity: .45; cursor: default; }
+.surf-profile-day-button, .surf-profile-hour { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 40px; padding: 10px; border: 0; border-radius: 6px; background: white; color: var(--ink); font: inherit; font-size: 12px; line-height: 1.4; text-align: left; cursor: pointer; }
+.surf-profile-day-button { font-weight: 650; border-bottom: 1px solid var(--line); }
+.surf-profile-day-button[data-selected="true"] { color: var(--sea-dark); }
+.surf-profile-day.is-open > .surf-profile-day-button { position: sticky; top: 0; z-index: 1; background: #e0eee8; }
+.surf-profile-day-button[aria-expanded="true"] .surf-profile-chevron { transform: rotate(225deg); margin-top: 3px; }
+.surf-profile-hour { padding-left: 18px; }
+.surf-profile-hour:hover { background: var(--mint); }
+.surf-profile-hour[aria-pressed="true"] { background: var(--sea); color: white; font-weight: 650; }
+.surf-profile-day-button:focus-visible, .surf-profile-hour:focus-visible { outline: 2px solid var(--sea); outline-offset: -2px; }
+.surf-profile-selected-mark { flex: none; font-size: 15px; }
+.surf-profile-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(83px, 1fr)); gap: 7px; margin: 8px 0 16px; }
+.surf-profile-value { padding: 9px 6px; text-align: center; background: #edf3e9; border-radius: 8px; }
+.surf-profile-value small { display: block; font-size: 9px; color: var(--muted); }
+.surf-profile-value strong { font-size: 13px; }
+#surfSimulation .surf-table-heading { flex-wrap: wrap; }
+@media (max-width: 760px) { .surf-profile-layout { display: flex; flex-direction: column; } .surf-profile-selector, #surfSimulationProfile { width: 100%; } }
+@media (max-width: 640px) { .surf-profile-selector select { font-size: 16px; } .surf-profile-day-button, .surf-profile-hour { min-height: 44px; font-size: 14px; } .surf-profile-pages .filter { flex: auto; min-height: 44px; } }
+.surf-days { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+#surfDays { gap: 10px; align-items: flex-start; }
+.surf-day-card { flex: 0 0 148px; min-width: 0; }
+.surf-day-button { width: 100%; min-height: 44px; padding: 11px 13px; font-size: 13px; font-weight: 650; }
+.surf-day-sun-times { display: grid; gap: 5px; padding: 9px 8px 3px; }
+.surf-day-sun { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.surf-day-sun .icon { flex: none; width: 16px; height: 16px; color: #b07926; }
+.surf-day-sun strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .surf-day-card { flex-basis: calc((100% - 10px) / 2); } }
+.surf-day-pages { margin: -6px 0 14px; }
+.surf-day-parts { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 14px; }
+.surf-day-part { min-height: 34px; padding: 7px 12px; font-size: 11px; }
+.surf-day-part[aria-pressed="true"] { background: var(--sea); border-color: var(--sea); color: white; }
+.surf-day-part:disabled { opacity: .4; cursor: default; }
+@media (max-width: 640px) { .surf-day-part { flex: 1; min-height: 40px; padding: 7px 8px; } }
+#surfHourlyContext { margin: 0; }
+.surf-point-summary { margin: 12px 0 0; color: var(--ink); }
+.surf-daylight-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0; font-size: 11px; }
+.surf-daylight-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.surf-daylight-legend i { width: 17px; height: 12px; border-radius: 3px; border: 1px solid #b9cbd5; }
+.surf-daylight-legend .is-day { background: #fffbed; border-color: #e7d9ad; }
+.surf-daylight-legend .is-night { background: #e0efff; border-color: #96bde9; }
+.surf-daylight-legend small { color: var(--muted); font-size: 10px; }
+.surf-info summary { padding: 10px 0; font-size: 14px; font-weight: 650; cursor: pointer; }
+.surf-table-scroll { --hourly-label-width: 100px; --hourly-column-width: 150px; max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; scrollbar-color: #80aaa0 #eef3ef; }
+.surf-table-scroll::-webkit-scrollbar { height: 12px; }
+.surf-table-scroll::-webkit-scrollbar-track { background: #eef3ef; }
+.surf-table-scroll::-webkit-scrollbar-thumb { background: #80aaa0; border: 3px solid #eef3ef; border-radius: 8px; }
+.surf-table { border-collapse: separate; border-spacing: 0; table-layout: fixed; width: calc(var(--hourly-label-width) + var(--hourly-column-width) * var(--hourly-column-count, 1)); font-size: 12px; }
+.surf-table th, .surf-table td { padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.surf-table tbody tr:last-child > * { border-bottom: 0; }
+.surf-table td, .surf-table thead th:not(.surf-hourly-label) { width: var(--hourly-column-width); min-width: var(--hourly-column-width); max-width: var(--hourly-column-width); text-align: center; }
+.surf-table .surf-hourly-label { position: sticky; left: 0; z-index: 2; width: var(--hourly-label-width); min-width: var(--hourly-label-width); max-width: var(--hourly-label-width); padding: 8px; text-align: left; font-weight: 550; line-height: 1.45; white-space: normal; overflow-wrap: break-word; hyphens: auto; background: #f8fafb; color: var(--ink); box-shadow: 2px 0 3px #18383e0d; }
+.surf-table thead .surf-hourly-label { z-index: 3; background: #edf3fb; }
+.surf-table thead th:not(.surf-hourly-label) { padding: 0; background: white; }
+.surf-hour-interval { display: block; width: 100%; min-height: 78px; padding: 8px 6px; border: 0; color: var(--ink); background: transparent; }
+.surf-hour-interval strong { display: block; font-size: 13px; white-space: nowrap; }
+.surf-hour-interval small { display: block; margin-top: 3px; font-size: 10px; font-weight: 400; line-height: 1.3; }
+.surf-hour-interval .surf-hour-date { margin: 0 0 3px; opacity: .8; }
+.surf-hour-interval:focus-visible { outline: 3px solid #d6a638; outline-offset: -4px; }
+.surf-hour-value { font-size: 14px; font-weight: 550; line-height: 1.4; }
+.surf-table [data-field="height"] .surf-hour-value, .surf-table [data-field="period"] .surf-hour-value { font-size: 18px; }
+.surf-table .surf-score { font-size: 16px; }
+.surf-table td { background: white; }
+.surf-cell-wind { display: block; max-width: 100%; margin: 4px auto 0; color: var(--muted); font-size: 10px; line-height: 1.35; white-space: normal; }
+.surf-cell-weather { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 400; line-height: 1.35; }
+.surf-cloud-reading { display: inline-flex; justify-content: center; align-items: center; gap: 5px; }
+.surf-weather-emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 22px; line-height: 1.2; font-weight: 400; }
+.surf-cloud-percent { white-space: nowrap; }
+.surf-direction-cell { --direction-ink: #166d9c; display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: center; gap: 5px; text-align: left; }
+.surf-direction-cell[data-kind="wind"] { --direction-ink: #7755a8; }
+.surf-metric-direction { margin-top: 10px; gap: 10px; font-size: 12px; }
+.surf-direction-mini { display: block; width: 68px; height: 49px; border: 1px solid #acc5ce; border-radius: 5px; overflow: hidden; }
+.surf-mini-sea { fill: #d9edf8; }
+.surf-mini-land { fill: #e8d7b3; }
+.surf-mini-shore { fill: none; stroke: #a8844a; stroke-width: 1.5; }
+.surf-mini-label { fill: #395563; font: 11px system-ui, sans-serif; }
+.surf-mini-arrow { fill: none; stroke: var(--direction-ink); stroke-width: 3; stroke-linecap: round; }
+.surf-mini-tip { fill: var(--direction-ink); }
+.surf-mini-calm { fill: none; stroke: #708896; stroke-width: 2; }
+.surf-direction-reading { min-width: 0; font-size: 11px; line-height: 1.35; }
+.surf-direction-caption { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 400; line-height: 1.3; }
+.surf-table [data-group="weather"] .surf-hour-value { font-size: 18px; }
+.surf-table .surf-conditions-start > * { border-top: 3px solid #abc7d9; }
+.surf-row-group { display: block; margin-bottom: 7px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--sea); }
+.surf-table td[data-light="day"] { background: #fffbed; }
+.surf-table td[data-light="night"] { background: #e0efff; }
+.surf-table thead th[data-light="day"] { background: #fff4d6; }
+.surf-table thead th[data-light="night"] { background: #bfdcff; }
+.surf-table thead th[data-session="true"] { box-shadow: inset 0 3px #126a96; }
+.surf-hour-interval .surf-hour-session { display: inline-block; padding: 2px 5px; border: 1px solid #8ab6d1; border-radius: 4px; font-weight: 650; color: #135585; background: #f0f7ff; }
+.surf-table tbody td[data-selected="true"] { box-shadow: inset 2px 0 var(--sea), inset -2px 0 var(--sea); }
+.surf-table thead th[data-selected="true"] { box-shadow: inset 2px 0 var(--sea), inset -2px 0 var(--sea), inset 0 3px var(--sea); }
+@media (max-width: 640px) { .surf-table-scroll { --hourly-label-width: 88px; --hourly-column-width: 136px; } .surf-table .surf-hourly-label { padding: 8px 6px; font-size: 11px; } .surf-table td { padding: 7px 6px; } .surf-hour-value { font-size: 13px; } }
+.surf-score { display: inline-block; min-width: 43px; padding: 3px 8px; border-radius: 6px; background: #edf0e7; text-align: center; font-weight: 700; }
+/* Shared recommendation scale: red → orange → green. Missing data stays neutral. */
+[data-quality="bad"] { --rating-bg: #fee2e2; --rating-ink: #991b1b; --rating-line: #fca5a5; }
+[data-quality="poor"] { --rating-bg: #ffebe2; --rating-ink: #9a3412; --rating-line: #fdba9a; }
+[data-quality="weak"] { --rating-bg: #fff0dc; --rating-ink: #92400e; --rating-line: #f5c078; }
+[data-quality="fair"] { --rating-bg: #fff6d5; --rating-ink: #79520b; --rating-line: #e8cd70; }
+[data-quality="good"] { --rating-bg: #e7f3d9; --rating-ink: #3f6212; --rating-line: #b4d58b; }
+[data-quality="great"] { --rating-bg: #dcf3df; --rating-ink: #166534; --rating-line: #91cc9d; }
+[data-quality="excellent"] { --rating-bg: #c6ecd8; --rating-ink: #065f46; --rating-line: #67b993; }
+[data-quality="unknown"] { --rating-bg: #f0f2f3; --rating-ink: #52606b; --rating-line: #cdd3d8; }
+.surf-score[data-quality], .surf-metric[data-quality], .surf-window[data-quality] {
+  background: var(--rating-bg); color: var(--rating-ink); border-color: var(--rating-line);
+}
+/* Fill the rating cell, independently of the pale day/night backgrounds. */
+.surf-table td[data-quality="bad"] { --rating-bg: #f6b0ad; }
+.surf-table td[data-quality="poor"] { --rating-bg: #f7c29c; }
+.surf-table td[data-quality="weak"] { --rating-bg: #f5d5a0; }
+.surf-table td[data-quality="fair"] { --rating-bg: #f3cf60; }
+.surf-table td[data-quality="good"] { --rating-bg: #b9dda0; }
+.surf-table td[data-quality="great"] { --rating-bg: #93d4a5; }
+.surf-table td[data-quality="excellent"] { --rating-bg: #70c49b; }
+.surf-table td[data-quality] { background: var(--rating-bg); color: #000; }
+.surf-table .surf-score[data-quality] { color: #000; background: transparent; }
+.surf-window[data-quality] small { display: block; margin-top: 7px; color: inherit; }
+.surf-metric[data-quality] p { opacity: 1; }
+.surf-window[data-quality]:hover { box-shadow: 0 0 0 2px var(--rating-line); }
+.surf-window[data-quality]:focus-visible { outline: 3px solid var(--rating-ink); outline-offset: 3px; }
+.surf-model-row { display: flex; gap: 10px; justify-content: space-between; padding: 7px 0; font-size: 11px; border-bottom: 1px solid var(--line); }
+.surf-model-row span { text-align: right; }
+.surf-camera-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.surf-camera-links a { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; font-size: 12px; }
+.surf-map-actions { display: flex; gap: 8px; }
+.surf-spot-map-box .surf-table-heading { flex-wrap: wrap; }
+#surfSpotMap { height: 390px; width: 100%; border-radius: 12px; background: #e0e9e5; isolation: isolate; z-index: 0; }
+#surfSpotMap .leaflet-control-attribution { font-size: 10px; }
+#surfSpotMap .leaflet-control-zoom a { color: var(--ink); text-decoration: none; }
+/* Over a map on a touch screen when one finger tries to move it. */
+.surf-map-gesture-hint { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: #12312fd9; color: white; font: 650 16px / 1.4 Inter, "Segoe UI", system-ui, sans-serif; text-align: center; text-shadow: 0 1px 3px #0008;
+  pointer-events: none; opacity: 0; transition: opacity .2s; }
+.surf-map-gesture-hint.is-visible { opacity: 1; }
+.surf-map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; font-size: 10px; color: var(--muted); }
+.surf-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.surf-map-legend i { width: 10px; height: 10px; border-radius: 50%; }
+.surf-map-legend .has-camera { background: var(--sea); }
+.surf-map-legend .no-camera { background: #fff; border: 1px solid #94a3a0; }
+.surf-map-legend .selected-spot { background: #f97316; box-shadow: 0 0 0 2px var(--ink); }
+.surf-spot-marker { background: transparent; border: 0; display: grid; place-items: center; }
+.surf-spot-marker > span { width: 17px; height: 17px; display: block; border: 2px solid white; border-radius: 50%; box-shadow: 0 1px 5px #18383e80; background: var(--sea); }
+.surf-spot-marker.no-camera > span { background: #fff; border-color: #94a3a0; }
+.surf-spot-marker.is-selected > span { width: 23px; height: 23px; background: #f97316; border-color: white; box-shadow: 0 0 0 3px var(--ink), 0 1px 6px #18383e80; }
+.surf-map-cluster { display: grid; place-items: center; border-radius: 50%; background: #d6e8de; border: 2px solid white; color: var(--sea-dark); box-shadow: 0 1px 6px #18383e50; font: 700 14px / 1 system-ui, sans-serif; }
+.surf-map-cluster.is-selected { background: #f97316; color: #431407; box-shadow: 0 0 0 3px var(--ink); }
+.surf-cluster-copy { position: relative; text-align: center; }
+.surf-cluster-label { position: absolute; top: 32px; left: 50%; transform: translateX(-50%); max-width: 115px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 5px; border-radius: 5px; background: #fffffff0; color: var(--ink); font: 600 10px / 1.3 system-ui, sans-serif; box-shadow: 0 1px 3px #18383e30; }
+.surf-cluster-label.is-above { top: auto; bottom: 32px; }
+.surf-map-label { width: max-content; max-width: 145px; padding: 4px 6px; white-space: normal; text-align: center; border-color: #d0dbd5; border-radius: 6px; color: var(--ink); font: 550 10px / 1.3 system-ui, sans-serif; cursor: pointer; }
+.surf-map-popup { font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 12px; line-height: 1.5; }
+.surf-map-popup strong { display: block; color: var(--ink); }
+.surf-map-popup p { margin: 8px 0; color: var(--muted); }
+.surf-map-popup a { font-weight: 650; color: var(--sea); }
+#surfWindy .surf-table-heading { align-items: center; flex-wrap: wrap; }
+.windy-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.windy-tab { min-height: 40px; padding: 8px 18px; font-size: 12px; }
+.windy-tab[aria-selected="true"] { background: var(--sea); border-color: var(--sea); color: white; }
+#windyFrame { margin-top: 10px; width: 100%; height: 420px; border: 0; border-radius: 10px; }
+#surfCoverage { max-height: 380px; overflow-y: auto; }
+#surfCoverage p { font-size: 11px; margin: 6px 0; }
+.bath-profile { display: flex; gap: 5px; align-items: start; min-height: 95px; margin: 16px 0 8px; }
+.bath-point { flex: 1; min-width: 0; text-align: center; font-size: 10px; color: var(--muted); }
+.bath-point i { display: block; background: #b3d1c7; border-radius: 0 0 5px 5px; margin: 4px 0; min-height: 2px; }
+@media (max-width: 920px) { .surf-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 640px) { .surf-spot-facts { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { #surfSpotMap { height: 310px; } .surf-spot-map-box .surf-map-actions { flex-wrap: wrap; } }
+@media (max-width: 640px) { .section-nav { width: 100%; } .section-nav a { flex: 1; padding: 10px; font-size: 12px; text-align: center; } .section-nav span { display: none; } .surf-box { padding: 16px; } .surf-metrics { gap: 10px; } .surf-metric { padding: 14px; } .surf-metric strong { font-size: 25px; } .surf-windows { grid-template-columns: 1fr; } .surf-spot-heading { display: block; } .surf-spot-heading h2 { font-size: 26px; } #windyFrame { height: 350px; } .surf-chart svg { height: 170px; } }
+.surf-wind-inset { margin: 1rem 0; }
+#surfWindMap { height: 420px; width: 100%; max-width: 680px; border-radius: 12px; background: #263b38; z-index: 0; }
+.surf-wind-compass { pointer-events: none; }
+.surf-wind-dial { width: 280px; height: 280px; overflow: visible; }
+.surf-wind-disc { fill: #071b20; fill-opacity: .18; stroke: white; stroke-width: 1.8; }
+.surf-wind-grid { fill: none; stroke: white; stroke-opacity: .25; stroke-width: .8; stroke-dasharray: 3 4; }
+.surf-wind-degree { fill: white; font: 700 14px system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: #102528; stroke-width: 2px; stroke-opacity: .6; }
+.surf-wind-sector { fill: #f2c45d; fill-opacity: .95; }
+.surf-wind-arrowhead { fill: white; filter: drop-shadow(0 1px 2px #102528); }
+.surf-wind-origin { fill: #344640; stroke: white; stroke-width: 2; }
+.surf-wave-crests { fill: none; stroke: #78dfff; stroke-width: 2; opacity: .8; animation: surf-wave-drift 3s linear infinite; filter: drop-shadow(0 1px 1px #153e54); }
+@keyframes surf-wave-drift { from { transform: translateY(0); } to { transform: translateY(24px); } }
+#surfWaveDescription { color: #17647a; }
+@media (prefers-reduced-motion: reduce) { .surf-wave-crests { animation: none; } }
+@media (max-width: 600px) { #surfWindMap { height: 360px; } }
+/* Start page: an explicit choice between automatic and personal comparisons. */
+.surf-comparison { margin: 24px 0 36px; }
+.compare-body { margin-top: 24px; padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: #ffffffd9; }
+.surf-section-heading .eyebrow { margin: 0 0 9px; font-family: inherit; font-size: 10px; font-weight: 750; line-height: 1.6; letter-spacing: 2px; color: var(--sea); }
+.surf-section-heading h1 { margin: 0; font: 400 clamp(30px, 4vw, 48px) / 1.15 Georgia, serif; }
+.compare-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.compare-actions .filter { min-height: 40px; }
+.compare-actions .filter:disabled { opacity: .45; cursor: default; }
+.compare-manual-actions { display: flex; gap: 8px; }
+/* "Porównaj ulubione": the heart, the words and the number together on one line. On a phone too narrow for it beside
+   "Porównaj wybrane" it moves to a row of its own. */
+.compare-actions .filter-favorites { justify-content: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 640px) { .compare-manual-actions { flex-wrap: wrap; } }
+/* While the comparison shows the favourites, "Porównaj ulubione" is green, in the colours of "Pokaż kolejne N dni",
+   and its heart is filled (since 21.11.2026, the user's request). */
+.compare-actions .filter-favorites[aria-pressed="true"] { background: #d5ebdf; border-color: #7fb89c; color: #07594f; }
+.compare-actions .filter-favorites[aria-pressed="true"] .icon { fill: currentColor; }
+.compare-selectors, .compare-ranking { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.compare-selector { min-width: 0; border-top: 3px solid var(--spot-color); font-size: 11px; }
+/* "Spot N" and × of the list in one row above it (since 20.11.2026). Since 21.11.2026 (the user's request) a heart
+   follows "Spot N": filled in the cameras' green when the list's spot is a favourite, empty when it is not. */
+.compare-selector-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 36px; }
+.compare-selector-head .compare-hide { width: 36px; height: 36px; margin: 0 -8px 0 auto; color: var(--muted); }
+.compare-list-favorite { display: grid; place-items: center; flex: none; width: 36px; height: 36px; margin-left: -6px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
+.compare-list-favorite .icon { width: 17px; height: 17px; }
+.compare-list-favorite[aria-pressed="true"] { color: var(--sea); }
+.compare-list-favorite[aria-pressed="true"] .icon { fill: currentColor; }
+@media (hover: hover) { .compare-list-favorite:hover { background: #18383e14; } }
+.compare-list-favorite:focus-visible { outline: 2px solid var(--sea); outline-offset: -2px; }
+.compare-picker-button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 40px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.compare-picker-button > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.compare-picker-button::after { content: ""; width: 6px; height: 6px; flex: none; margin: -3px 2px 0; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
+/* The empty list at the end adds the next spot. */
+.compare-picker-button[data-empty="true"] { border-style: dashed; color: var(--muted); }
+.compare-picker-button[data-empty="true"] > span::before { content: "+ "; font-weight: 700; }
+.compare-picker-button[aria-expanded="true"] { border-color: var(--sea); }
+.compare-picker-button:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+/* The window of a list keeps its size while the user types: the search field and five rows of spots. */
+.compare-picker-list { --option-height: 44px; position: fixed; z-index: 1700; display: flex; flex-direction: column; overflow: hidden; padding: 5px; border: 1px solid #bacbd2; border-radius: 10px; background: white; box-shadow: 0 10px 30px #183d4933; color: var(--ink); font-size: 13px; text-align: left; }
+.compare-picker-list[hidden] { display: none; }
+.compare-picker-search { flex: none; width: 100%; min-height: 40px; margin-bottom: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; font: inherit; font-size: 16px; color: var(--ink); background: white; }
+.compare-picker-search:focus { outline: 2px solid var(--sea); outline-offset: -1px; border-color: var(--sea); }
+.compare-picker-options { flex: none; height: calc(5 * var(--option-height)); overflow-y: auto; overscroll-behavior: contain; }
+.compare-picker-options:has(.is-pinned) { scroll-padding-top: var(--option-height); }
+.compare-picker-option { position: relative; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; height: var(--option-height); padding: 0 26px 0 10px; border-radius: 5px; line-height: 1.25; cursor: pointer; }
+.compare-picker-option > * { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.compare-picker-option[aria-selected="true"]::after { content: "✓"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--sea); font-weight: 700; }
+/* A dashed line between the spots that match the typed text and the others. */
+/* A favourite spot has a heart before its name. */
+.compare-picker-option.is-favorite > span::before { content: "♥ "; color: var(--sea); }
+.compare-picker-option.is-other::before { content: ""; position: absolute; top: 0; left: 6px; right: 6px; border-top: 1px dashed #b4c4bf; }
+.compare-picker-option[data-active="true"] { background: #edf3ef; box-shadow: inset 3px 0 var(--sea); }
+.compare-picker-option[aria-disabled="true"] { color: #718087; cursor: default; }
+.compare-picker-option.is-recent { background: #e3efff; color: #173f6b; }
+.compare-picker-option.is-pinned { position: sticky; top: 0; z-index: 1; border-radius: 0; box-shadow: inset 0 -1px #719cc9; }
+.compare-picker-option.is-recent[data-active="true"] { background: #cfe3ff; }
+.compare-recent-caption, .compare-recent-note { display: block; font-size: 11px; }
+.compare-recent-caption { margin-bottom: 4px; color: #295b90; font-weight: 700; }
+.compare-recent-note { margin-top: 4px; color: #526d89; }
+.compare-chart { overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; }
+.compare-chart:active { cursor: grabbing; }
+.compare-chart svg { display: block; width: 100%; height: auto; }
+.compare-zoom { margin: 0 0 8px; }
+.compare-chart-state { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; border: 1px dashed var(--line); border-radius: 14px; background: #f6f9f5; text-align: center; }
+.compare-chart-state strong { font-size: 20px; color: var(--sea-dark); }
+.compare-chart-state p { margin: 0; color: var(--muted); font-size: 13px; }
+/* The legend sits in a frame; the "i" on its left explains its links. */
+.compare-legend-box { position: relative; display: flex; align-items: center; gap: 10px; }
+.compare-legend { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 10px 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: white; font-size: 14px; }
+.compare-legend:empty, .compare-legend-box:has(.compare-legend:empty) .compare-info { display: none; }
+.compare-legend-item { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+/* The link to the spot's hourly forecast keeps the legend's look. */
+.compare-legend-link { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; color: inherit; text-decoration: none; }
+.compare-legend-item svg { width: 76px; height: 14px; flex: none; }
+.compare-legend-link > span { min-width: 0; overflow-wrap: anywhere; }
+/* Each small "i" gets a finger-sized tap area; its hint floats below it. */
+.compare-info { position: relative; flex: none; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 1.5px solid currentColor; border-radius: 50%; background: none; color: var(--muted); font-size: 11px; font-weight: 700; line-height: 1; }
+.compare-info::after { content: ""; position: absolute; inset: -12px; }
+.compare-info:hover, .compare-info[aria-expanded="true"] { color: var(--sea); }
+.compare-hint { position: absolute; z-index: 1500; width: max-content; max-width: min(300px, 100%); margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: white; box-shadow: 0 6px 20px #183d4926; color: var(--ink); font-size: 13px; line-height: 1.45; }
+.compare-hint::before { content: ""; position: absolute; top: -6px; left: calc(var(--arrow, 50%) - 5px); width: 10px; height: 10px; border: solid var(--line); border-width: 1px 0 0 1px; background: white; transform: rotate(45deg); }
+/* One "i" above the ranking tiles, shown while at least one tile opens a forecast. */
+.compare-ranking-box { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.compare-ranking-box > .compare-info { align-self: flex-start; }
+.compare-ranking-box:not(:has(.compare-ranking a)) > .compare-info { display: none; }
+.compare-card { display: block; text-decoration: none; }
+.compare-empty-card { background: #f1f3f4; border-color: #d8dde0; color: var(--ink); }
+.compare-empty-card strong { margin-top: 0; }
+.compare-empty-card small { display: block; margin-top: 7px; font-size: 13px; color: var(--ink); }
+.compare-card strong { font-size: 26px; }
+.compare-card .compare-spot-link { color: var(--spot-color); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.compare-card:hover .compare-spot-link, .compare-card:focus-visible .compare-spot-link { text-decoration-thickness: 2px; }
+/* × in the top right corner of a tile (since 20.11.2026), with a finger-sized tap area; the spot's name keeps clear of it. */
+.compare-tile { position: relative; display: grid; min-width: 0; }
+.compare-tile > .compare-card > :first-child { margin-right: 64px; }
+/* The heart before × (since 20.11.2026): the cameras' heart, with a finger-sized tap area. */
+.compare-tile > .compare-favorite { position: absolute; top: 11px; right: 46px; width: 30px; height: 30px; }
+.compare-favorite .icon { width: 15px; height: 15px; }
+.compare-favorite::after { content: ""; position: absolute; inset: -5px; }
+.compare-tile > .compare-hide { position: absolute; top: 6px; right: 6px; }
+.compare-hide { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--rating-ink, var(--ink)); opacity: .75; cursor: pointer; }
+.compare-hide .icon { width: 18px; height: 18px; stroke-width: 2.2; }
+/* Only with a mouse: on a touch screen the circle would stay on the × that takes the place of the hidden one. */
+@media (hover: hover) { .compare-hide:hover { opacity: 1; background: #18383e14; } }
+.compare-hide:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: -2px; }
+/* The hidden spots under the tiles, each with "Przywróć". */
+.compare-hidden { margin-top: 6px; font-size: 14px; }
+.compare-hidden[hidden] { display: none; }
+.compare-hidden summary { width: max-content; max-width: 100%; padding: 8px 0; color: var(--sea-dark); font-weight: 700; cursor: pointer; }
+.compare-hidden p { margin: 2px 0 10px; }
+.compare-hidden ul { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
+.compare-hidden li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 14px; border: 1px solid var(--line); border-radius: 10px; background: #f6f9f5; }
+.compare-hidden li span { min-width: 0; overflow-wrap: anywhere; }
+.compare-hidden .filter { flex: none; min-height: 40px; background: white; color: var(--sea-dark); font-size: 13px; font-weight: 700; }
+/* "Cofnij" for a while after ×, at the bottom of the screen. */
+.compare-undo { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 1650; display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 6px 6px 18px; border-radius: 12px; background: #173e38; color: white; box-shadow: 0 5px 20px #0003; font-size: 14px; line-height: 1.35; transform: translateX(-50%); animation: compare-undo-in .2s ease-out; }
+.compare-undo[hidden] { display: none; }
+.compare-undo span { min-width: 0; }
+.compare-undo button { flex: none; min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; background: none; color: #9fe8d8; font: inherit; font-weight: 700; cursor: pointer; }
+@media (hover: hover) { .compare-undo button:hover { background: #ffffff1f; } }
+.compare-undo button:focus-visible { outline: 2px solid white; outline-offset: 1px; }
+@keyframes compare-undo-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+@media (prefers-reduced-motion: reduce) { .compare-undo { animation: none; } }
+#compareDays [aria-pressed="true"] { background: var(--sea-dark); color: white; }
+#compareDays button[hidden] { display: none; }
+#compareDays .compare-page-days { font-weight: 700; }
+#compareDays .compare-page-days:disabled { opacity: .45; cursor: default; }
+#compareRankingTitle { font-size: 20px; }
+@media (max-width: 920px) { .compare-selectors, .compare-ranking { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .compare-body { padding: 16px; } .compare-actions { width: 100%; } .compare-actions .filter { flex: 1; min-height: 44px; } .compare-manual-actions { width: 100%; } .compare-picker-button { min-height: 44px; font-size: 16px; } .compare-picker-option { min-height: 44px; } .compare-ranking { grid-template-columns: 1fr; } }
+/* On phones the "i" sits above the frame's left corner, so the frame keeps the full width. */
+@media (max-width: 640px) {
+  .compare-legend-box { flex-direction: column; align-items: stretch; gap: 6px; }
+  .compare-legend { flex: none; padding: 10px; }
+  .compare-legend-box > .compare-info { align-self: flex-start; }
+}
+.surf-session { margin: 18px 0; scroll-margin-top: 20px; }
+.surf-session h3 { margin: 0 0 8px; font-size: 18px; }
+.surf-session strong { font-size: clamp(20px, 3vw, 28px); }
+.surf-session p { font-size: 13px; margin: 8px 0; }
+.surf-session .filter { margin-top: 8px; }
+.compare-hourly-scroll { overflow: auto; max-height: 380px; margin-top: 16px; }
+.compare-hourly-scroll:empty { display: none; }
+.compare-hourly-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-hourly-table caption { text-align: left; font-weight: 700; padding: 10px; }
+.compare-hourly-table th, .compare-hourly-table td { padding: 10px; border-bottom: 1px solid #dce4df; text-align: left; }
+.compare-hourly-table thead th { position: sticky; top: 0; background: #edf3ef; }
+.compare-hourly-table thead a { display: block; margin: -10px; padding: 10px; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.compare-hourly-table thead a:hover, .compare-hourly-table thead a:focus-visible { text-decoration-thickness: 2px; }
+.compare-hourly-table tbody th { white-space: nowrap; }
+.compare-hourly-table tr[data-history="true"] { background: #f1f5f9; }
+.compare-hourly-table td[data-quality] { background: var(--rating-bg); color: #000; font-weight: 650; }
+
+/* Hourly heatmap: the same score bands as the detailed forecast table. */
+.compare-actions a.filter { display: inline-flex; align-items: center; text-decoration: none; }
+.heatmap-panel { padding: 30px 0 36px; min-width: 0; }
+.heatmap-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.heatmap-heading p:not(.eyebrow) { font-size: 13px; color: var(--muted); }
+.heatmap-badge { display: inline-block; margin-left: 6px; padding: 3px 7px; background: var(--mint); border-radius: 5px; color: var(--sea-dark); font: 700 9px/1.4 sans-serif; vertical-align: middle; letter-spacing: .08em; }
+/* No text selection in the bar: a double click on "Pokaż całą mapę" hides the button with the first click,
+   and the second would otherwise select its text, which then shows greyed when the button returns. */
+.heatmap-key { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; margin-top: 16px; padding: 14px 16px; background: white; border: 1px solid var(--line); border-radius: 12px; user-select: none; -webkit-user-select: none; }
+.heatmap-key p { margin: 0; font-size: 12px; }
+.heatmap-key strong { padding-left: 4px; }
+.heatmap-legend { display: flex; gap: 5px; flex-wrap: wrap; }
+.heatmap-legend span { padding: 6px 10px; border-radius: 5px; background: var(--rating-bg); color: #18312b; font-size: 11px; font-variant-numeric: tabular-nums; }
+.heatmap-panel [data-quality="bad"] { --rating-bg: #f6b0ad; }
+.heatmap-panel [data-quality="poor"] { --rating-bg: #f7c29c; }
+.heatmap-panel [data-quality="weak"] { --rating-bg: #f5d5a0; }
+.heatmap-panel [data-quality="fair"] { --rating-bg: #f3cf60; }
+.heatmap-panel [data-quality="good"] { --rating-bg: #b9dda0; }
+.heatmap-panel [data-quality="great"] { --rating-bg: #93d4a5; }
+.heatmap-panel [data-quality="excellent"] { --rating-bg: #70c49b; }
+.heatmap-panel [data-quality="unknown"] { --rating-bg: #a9aedb; }
+#heatmapProgress { display: block; width: 100%; height: 5px; accent-color: var(--sea); }
+.heatmap-loading { display: flex; min-height: 360px; margin-top: 16px; padding: 30px; flex-direction: column; align-items: center; justify-content: center; gap: 0; border: 1px solid var(--line); border-radius: 12px; background: #f6f9f5; text-align: center; }
+.heatmap-loading strong { font-size: clamp(48px, 8vw, 76px); line-height: 1.2; color: var(--sea-dark); }
+.heatmap-loading p { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
+.heatmap-loading-dots { display: inline-flex; margin-left: .08em; }
+.heatmap-loading-dots span { display: inline-block; width: .22em; animation: heatmap-loading-dot 1.2s ease-in-out infinite; }
+.heatmap-loading-dots span:nth-child(2) { animation-delay: .15s; }
+.heatmap-loading-dots span:nth-child(3) { animation-delay: .3s; }
+.heatmap-loading[hidden] .heatmap-loading-dots span { animation: none; }
+@keyframes heatmap-loading-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30% { transform: translateY(-.14em); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heatmap-loading-dots span { animation: none; opacity: 1; transform: none; }
+}
+/* One grid for the whole coast: spots top to bottom (west to east), hours left to right; only the ends are labelled. */
+/* The spot axis column has a fixed width, so a smaller font for long names never changes the grid's width. */
+.heatmap-chart { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 6px; margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.2; }
+/* The axis is as tall as the grid and never stretches it (height 0, at least the whole row). */
+.heatmap-spot-axis { display: flex; flex-direction: column; justify-content: space-between; align-items: center; height: 0; min-height: 100%; font-size: 13px; }
+/* Town names stand letter by letter, one under another, all in small capitals of one height (an initial capital
+   would stick out of the column). Names too long for the grid get a smaller font (surf-heatmap.js), never an ellipsis. */
+.heatmap-spot-axis > span { flex: none; white-space: nowrap; writing-mode: vertical-rl; text-orientation: upright; font-variant-caps: all-small-caps; letter-spacing: .05em; line-height: 1; }
+/* Words of a name (e.g. Krynica Morska) are apart by about half a letter, not by a whole empty letter. */
+.heatmap-spot-axis > span > span + span { margin-inline-start: .4em; }
+/* One finger keeps scrolling the page; two fingers zoom and move the grid (surf-heatmap.js). */
+.heatmap-canvas { display: block; width: 100%; height: 364px; border-radius: 3px; cursor: pointer; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.heatmap-canvas:focus-visible { outline: 3px solid #18383e; outline-offset: 3px; }
+.heatmap-time-axis { grid-column: 2; display: flex; justify-content: space-between; gap: 12px; }
+/* At the end of the legend bar. Without a zoom it is only invisible, keeping its place, so the grid never jumps. */
+.heatmap-zoom-reset { margin-left: auto; min-height: 40px; }
+.heatmap-zoom-reset:disabled { visibility: hidden; }
+.heatmap-detail { margin-top: 14px; }
+.heatmap-detail > p { margin: 0; }
+.heatmap-pick { display: block; text-decoration: none; }
+.heatmap-pick-action { font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+#heatmapExplanation { max-width: 1000px; }
+@media (max-width: 640px) {
+  .heatmap-panel { padding-top: 22px; }
+  .heatmap-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .heatmap-key { padding: 12px; }
+  .heatmap-legend span { padding: 6px 8px; }
+  /* The colours wrap below; the button takes the free space to the right of "Ocena warunków". */
+  .heatmap-zoom-reset { order: 1; }
+  .heatmap-legend { order: 2; flex-basis: 100%; }
+}
+/* The comparison chart, its note, legend and day tiles share one text size (the chart's SVG labels use the same values). */
+#compareContent { --compare-font: 14px; }
+@media (max-width: 599px) { #compareContent { --compare-font: 13px; } }
+.compare-zoom, .compare-legend, #compareDays .filter { font-size: var(--compare-font); }
+.surfer-profile { display: inline-grid; gap: 5px; margin-top: 14px; font-size: 11px; color: var(--muted); }
+.surfer-profile select { min-width: 190px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
+.heatmap-heading .surfer-profile { margin-top: 0; }
+@media (max-width: 640px) { .surfer-profile select { font-size: 16px; } }
+#surfLocalBody h4 { margin: 14px 0 4px; font-size: 14px; }
+.surf-hazards { margin: 4px 0; padding-left: 20px; font-size: 13px; }
+.surf-hazards li { margin: 3px 0; }
+.surf-report-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0; }
+.surf-report-form > label, .surf-report-comment { display: grid; gap: 5px; font-size: 11px; color: var(--muted); }
+.surf-report-form input[type=datetime-local], .surf-report-form select, .surf-report-form textarea { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); }
+.surf-report-rating { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; border: 0; }
+.surf-report-rating legend { width: 100%; margin-bottom: 5px; font-size: 11px; color: var(--muted); }
+.surf-report-rating label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; }
+.surf-report-rating label:has(input:checked) { border-color: var(--sea); background: color-mix(in srgb, var(--sea) 12%, white); }
+.surf-report-comment, .surf-report-actions { grid-column: 1 / -1; }
+.surf-report-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.surf-report-heading { margin: 14px 0 6px; font-size: 14px; }
+.surf-report-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.surf-report-list li { padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.surf-report-list small { display: block; margin-top: 3px; color: var(--muted); }
+@media (max-width: 640px) { .surf-report-form input[type=datetime-local], .surf-report-form select, .surf-report-form textarea { font-size: 16px; } }
+/* "Pokaż kolejne…" and "Pokaż mniej" under the day tiles (since 20.11.2026, the user's request): two shades of green, so
+   they stand apart from the days and from each other. The chosen day stays dark green with white text. */
+.filter.page-more { background: #d5ebdf; border: 1px solid #7fb89c; color: #07594f; }
+.filter.page-less { background: #eef6f1; border: 1px solid #b4d3c3; color: #2e6b5b; }
+@media (hover: hover) { .filter.page-more:hover:enabled { background: #c6e3d3; } .filter.page-less:hover:enabled { background: #e2efe7; } }
