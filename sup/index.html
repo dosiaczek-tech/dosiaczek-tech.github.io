@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#185b4d">
+    <meta name="description" content="Odkrywaj polskie szlaki wodne, poznawaj ich charakter i zapisuj własne wyprawy na desce SUP.">
+    <title>W nurcie — Twój atlas tras SUP</title>
+    <link rel="icon" href="./assets/mark.svg?v=1.0.17" type="image/svg+xml">
+    <!-- Inside an Android WebView, i.e. the Falki app, the page hides its own ⋮: the app's bar has one. -->
+    <script>if (/; wv\)/.test(navigator.userAgent)) document.documentElement.classList.add('in-app');</script>
+    <link rel="stylesheet" href="./assets/app.css?v=1.0.17">
+    <script type="module" src="./assets/app.js?v=1.0.17"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#odkrywaj">Przejdź do tras</a>
+    <!-- No refresh button above the header since 20.11.2026: "Odśwież aplikację" is in ⋮, the page's own in a browser
+         and the bar's in the Falki app. -->
+    <header class="site-header">
+      <div class="header-start">
+        <div class="app-menu">
+          <button id="app-menu-button" class="app-menu-button" type="button" aria-label="Menu aplikacji" aria-expanded="false" aria-controls="app-menu"><span data-icon="menu"></span></button>
+          <div id="app-menu" class="app-menu-panel" role="navigation" aria-label="Aplikacje Falki" hidden>
+            <a href="../#surf"><strong>Prognozy SURF</strong><span>nad morzem. Bałtyk Surf · fale i oceny prognoz</span></a>
+            <a href="./" aria-current="page"><strong>Wyprawy SUP</strong><span>w nurcie. · trasy i dziennik wypraw</span></a>
+          </div>
+        </div>
+        <!-- "w nurcie." (since 20.11.2026, before "z nurtem.") is written like "nad morzem." of the surf forecasts, with
+             nothing under it. Its mark is the surf one, the wavy lines upright like a river (assets/logo.svg). -->
+        <a class="brand" href="#" aria-label="W nurcie — strona główna">
+          <span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 2c-3 3-3 6 0 10s3 7 0 10M15.5 2c-3 3-3 6 0 10s3 7 0 10"/></svg></span>
+          <span class="brand-name">w nurcie<span>.</span></span>
+        </a>
+      </div>
+      <div class="header-actions">
+        <a class="button button-small header-cta" href="#moje-trasy"><span data-icon="plus"></span> Dodaj trasę</a>
+        <!-- Date and time at the right, as in the surf forecasts. -->
+        <div class="clock">
+          <span data-icon="sun"></span>
+          <div><time id="current-time"></time><small>Czas w Polsce</small></div>
+        </div>
+        <!-- ⋮ of the page (since 20.11.2026), the same on surf and SUP. The download link names the APK that
+             downloads/ offers; ../tests/app-menu.test.cjs checks that they agree. -->
+        <div class="page-menu">
+          <button id="page-menu-button" class="page-menu-button" type="button" aria-label="Więcej" aria-expanded="false" aria-controls="page-menu"><span data-icon="more"></span></button>
+          <div id="page-menu" class="page-menu-panel" hidden>
+            <button id="page-reload" type="button"><strong>Odśwież aplikację</strong><span>Wczytuje stronę od nowa</span></button>
+            <a href="../downloads/falki-2.0.4.apk" download><strong>Ściągnij na telefon najnowszą wersję</strong><span>Falki 2.0.4 · aplikacja na Androida (APK)</span></a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- The tabs are a bar of their own under the header, as in the surf forecasts (since 20.11.2026): the header
+         scrolls away with the page and only this bar stays at the top. -->
+    <div class="section-nav-bar">
+      <div class="page-width">
+        <nav class="section-nav" aria-label="Nawigacja główna">
+          <a href="#odkrywaj" class="nav-link">Trasy</a>
+          <a href="#moje-trasy" class="nav-link">Moje trasy <span id="nav-trip-count" class="nav-count" hidden>0</span></a>
+          <a href="#o-danych" class="nav-link about-link">O atlasie</a>
+        </nav>
+      </div>
+    </div>
+
+    <main>
+      <section id="odkrywaj" class="atlas-section page-width" aria-labelledby="atlas-title">
+        <div class="section-heading">
+          <div><h1 id="atlas-title" class="section-title">Sprawdź dostępne trasy rzeczne na supa</h1></div>
+          <p class="heading-note"><span class="status-dot"></span> <span id="catalog-count">…</span>&nbsp;tras ze źródłami i opisem</p>
+        </div>
+        <form id="filters" class="filters" role="search" aria-label="Filtry tras">
+          <label class="search-field"><span data-icon="search"></span><span class="sr-only">Szukaj rzeki, miejscowości, regionu lub źródła</span><input id="search" type="search" placeholder="Rzeka, miejsce lub źródło…" autocomplete="off"></label>
+          <label><span class="sr-only">Poziom SUP</span><select id="difficulty"><option value="">Każdy poziom SUP</option><option value="easy">Spokojne odcinki</option><option value="moderate">Średnio wymagające</option><option value="advanced">Dla zaawansowanych</option><option value="unknown">Brak oceny SUP</option></select></label>
+          <label><span class="sr-only">Charakter przeszkód</span><select id="obstacles"><option value="">Każdy charakter</option><option value="many">Zwałkowe</option><option value="some">Miejscowe przeszkody</option><option value="low">Mniej przeszkód</option><option value="unknown">Brak danych o zwałkach</option></select></label>
+          <label><span class="sr-only">Rodzaj akwenu</span><select id="water-type"><option value="">Rzeki i jeziora</option><option value="river">Rzeki</option><option value="mixed">Rzeka + jezioro</option></select></label>
+          <button class="icon-button filter-reset" type="reset" title="Wyczyść filtry" aria-label="Wyczyść filtry"><span data-icon="reset"></span></button>
+          <div class="extra-filters"><label>Region<select id="area"><option value="">Cała Polska</option><option value="pomorze">Kaszuby i okolice · Pomorze</option><option value="bory-tucholskie">Bory Tucholskie</option></select></label><label>Rodzaj wyprawy<select id="trip-kind"><option value="">Wszystkie warianty</option><option value="day">Jednodniowe według źródła</option><option value="multi">Weekendowe i wielodniowe</option></select></label><p>Kolor identyfikuje trasę. Poziom SUP znajdziesz na jej karcie.</p></div>
+        </form>
+        <div id="catalog-error" class="notice error" role="alert" hidden></div>
+        <div class="atlas-layout">
+          <div class="map-shell atlas-map-shell">
+            <div id="atlas-map" class="map" aria-label="Mapa tras wodnych w Polsce"></div>
+            <button id="show-all" class="map-button" type="button"><span data-icon="expand"></span> Pokaż trasy</button>
+            <div id="map-selection" class="map-selection" hidden></div>
+            <div class="map-legend"><span><i class="legend-colors"></i>Inny kolor = inna trasa</span><span><i class="legend-break"></i>Przerwa w trasie wodnej</span><label><input id="show-kilometers" type="checkbox" checked> Kilometry wybranej trasy</label></div>
+            <div id="atlas-tile-error" class="tile-error" hidden>Podkład mapy jest niedostępny. Trasy i opisy są nadal widoczne. <button type="button">Ponów</button></div>
+            <section id="route-detail" class="route-detail" aria-label="Szczegóły wybranej trasy" hidden></section>
+          </div>
+        </div>
+        <button id="toggle-route-list" class="button button-outline route-list-toggle" type="button" aria-expanded="false" aria-controls="route-sidebar"><span data-icon="route"></span> <span id="toggle-route-label">Zobacz dostępne trasy</span> <span id="toggle-route-count" class="nav-count">…</span></button>
+        <aside id="route-sidebar" class="route-sidebar" aria-label="Lista tras" hidden>
+          <div class="list-heading"><span id="result-count" aria-live="polite">Wczytuję trasy…</span><label><span class="sr-only">Sortowanie tras</span><select id="sort"><option value="recommended">Polecana kolejność</option><option value="shortest">Od najkrótszej</option><option value="longest">Od najdłuższej</option><option value="name">Alfabetycznie</option></select></label></div>
+          <div id="route-list" class="route-list"><p class="loading-copy">Przygotowuję Twój atlas…</p></div>
+        </aside>
+        <div class="atlas-footnote"><span data-icon="info"></span><p>Kliknij kolorową linię, aby otworzyć szczegóły. Pinezki pokazują miejsca dostępu ze źródłami; w ich opisach możesz wybrać start i metę krótszego odcinka. Kółko myszy przybliża i oddala mapę. Linie prowadzą <strong>po wodzie</strong>; przewózki i luki są przerwami oznaczonymi punktami. Kilometry mierzą widoczne odcinki bez przerw, a długość oferty pochodzi ze źródła. <span id="access-data-status"></span> <a href="#o-danych">Jak czytać atlas?</a></p></div>
+      </section>
+
+      <section id="moje-trasy" class="journal-section page-width" aria-labelledby="journal-title">
+        <div class="section-heading"><div><h2 id="journal-title" class="section-title">Dodaj i zapisz swoje trasy</h2></div></div>
+        <section id="cloud-panel" class="cloud-panel" aria-labelledby="cloud-title">
+          <div class="cloud-heading"><div><h3 id="cloud-title"><span data-icon="lock"></span> Logowanie</h3><p id="cloud-status" role="status" aria-live="polite">Sprawdzam połączenie z chmurą…</p></div><a href="./cloud-setup.html" class="text-button">Konfiguracja chmury</a></div>
+          <p id="cloud-setup-note">Trasy zapisują się na Twoim koncie. Zaloguj się, aby je zapisywać i oglądać.</p>
+          <form id="cloud-auth-form" hidden>
+            <div class="cloud-fields"><label>E-mail<input id="cloud-email" type="email" autocomplete="username" maxlength="254" required></label><label>Hasło<input id="cloud-password" type="password" autocomplete="current-password" minlength="8" required></label></div>
+            <div class="cloud-actions"><button type="submit" class="button button-small" data-auth-action>Zaloguj się</button><button id="cloud-signup" type="button" class="button button-outline button-small" data-auth-action>Załóż konto</button><button id="cloud-reset-password" type="button" class="text-button" data-auth-action>Nie pamiętam hasła</button></div>
+          </form>
+          <div id="cloud-account" hidden><p>Twoje konto: <strong id="cloud-email-label"></strong></p><div class="cloud-actions"><button id="cloud-sync-now" type="button" class="button button-small">Synchronizuj teraz</button><button id="cloud-signout" type="button" class="text-button" data-auth-action>Wyloguj się</button></div><button id="cloud-import-local" type="button" class="button button-outline button-small cloud-import" hidden>Przenieś wcześniejsze wpisy z tego urządzenia</button></div>
+          <form id="cloud-password-form" hidden><label>Nowe hasło<input id="cloud-new-password" type="password" autocomplete="new-password" minlength="8" required></label><button type="submit" class="button button-small" data-auth-action>Zapisz nowe hasło</button></form>
+          <p id="cloud-message" class="cloud-message" role="status" aria-live="polite" hidden></p>
+        </section>
+        <div id="storage-error" class="notice error" role="alert" hidden></div>
+        <form id="trip-form" class="add-route" novalidate>
+          <div class="add-endpoints">
+            <h3 id="form-heading">Nowa trasa</h3>
+            <label for="river-start">Start</label>
+            <div class="endpoint-field"><input id="river-start" list="river-places" placeholder="Wpisz miejsce lub dotknij mapy" autocomplete="off" maxlength="240" disabled><button id="pick-river-start" type="button" class="icon-button" aria-pressed="false" title="Wskaż start na mapie" aria-label="Wskaż start na mapie" disabled><span data-icon="pin"></span></button></div>
+            <label for="river-finish">Meta</label>
+            <div class="endpoint-field"><input id="river-finish" list="river-places" placeholder="Wpisz miejsce lub dotknij mapy" autocomplete="off" maxlength="240" disabled><button id="pick-river-finish" type="button" class="icon-button" aria-pressed="false" title="Wskaż metę na mapie" aria-label="Wskaż metę na mapie" disabled><span data-icon="pin"></span></button></div>
+            <datalist id="river-places"></datalist>
+            <p class="route-result"><span id="draft-distance" class="draft-distance" role="status" aria-live="polite">0 km</span><span id="river-status" class="river-status" role="status" aria-live="polite">Wczytuję rzeki…</span><button id="retry-rivers" type="button" class="text-button" hidden>Ponów</button></p>
+            <button id="fit-drawn-river" type="button" class="button button-small repair-river" hidden><span data-icon="route"></span> Dopasuj tę prostą do rzeki</button>
+          </div>
+          <div class="map-shell journal-map-shell">
+            <div id="journal-map" class="map" aria-label="Mapa do wskazania startu i mety oraz Twoich zapisanych tras"></div>
+            <button id="show-trips" class="map-button" type="button"><span data-icon="expand"></span> Moje trasy</button>
+            <button id="clear-draft" class="map-button clear-draft" type="button" disabled><span data-icon="trash"></span> Wyczyść</button>
+            <div id="draw-hint" class="draw-hint"></div>
+            <div id="journal-tile-error" class="tile-error" hidden>Podkład mapy jest niedostępny. <button type="button">Ponów</button></div>
+          </div>
+          <div class="add-notes">
+            <label for="trip-notes">Notatki</label>
+            <textarea id="trip-notes" name="notes" rows="4" maxlength="3000" placeholder="Np. dobre miejsce na przerwę, przeszkody, parking…"></textarea>
+            <input id="trip-name" name="name" type="hidden">
+            <input id="trip-date" name="date" type="hidden">
+            <input id="trip-water" name="waterType" type="hidden" value="river">
+            <div id="form-error" class="notice error" role="alert" hidden></div>
+            <button id="save-trip" class="button save-button" type="submit"><span data-icon="check"></span> Zapisz trasę</button>
+            <button id="cancel-edit" class="text-button" type="button" hidden>Anuluj edycję</button>
+          </div>
+        </form>
+        <div id="saved-block" hidden>
+        <div class="saved-heading"><h3>Zapisane trasy <span id="trip-count" class="nav-count">0</span></h3><div class="journal-actions"><button id="export-trips" class="button button-outline button-small" type="button"><span data-icon="download"></span> Eksportuj</button><label class="button button-outline button-small file-button"><span data-icon="upload"></span> Importuj<input id="import-backup" type="file" accept=".json,application/json" aria-label="Importuj kopię tras JSON"></label></div></div>
+        <div id="saved-trips" class="saved-trips"></div>
+        </div>
+      </section>
+
+      <section id="o-danych" class="about-section page-width" aria-labelledby="about-title">
+        <div><p class="eyebrow">DOBRZE WIEDZIEĆ</p><h2 id="about-title">Każdy szlak ma swoją historię.<br>I swoje źródło.</h2><p>Atlas jest punktem wyjścia do poznawania polskich wód. Opisujemy konkretne odcinki, bo jedna rzeka może być zarówno spokojna, jak i pełna zwałek.</p></div>
+        <div class="about-answers">
+          <details open><summary>Skąd pochodzą informacje?</summary><p>Katalog zawiera <strong id="about-catalog-count">…</strong> tras i wariantów. Rozszerzenie regionalne oparto na <a href="https://kaszubypolnocne.pl/szlaki/szlaki-kajakowe/" target="_blank" rel="noopener noreferrer">Kaszubach Północnych</a>, <a href="https://www.ekajaki.pl/splywy_wielodniowe.html" target="_blank" rel="noopener noreferrer">eKajaki.pl</a>, <a href="https://www.kajaki.hydrostacja.pl/kajaki-kaszuby-bory-tucholskie/" target="_blank" rel="noopener noreferrer">Hydrostacji</a>, <a href="https://www.kajakodajnia.pl/wierzyca-opis.html" target="_blank" rel="noopener noreferrer">Kajakodajni — opis Wierzycy</a> i Pomorskich Szlakach Kajakowych. Pozostałe regiony korzystają z opisów AS-TOUR, PAGAj, AGRO-KAJAK, Kajaki.pl i KAJARK. Każda karta zawiera źródła i datę odczytu. Zaznaczamy rozbieżności kilometrażu, szacunki oraz wymagane przewózki. Dłuższe warianty mogą zawierać krótsze odcinki z katalogu.</p></details>
+          <details><summary>Co oznacza poziom SUP i „zwałkowa”?</summary><p>Poziom SUP to nasza interpretacja opisu: spokojna trasa, średnio wymagająca lub dla zaawansowanych. „Brak oceny” oznacza, że opis nie daje podstaw do sklasyfikowania odcinka. Oryginalną ocenę kajakową pokazujemy osobno. „Zwałkowa” oznacza opisane w źródle powalone drzewa i przeszkody w korycie. Brak informacji o zwałkach nie oznacza ich braku. To charakterystyka, nie pomiar dzisiejszych warunków.</p></details>
+          <details><summary>Jak dokładne są linie na mapie?</summary><p>Wszystkie <strong id="water-route-count">…</strong> tras mają przebiegi po wodzie: koryta rzek z OpenStreetMap oraz orientacyjne przejścia po jeziorach wyznaczone w granicach wody, z ominięciem wysp. <strong id="gapped-count">…</strong> tras ma przerwy, np. przy przewózkach, zaporach lub brakach geometrii. Nie łączymy ich prostą po lądzie. Końce odcinków są orientacyjne; linia nie jest zweryfikowanym śladem GPS ani drogą przenoski. Znaczniki km mierzą widoczne fragmenty wodne bez przerw i mogą różnić się od kilometrażu oferty.</p></details>
+          <details><summary>Gdzie zapisują się moje trasy?</summary><p>Bez logowania: w pamięci tej przeglądarki na tym urządzeniu. Po podłączeniu Supabase i zalogowaniu: w prywatnym dzienniku konta oraz jego lokalnej kopii. Na telefonie i komputerze użyj tego samego konta. Wcześniejsze wpisy dodasz przyciskiem „Przenieś wcześniejsze wpisy z tego urządzenia”. Zmiany bez połączenia czekają lokalnie na wysłanie; komunikat „Zsynchronizowano” potwierdza zapis w chmurze. Rozbieżne edycje są zachowywane jako dodatkowe kopie. „Eksportuj” pobiera kopię JSON, a „Importuj” dodaje wpisy. Czyszczenie danych przeglądarki usuwa lokalne wpisy i niewysłane zmiany. <a href="./cloud-setup.html">Jak uruchomić darmową chmurę?</a></p></details>
+          <details><summary>Jak dodać własną trasę?</summary><p>W sekcji „Dodaj i zapisz swoje trasy” dotknij rzeki na mapie w miejscu startu, a potem w miejscu mety — rzeka rozpozna się sama. Możesz też wpisać nazwę miejsca i wybrać podpowiedź (pokazuje także nazwę rzeki) albo współrzędne: szerokość, długość. Trasa podąży za zakrętami koryta; przeciągnięcie znacznika S lub M zmieni jej koniec. Dopisz notatki i naciśnij „Zapisz trasę”. Linia nie jest potwierdzeniem drożności szlaku ani dostępu do brzegu.</p></details>
+          <details><summary>Jak wybrać wodowanie i krótszy odcinek?</summary><p>Otwórz trasę i sekcję „Wodowania i krótszy odcinek”. Wybierz start oraz metę w kolejności płynięcia i kliknij „Pokaż odcinek”. Możesz też użyć „Start tutaj” / „Meta tutaj” w opisie pinezki. Pomiar obejmuje wodny przebieg pomiędzy punktami, bez przewózek i luk. Zapisany wariant zachowuje swoje końce i geometrię przy aktualizacjach katalogu. Miejsca pochodzą z opisów operatorów, przewodników i OpenStreetMap; punkt opisujący obiekt nie zawsze oznacza dokładne zejście. Znak „≈” i przerywany obrys oznaczają przybliżoną lokalizację opisanego dostępu, np. według kilometrażu lub rejonu mostu. Dostęp prywatny, zasady korzystania i źródła są podane przy pinezce. Znak „?” oznacza koniec bez przypisanego wodowania. Granica luki w geometrii nie jest wskazaniem miejsca wyjścia z wody.</p></details>
+        </div>
+      </section>
+    </main>
+    <!-- "Wersja Falki" is the release of the Falki app and of these pages; ../tests/app-menu.test.cjs keeps it equal to
+         ../android/flake.nix and to the APK that ../downloads/ offers. -->
+    <footer class="site-footer page-width"><a class="brand footer-brand" href="#"><img src="./assets/mark.svg?v=1.0.17" width="30" height="30" alt="">w nurcie.</a><p>Małe wyprawy. Duże wspomnienia.</p><p class="falki-version">Wersja Falki 2.0.4</p><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">Dane mapy © OpenStreetMap · ODbL</a></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <noscript><div class="notice error">Włącz JavaScript, aby korzystać z map i zapisywać wyprawy.</div></noscript>
+  </body>
+</html>
